@@ -3,26 +3,19 @@
 # Set these before applying the configuration
 # --------------------------------------------------
 
-variable ssw {
-  type        = string
-  description = "testing git push"
-}
-
-
 variable project_id {
   type        = string
   description = "Google Cloud Project ID"
 }
-
+variable bucket_name {
+  type        = string
+  description = "Bucket where source data is stored"
+  default     = "da-solutions-assets-1484658051840"
+}
 variable region {
   type        = string
   description = "Google Cloud Region"
 }
-
-# variable zone {
-#   type        = string
-#   description = "Google Cloud Zone"
-# }
 
 variable "labels" {
   type        = map(string)
