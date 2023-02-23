@@ -6,6 +6,7 @@
 
 # Python
 *.pyc
+*.txt
 
 # Emacs save files
 *~
