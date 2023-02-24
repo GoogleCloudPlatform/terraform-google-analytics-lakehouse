@@ -190,13 +190,16 @@ resource "google_bigquery_table" "gcp_tbl_products" {
 
   }
 }
-#bq table on top of biglake bucke
+#bq table on top of biglake bucket.  
 resource "google_bigquery_table" "gcp_tbl_users" {
   dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
   table_id            = "gcp_tbl_users"
   project             = var.project_id
   deletion_protection = var.deletion_protection
   depends_on = [time_sleep.wait_5_seconds]
+
+  #steve
+  
 
 
   external_data_configuration {
