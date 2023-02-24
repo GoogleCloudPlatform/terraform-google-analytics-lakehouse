@@ -190,7 +190,7 @@ resource "google_bigquery_table" "gcp_tbl_products" {
 
   }
 }
-#bq table on top of biglake bucket
+#bq table on top of biglake bucke
 resource "google_bigquery_table" "gcp_tbl_users" {
   dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
   table_id            = "gcp_tbl_users"
@@ -206,6 +206,15 @@ resource "google_bigquery_table" "gcp_tbl_users" {
     source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/users-*.Parquet"]
 
   }
+}
+
+#dataproc metastore
+resource "google_dataproc_metastore_service" "gcp_default" {
+  service_id = "gcp-default-metastore"
+  location   = "us-central1"
+  port       = 9080
+  project  = var.project_id
+  depends_on = [time_sleep.wait_5_seconds]
 }
 
 #dataplex
