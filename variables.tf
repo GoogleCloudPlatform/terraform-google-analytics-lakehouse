@@ -7,14 +7,22 @@ variable project_id {
   type        = string
   description = "Google Cloud Project ID"
 }
+
+variable big_lake_bucket_project_id {
+  type        = string
+  description = "Project thats hosts biglake data in buckets"
+  default = "solutions-2023-testing-c"
+}
+
 variable bucket_name {
   type        = string
   description = "Bucket where source data is stored"
-  default     = "da-solutions-assets-1484658051840"
+  default     = "da-solutions-assets-1484658051840-sandbox"
 }
 variable region {
   type        = string
   description = "Google Cloud Region"
+  default = "us-central1"
 }
 
 variable "labels" {

@@ -46,33 +46,24 @@ module "project-services" {
     "cloudfunctions.googleapis.com",
     "bigquerydatatransfer.googleapis.com",
     "artifactregistry.googleapis.com",
+    "metastore.googleapis.com",
+    "dataproc.googleapis.com",
+    "dataplex.googleapis.com",
+	  "datacatalog.googleapis.com"
+
   ]
 }
-#this could be one second.  
-#the previous api module does not signal 'done' until all APIs are registered.
-#so, all we need is something to wait for that return ( depends_on = [module.project-services])
-
-
 
 resource "time_sleep" "wait_5_seconds" {
   depends_on = [module.project-services]
 
-  create_duration = "5s"
+  create_duration = "60s"
 }
 #random id
 resource "random_id" "id" {
   byte_length = 4
 }
 
-resource "google_storage_bucket" "source_data_bucket" {
-  name                        = "ds-edw-export-${random_id.id.hex}"
-  project                     = var.project_id
-  location                    = "us-central1"
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-  depends_on = [time_sleep.wait_5_seconds]
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
 
 # Set up BigQuery resources
 # # Create the BigQuery dataset
@@ -97,7 +88,7 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection" {
 }
 
 
-# Create a BigQuery external table
+# Create BigQuery external tables
 resource "google_bigquery_table" "gcp_tbl_distribution_centers" {
   dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
   table_id            = "gcp_tbl_distribution_centers"
@@ -199,7 +190,7 @@ resource "google_bigquery_table" "gcp_tbl_products" {
 
   }
 }
-
+#bq table on top of biglake bucket
 resource "google_bigquery_table" "gcp_tbl_users" {
   dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
   table_id            = "gcp_tbl_users"
@@ -217,3 +208,78 @@ resource "google_bigquery_table" "gcp_tbl_users" {
   }
 }
 
+#dataplex
+#get dataplex svc acct info
+resource "google_project_service_identity" "dataplex_sa" {
+  provider = google-beta
+  project  = var.project_id
+  service  = "dataplex.googleapis.com"
+  depends_on = [time_sleep.wait_5_seconds]
+}
+
+#lake
+resource "google_dataplex_lake" "gcp_primary" {
+  location     = var.region
+  name         = "gcp-primary-lake"
+  description  = "gcp primary lake"
+  display_name = "gcp primary lake"
+
+  labels = {
+    gcp-lake = "exists"
+  }
+
+  project = var.project_id
+  depends_on = [time_sleep.wait_5_seconds]
+}
+
+#zone
+resource "google_dataplex_zone" "gcp_primary_zone" {
+  discovery_spec {
+    enabled = true 
+  }
+
+  lake     = google_dataplex_lake.gcp_primary.name
+  location = var.region
+  name     = "gcp-primary-zone"
+
+  resource_spec {
+    location_type = "SINGLE_REGION"
+  }
+
+  type         = "RAW"
+  description  = "Zone for thelookecommerce"
+  display_name = "Zone 1"
+  labels       = {}
+  project      = var.project_id
+  depends_on = [time_sleep.wait_5_seconds]
+}
+
+#give dataplex access to biglake bucket
+resource "google_project_iam_member" "dataplex_bucket_access" {
+  project = var.big_lake_bucket_project_id
+  role    = "roles/dataplex.serviceAgent"
+  member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
+
+  depends_on = [time_sleep.wait_5_seconds]
+}
+
+#asset
+resource "google_dataplex_asset" "gcp_primary_asset" {
+  name          = "gcp-primary-asset"
+  location      = var.region 
+
+  lake = google_dataplex_lake.gcp_primary.name
+  dataplex_zone = google_dataplex_zone.gcp_primary_zone.name
+
+  discovery_spec {
+    enabled = true
+  }
+
+  resource_spec {
+    name = "projects/${var.big_lake_bucket_project_id}/buckets/${var.bucket_name}"
+    type = "STORAGE_BUCKET"
+  }
+
+  project = var.project_id
+  depends_on = [time_sleep.wait_5_seconds, google_project_iam_member.dataplex_bucket_access]
+}
