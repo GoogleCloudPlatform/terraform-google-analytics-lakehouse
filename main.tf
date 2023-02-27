@@ -49,20 +49,153 @@ module "project-services" {
     "metastore.googleapis.com",
     "dataproc.googleapis.com",
     "dataplex.googleapis.com",
-	  "datacatalog.googleapis.com"
+	  "datacatalog.googleapis.com",
+    "workflows.googleapis.com"
 
   ]
 }
 
-resource "time_sleep" "wait_5_seconds" {
+resource "time_sleep" "wait_pre_event_arc_api" {
   depends_on = [module.project-services]
-
-  create_duration = "60s"
+  #actually waits 180 seconds
+  create_duration = "120s"
 }
+resource "time_sleep" "wait_post_event_arc_api" {
+  depends_on = [module.project-services,
+  google_eventarc_trigger.trigger_pubsub_tf]
+  #actually waits 180 seconds
+  create_duration = "420s"
+}
+
 #random id
 resource "random_id" "id" {
   byte_length = 4
 }
+
+# [START eventarc_workflows_create_serviceaccount]
+
+# Create a service account for Eventarc trigger and Workflows
+resource "google_service_account" "eventarc_workflows_service_account" {
+  provider     = google-beta
+  project  =  module.project-services.project_id
+  account_id   = "eventarc-workflows-sa"
+  display_name = "Eventarc Workflows Service Account"
+}
+
+# Grant the logWriter role to the service account
+resource "google_project_iam_binding" "project_binding_eventarc" {
+  provider = google-beta
+  project  = module.project-services.project_id
+  role     = "roles/logging.logWriter"
+
+  members = ["serviceAccount:${google_service_account.eventarc_workflows_service_account.email}"]
+
+  depends_on = [time_sleep.wait_pre_event_arc_api, google_service_account.eventarc_workflows_service_account]
+}
+
+# Grant the workflows.invoker role to the service account
+resource "google_project_iam_binding" "project_binding_workflows" {
+  provider = google-beta
+  project  = module.project-services.project_id
+  role     = "roles/workflows.invoker"
+
+  members = ["serviceAccount:${google_service_account.eventarc_workflows_service_account.email}"]
+
+  depends_on = [google_service_account.eventarc_workflows_service_account]
+}
+
+# [END eventarc_workflows_create_serviceaccount]
+
+# [START eventarc_workflows_deploy]
+# Define and deploy a workflow
+
+resource "google_workflows_workflow" "workflow_trigger_for_eventarc" {
+  name          = "workflow"
+  project  = module.project-services.project_id
+  region        = "us-central1"
+  description   = "Trigger to prime eventarc"
+  service_account = google_service_account.eventarc_workflows_service_account.id
+  source_contents = <<-EOF
+  # This is a sample workflow, feel free to replace it with your source code
+  #
+  # This workflow does the following:
+  # - reads current time and date information from an external API and stores
+  #   the response in CurrentDateTime variable
+  # - retrieves a list of Wikipedia articles related to the day of the week
+  #   from CurrentDateTime
+  # - returns the list of articles as an output of the workflow
+  # FYI, In terraform you need to escape the $$ or it will cause errors.
+
+  - getCurrentTime:
+      call: http.get
+      args:
+          url: https://us-central1-workflowsample.cloudfunctions.net/datetime
+      result: CurrentDateTime
+  - readWikipedia:
+      call: http.get
+      args:
+          url: https://en.wikipedia.org/w/api.php
+          query:
+              action: opensearch
+              search: $${CurrentDateTime.body.dayOfTheWeek}
+      result: WikiResult
+  - returnOutput:
+      return: $${WikiResult.body[1]}
+EOF
+}
+
+resource "google_eventarc_trigger" "trigger_pubsub_tf" {
+  name     = "trigger-pubsub-workflow-tf"
+  project  = module.project-services.project_id
+  provider = google-beta
+  location = "us-central1"
+  matching_criteria {
+    attribute = "type"
+    value     = "google.cloud.pubsub.topic.v1.messagePublished"
+  }
+  destination {
+    workflow = google_workflows_workflow.workflow_trigger_for_eventarc.id
+  }
+
+
+  service_account = google_service_account.eventarc_workflows_service_account.id
+
+  depends_on = [time_sleep.wait_pre_event_arc_api,
+  google_service_account.eventarc_workflows_service_account]
+}
+
+# [END eventarc_create_pubsub_trigger]
+
+resource "google_project_service_identity" "pos_eventarc_sa" {
+  provider = google-beta
+  project  = module.project-services.project_id
+  service = "eventarc.googleapis.com"
+  depends_on = [time_sleep.wait_pre_event_arc_api,
+  google_eventarc_trigger.trigger_pubsub_tf]
+}
+
+
+
+resource "google_storage_bucket" "gcp_raw_data_bucket" {
+  name                        = "gcp_raw_data_bucket-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = "us-central1"
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
+}
+
+data "google_storage_transfer_project_service_account" "gcp_default" {
+  project = var.project_id
+}
+
+
+resource "google_storage_bucket_iam_member" "source_bucket" {
+  bucket     = var.bucket_name
+  role       = "roles/storage.admin"
+  member     = "serviceAccount:${data.google_storage_transfer_project_service_account.gcp_default.email}"
+}
+
 
 
 # Set up BigQuery resources
@@ -74,7 +207,7 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   description   = "My gcp_lakehouse Dataset with tables"
   location      = var.region
   labels        = var.labels
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 }
 
 # # Create a BigQuery connection
@@ -84,7 +217,7 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   location      = var.region
   friendly_name = "gcp lakehouse storage bucket connection"
   cloud_resource {}
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 }
 
 
@@ -94,7 +227,7 @@ resource "google_bigquery_table" "gcp_tbl_distribution_centers" {
   table_id            = "gcp_tbl_distribution_centers"
   project             = var.project_id
   deletion_protection = var.deletion_protection
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 
 
   external_data_configuration {
@@ -111,7 +244,7 @@ resource "google_bigquery_table" "gcp_tbl_events" {
   table_id            = "gcp_tbl_events"
   project             = var.project_id
   deletion_protection = var.deletion_protection
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 
 
   external_data_configuration {
@@ -128,7 +261,7 @@ resource "google_bigquery_table" "gcp_tbl_inventory_items" {
   table_id            = "gcp_tbl_inventory_items"
   project             = var.project_id
   deletion_protection = var.deletion_protection
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 
 
   external_data_configuration {
@@ -145,7 +278,7 @@ resource "google_bigquery_table" "gcp_tbl_order_items" {
   table_id            = "gcp_tbl_order_items"
   project             = var.project_id
   deletion_protection = var.deletion_protection
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 
 
   external_data_configuration {
@@ -162,7 +295,7 @@ resource "google_bigquery_table" "gcp_tbl_orders" {
   table_id            = "gcp_tbl_orders"
   project             = var.project_id
   deletion_protection = var.deletion_protection
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 
 
   external_data_configuration {
@@ -179,7 +312,7 @@ resource "google_bigquery_table" "gcp_tbl_products" {
   table_id            = "gcp_tbl_products"
   project             = var.project_id
   deletion_protection = var.deletion_protection
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 
 
   external_data_configuration {
@@ -196,7 +329,7 @@ resource "google_bigquery_table" "gcp_tbl_users" {
   table_id            = "gcp_tbl_users"
   project             = var.project_id
   deletion_protection = var.deletion_protection
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 
   #steve
   
@@ -211,13 +344,187 @@ resource "google_bigquery_table" "gcp_tbl_users" {
   }
 }
 
-#dataproc metastore
-resource "google_dataproc_metastore_service" "gcp_default" {
-  service_id = "gcp-default-metastore"
-  location   = "us-central1"
-  port       = 9080
+#resource "google_dataproc_metastore_service" "gcp_default" {
+ # service_id = "gcp-default-metastore"
+  #location   = "us-central1"
+  #port       = 9080
+  #project  = var.project_id
+  #depends_on = [time_sleep.wait_post_event_arc_api]
+#}
+
+
+# # Set up the provisioning bucketstorage bucket
+resource "google_storage_bucket" "provisioning_bucket" {
+  name                        = "gcp_gcf_source_code-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+  
+
+  # public_access_prevention = "enforced"
+}
+
+# Set up Storage Buckets
+# # Set up the export storage bucket
+resource "google_storage_bucket" "destination_bucket" {
+  name                        = "gcp-edw-export-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = "us-central1"
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
+  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
+}
+
+
+# Set up service account for the Cloud Function to execute as
+resource "google_service_account" "cloud_function_service_account" {
+  project      = module.project-services.project_id
+  account_id   = "cloud-function-sa-${random_id.id.hex}"
+  display_name = "Service Account for Cloud Function Execution"
+}
+
+resource "google_project_iam_member" "cloud_function_service_account_editor_role" {
+  project = module.project-services.project_id
+  role    = "roles/editor"
+  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
+
+  depends_on = [
+    google_service_account.cloud_function_service_account
+  ]
+}
+
+
+resource "google_project_iam_member" "cloud_function_service_account_function_invoker" {
+  project = module.project-services.project_id
+  role    = "roles/cloudfunctions.invoker"
+  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
+
+  depends_on = [
+    google_service_account.cloud_function_service_account
+  ]
+}
+
+
+# Create a Cloud Function resource
+# # Zip the function file
+data "archive_file" "bigquery_external_function_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/assets/bigquery-external-function"
+  output_path = "${path.module}/assets/bigquery-external-function.zip"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+
+
+
+# # Place the cloud function code (zip file) on Cloud Storage
+resource "google_storage_bucket_object" "cloud_function_zip_upload" {
+  name   = "assets/bigquery-external-function.zip"
+  bucket = google_storage_bucket.provisioning_bucket.name
+  source = data.archive_file.bigquery_external_function_zip.output_path
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket,
+    data.archive_file.bigquery_external_function_zip
+  ]
+}
+
+resource "google_project_service_identity" "gcs_sa" {
+  provider = google-beta
   project  = var.project_id
-  depends_on = [time_sleep.wait_5_seconds]
+  service  = "storage.googleapis.com"
+  depends_on = [time_sleep.wait_post_event_arc_api]
+}
+
+#get gcs svc account
+data "google_storage_project_service_account" "gcs_account" {
+  project = module.project-services.project_id
+}
+
+resource "google_project_iam_member" "gcs_pubsub_publisher" {
+  project = module.project-services.project_id
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
+}
+
+
+#Create gcp cloud function
+resource "google_cloudfunctions2_function" "function" {
+  #provider = google-beta
+  project     = module.project-services.project_id
+  name        = "gcp-run-gcf-${random_id.id.hex}"
+  location    = var.region
+  description = "run python code that Terraform cannot currently handle"
+
+  build_config {
+    runtime     = "python310"
+    entry_point = "gcs_copy"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.provisioning_bucket.name
+        object = "assets/bigquery-external-function.zip"
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count = 1
+    available_memory   = "256M"
+    timeout_seconds    = 540
+    environment_variables = {
+      PROJECT_ID       = module.project-services.project_id
+      DESTINATION_BUCKET_ID = google_storage_bucket.destination_bucket.name
+      SOURCE_BUCKET_ID = var.bucket_name
+    }
+    service_account_email = google_service_account.cloud_function_service_account.email
+  }
+
+  event_trigger {
+    trigger_region = var.region
+    event_type     = "google.cloud.storage.object.v1.finalized"
+    event_filters {
+      attribute = "bucket"
+      value     = google_storage_bucket.provisioning_bucket.name  
+    }
+    retry_policy = "RETRY_POLICY_RETRY"
+  }
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket,
+    google_project_iam_member.cloud_function_service_account_editor_role,
+    google_project_service_identity.pos_eventarc_sa,
+    time_sleep.wait_post_event_arc_api
+  ]
+}
+
+resource "google_project_iam_member" "workflow_event_receiver" {
+  project = module.project-services.project_id
+  role    = "roles/eventarc.eventReceiver"
+  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+}
+
+resource "google_storage_bucket_object" "startfile" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "startfile"
+  source = "${path.module}/assets/startfile"
+
+  depends_on = [
+    google_cloudfunctions2_function.function
+  ]
+
+}
+
+
+
+resource "time_sleep" "wait_for_cf_to_exec" {
+  depends_on = [google_storage_bucket_object.startfile]
+  #actually waits 180 seconds
+  create_duration = "30s"
 }
 
 #dataplex
@@ -226,7 +533,7 @@ resource "google_project_service_identity" "dataplex_sa" {
   provider = google-beta
   project  = var.project_id
   service  = "dataplex.googleapis.com"
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 }
 
 #lake
@@ -241,7 +548,7 @@ resource "google_dataplex_lake" "gcp_primary" {
   }
 
   project = var.project_id
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 }
 
 #zone
@@ -263,16 +570,16 @@ resource "google_dataplex_zone" "gcp_primary_zone" {
   display_name = "Zone 1"
   labels       = {}
   project      = var.project_id
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 }
 
 #give dataplex access to biglake bucket
 resource "google_project_iam_member" "dataplex_bucket_access" {
-  project = var.big_lake_bucket_project_id
+  project = var.project_id
   role    = "roles/dataplex.serviceAgent"
   member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
 
-  depends_on = [time_sleep.wait_5_seconds]
+  depends_on = [time_sleep.wait_post_event_arc_api]
 }
 
 #asset
@@ -288,10 +595,10 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
   }
 
   resource_spec {
-    name = "projects/${var.big_lake_bucket_project_id}/buckets/${var.bucket_name}"
+    name = "projects/${var.project_id}/buckets/${google_storage_bucket.destination_bucket.name}" 
     type = "STORAGE_BUCKET"
   }
 
   project = var.project_id
-  depends_on = [time_sleep.wait_5_seconds, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_post_event_arc_api, google_project_iam_member.dataplex_bucket_access]
 }

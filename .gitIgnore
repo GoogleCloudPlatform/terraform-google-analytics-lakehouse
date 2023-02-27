@@ -1,12 +1,26 @@
+#vs code
+*code-workspace*
+
 # OSX leaves these everywhere on SMB shares
 ._*
 
 # OSX trash
 .DS_Store
 
+# BIN
+
+.venv/bin/*
+.venv/lib/*
+
 # Python
 *.pyc
 *.txt
+*.py
+*.exe
+*.cfg 
+*.sh 
+
+
 
 # Emacs save files
 *~
