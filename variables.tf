@@ -19,6 +19,13 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "dataset_id" {
+  type        = string
+  description = "Google Cloud BQ Dataset ID"
+  default     = "gcp"
+}
+
+
 variable "labels" {
   type        = map(string)
   description = "A map of labels to apply to contained resources."
