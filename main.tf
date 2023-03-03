@@ -57,12 +57,12 @@ module "project-services" {
 }
 
 resource "time_sleep" "wait_after_apis_activate" {
-  depends_on = [module.project-services]
+  depends_on      = [module.project-services]
   create_duration = "30s"
 }
 resource "time_sleep" "wait_after_adding_eventarc_svc_agent" {
   depends_on = [time_sleep.wait_after_apis_activate,
-  google_project_iam_member.eventarc_svg_agent
+    google_project_iam_member.eventarc_svg_agent
   ]
   #actually waits 180 seconds
   create_duration = "60s"
@@ -77,9 +77,9 @@ resource "random_id" "id" {
 
 
 resource "google_project_service_identity" "pos_eventarc_sa" {
-  provider = google-beta
-  project  = module.project-services.project_id
-  service  = "eventarc.googleapis.com"
+  provider   = google-beta
+  project    = module.project-services.project_id
+  service    = "eventarc.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 resource "google_project_iam_member" "eventarc_svg_agent" {
@@ -87,7 +87,7 @@ resource "google_project_iam_member" "eventarc_svg_agent" {
   role    = "roles/eventarc.serviceAgent"
   member  = "serviceAccount:${google_project_service_identity.pos_eventarc_sa.email}"
 
-  depends_on = [  
+  depends_on = [
     google_project_service_identity.pos_eventarc_sa
   ]
 }
@@ -105,6 +105,8 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   labels        = var.labels
   depends_on    = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
+
+
 
 # # Create a BigQuery connection
 resource "google_bigquery_connection" "gcp_lakehouse_connection" {
@@ -240,13 +242,30 @@ resource "google_bigquery_table" "gcp_tbl_users" {
   }
 }
 
-#resource "google_dataproc_metastore_service" "gcp_default" {
-# service_id = "gcp-default-metastore"
-#location   = "us-central1"
-#port       = 9080
-#project  = var.project_id
-#depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
-#}
+
+resource "google_bigquery_table" "view_ecommerce" {
+  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
+  table_id            = "vw_ecommerce"
+  project             = var.project_id
+  depends_on          = [
+    google_bigquery_dataset.gcp_lakehouse_ds,
+    google_bigquery_table.gcp_tbl_distribution_centers,
+    google_bigquery_table.gcp_tbl_events,
+    google_bigquery_table.gcp_tbl_inventory_items,
+    google_bigquery_table.gcp_tbl_users,
+    google_bigquery_table.gcp_tbl_products,
+    google_bigquery_table.gcp_tbl_orders,
+    google_bigquery_table.gcp_tbl_inventory_items
+    ]
+  deletion_protection = "false"
+
+  view {
+    query = file("${path.module}/assets/sql/view_ecommerce.sql")
+    use_legacy_sql = false 
+  }
+}
+
+
 
 
 # # Set up the provisioning bucketstorage bucket
@@ -293,7 +312,7 @@ resource "google_project_iam_member" "cloud_function_service_account_function_in
   role    = "roles/run.invoker"
   member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
 
-  depends_on = [  
+  depends_on = [
     google_service_account.cloud_function_service_account
   ]
 }
@@ -364,13 +383,15 @@ resource "google_cloudfunctions2_function" "function" {
   service_config {
     max_instance_count = 1
     available_memory   = "256M"
-    timeout_seconds    = 540
+    timeout_seconds    = 539
     environment_variables = {
       PROJECT_ID            = module.project-services.project_id
       DATASET_ID            = ""
       TABLE_NAME            = ""
       DESTINATION_BUCKET_ID = google_storage_bucket.destination_bucket.name
       SOURCE_BUCKET_ID      = var.bucket_name
+      REGION = var.region
+      CONN_NAME = google_bigquery_connection.gcp_lakehouse_connection.name
     }
     service_account_email = google_service_account.cloud_function_service_account.email
   }
@@ -393,12 +414,43 @@ resource "google_cloudfunctions2_function" "function" {
   ]
 }
 
-#do we need this? 
-resource "google_project_iam_member" "workflow_event_receiver" {
-  project = module.project-services.project_id
-  role    = "roles/eventarc.eventReceiver"
-  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+
+resource "google_project_iam_member" "dp_worker_role_sa" {
+  project    = data.google_project.project.project_id
+  role       = "roles/dataproc.worker"
+  member     = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+  depends_on = [module.project-services]
 }
+
+resource "google_project_iam_member" "dp_metastore_role_sa" {
+  project    = data.google_project.project.project_id
+  role       = "roles/metastore.admin"
+  member     = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+  depends_on = [module.project-services]
+}
+
+
+resource "google_dataproc_cluster" "gcp_lakehouse_cluster" {
+  name       = "gcp-lakehouse-cluster"
+  project    = data.google_project.project.project_id
+  region     = "us-central1"
+  depends_on = [google_project_iam_member.dp_worker_role_sa]
+  /* cluster_config {
+            metastore_config         {
+          dataproc_metastore_service = google_dataproc_metastore_service.gcp_lakehouse_metastore.id
+        }
+
+    }*/
+}
+
+resource "google_project_service_identity" "dataproc_sa" {
+  provider   = google-beta
+  project    = data.google_project.project.project_id
+  service    = "dataproc.googleapis.com"
+  depends_on = [google_dataproc_cluster.gcp_lakehouse_cluster]
+}
+
+#pyspark ml job
 
 resource "google_project_iam_member" "cf_admin_to_compute_default" {
   project = module.project-services.project_id
@@ -415,8 +467,25 @@ resource "google_storage_bucket_object" "startfile" {
   depends_on = [
     google_cloudfunctions2_function.function
   ]
+}
+
+#we need to wait after file is dropped in bucket, to trigger cf, and copy data files
+resource "time_sleep" "wait_after_cloud_function_creation" {
+  depends_on      = [google_storage_bucket_object.startfile]
+  create_duration = "15s"
+}
+
+resource "google_storage_bucket_object" "pyspark_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "sparkml.py"
+  source = "${path.module}/assets/sparkml.py"
+
+  depends_on = [
+    google_cloudfunctions2_function.function
+  ]
 
 }
+
 
 #dataplex
 #get dataplex svc acct info
@@ -493,3 +562,9 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
   project    = var.project_id
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent, google_project_iam_member.dataplex_bucket_access]
 }
+
+
+
+
+
+

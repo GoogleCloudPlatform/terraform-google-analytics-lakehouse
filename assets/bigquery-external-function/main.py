@@ -41,28 +41,27 @@ def gcs_copy():
 def bq_create_biglake_table():
 
     try:
+        from google.cloud import bigquery
 
         PROJECT_ID = os.environ.get("PROJECT_ID")
         DATASET_ID = os.environ.get("DATASET_ID")
         TABLE_NAME = os.environ.get("TABLE_NAME")
+        REGION = os.environ.get("TABLE_NAME")
+        CONN_NAME = os.environ.get("CONN_NAME")
 
-        from google.cloud import bigquery
+        client = bigquery.Client(project=PROJECT_ID)
 
-        client = bigquery.Client()
-        query_job = client.query(
-            """
-            CREATE EXTERNAL TABLE `PROJECT_ID.DATASET.EXTERNAL_TABLE_NAME`
-            WITH CONNECTION `PROJECT_ID.REGION.CONNECTION_ID`
+        s = """
+            CREATE EXTERNAL TABLE `{}.{}.{}`
+            WITH CONNECTION `{}.{}.{}`
             OPTIONS (
-                format ="TABLE_FORMAT",
-                uris = ['BUCKET_PATH'[,...]],
-                max_staleness = STALENESS_INTERVAL,
-                metadata_cache_mode = 'CACHE_MODE'
-                );
-            """
-        )
+            format ="PARQUET",
+            uris = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/orders-*.Parquet"],
+            max_staleness = INTERVAL 30 MINUTE,
+            metadata_cache_mode = 'AUTOMATIC')
+        """.format(PROJECT_ID,DATASET_ID, TABLE_NAME, PROJECT_ID,REGION, CONN_NAME )
 
-        results = query_job.result()  # Waits for job to complete.
+        query_job = client.query(s)
 
     except Exception as err:
         message = "Error: " + str(err)
