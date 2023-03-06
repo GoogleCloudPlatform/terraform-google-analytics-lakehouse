@@ -119,128 +119,40 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection" {
 }
 
 
-# Create BigQuery external tables
-resource "google_bigquery_table" "gcp_tbl_distribution_centers" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_distribution_centers"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-  depends_on          = [time_sleep.wait_after_adding_eventarc_svc_agent]
+resource "google_service_account" "workflows_sa" {
+  account_id   = "sample-workflows-sa-2"
+  display_name = "Sample Workflows Service Account"
+}
+resource "google_project_iam_member" "workflows_sa_bq_read" {
+  project = module.project-services.project_id
+  role    = "roles/bigquery.dataowner"
+  member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.gcp_lakehouse_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/distribution_centers-*.Parquet"]
-
-  }
+  depends_on = [
+    google_service_account.workflows_sa
+  ]
 }
 
-resource "google_bigquery_table" "gcp_tbl_events" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_events"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-  depends_on          = [time_sleep.wait_after_adding_eventarc_svc_agent]
 
 
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.gcp_lakehouse_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/events-*.Parquet"]
-
-  }
+resource "google_workflows_workflow" "workflows_bqml" {
+  name            = "workflow-bqml"
+  region          = "us-central1"
+  description     = "Create BQML Model 113"
+  service_account = google_service_account.workflows_sa.email
+  source_contents = file("${path.module}/assets/yaml/workflow_bqml.yaml")
+  depends_on      = [google_project_service.workflows]
 }
 
-resource "google_bigquery_table" "gcp_tbl_inventory_items" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_inventory_items"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-  depends_on          = [time_sleep.wait_after_adding_eventarc_svc_agent]
-
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.gcp_lakehouse_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/inventory_items-*.Parquet"]
-
-  }
+resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
+  name            = "workflow-create-gcp-biglake-tables"
+  region          = "us-central1"
+  description     = "create gcp biglake tables_8"
+  service_account = google_service_account.workflows_sa.email
+  source_contents = file("${path.module}/assets/yaml/workflow_create_ gcp_tbl_events.yaml")
+  depends_on      = [google_project_service.workflows]
 }
 
-resource "google_bigquery_table" "gcp_tbl_order_items" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_order_items"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-  depends_on          = [time_sleep.wait_after_adding_eventarc_svc_agent]
-
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.gcp_lakehouse_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/order_items-*.Parquet"]
-
-  }
-}
-
-resource "google_bigquery_table" "gcp_tbl_orders" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_orders"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-  depends_on          = [time_sleep.wait_after_adding_eventarc_svc_agent]
-
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.gcp_lakehouse_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/orders-*.Parquet"]
-
-  }
-}
-
-resource "google_bigquery_table" "gcp_tbl_products" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_products"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-  depends_on          = [time_sleep.wait_after_adding_eventarc_svc_agent]
-
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.gcp_lakehouse_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/products-*.Parquet"]
-
-  }
-}
-#bq table on top of biglake bucket.  
-resource "google_bigquery_table" "gcp_tbl_users" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_users"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-  depends_on          = [time_sleep.wait_after_adding_eventarc_svc_agent]
-
-  #steve
-
-
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.gcp_lakehouse_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/users-*.Parquet"]
-
-  }
-}
 
 
 resource "google_bigquery_table" "view_ecommerce" {
@@ -264,7 +176,6 @@ resource "google_bigquery_table" "view_ecommerce" {
     use_legacy_sql = false 
   }
 }
-
 
 
 
