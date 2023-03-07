@@ -13,7 +13,7 @@ def gcp_main(cloud_event):
 def gcs_copy():
 
     try:
-        DESTINATION_BUCKET_ID = os.environ.get("DESTINATION_BUCKET_ID")
+        DESTINATION_BUCKET_ID = "gcp-lakehouse-edw-export" #os.environ.get("DESTINATION_BUCKET_ID")
         SOURCE_BUCKET_ID = os.environ.get("SOURCE_BUCKET_ID")
         from google.cloud import storage
 
@@ -41,28 +41,45 @@ def gcs_copy():
 def bq_create_biglake_table():
 
     try:
-        from google.cloud import bigquery
+        import time
 
-        PROJECT_ID = os.environ.get("PROJECT_ID")
-        DATASET_ID = os.environ.get("DATASET_ID")
-        TABLE_NAME = os.environ.get("TABLE_NAME")
-        REGION = os.environ.get("TABLE_NAME")
-        CONN_NAME = os.environ.get("CONN_NAME")
+        from google.cloud import workflows_v1beta
+        from google.cloud.workflows import executions_v1beta
+        from google.cloud.workflows.executions_v1beta.types import executions
 
-        client = bigquery.Client(project=PROJECT_ID)
+        project = os.environ.get("PROJECT_ID")
+        location = os.environ.get("REGION")
+        workflow = "workflow-create-gcp-biglake-tables"
 
-        s = """
-            CREATE EXTERNAL TABLE `{}.{}.{}`
-            WITH CONNECTION `{}.{}.{}`
-            OPTIONS (
-            format ="PARQUET",
-            uris = ["gs://da-solutions-assets-1484658051840/thelook_ecommerce/orders-*.Parquet"],
-            max_staleness = INTERVAL 30 MINUTE,
-            metadata_cache_mode = 'AUTOMATIC')
-        """.format(PROJECT_ID,DATASET_ID, TABLE_NAME, PROJECT_ID,REGION, CONN_NAME )
+        if not project:
+            raise Exception('GOOGLE_CLOUD_PROJECT env var is required.')
 
-        query_job = client.query(s)
+        execution_client = executions_v1beta.ExecutionsClient()
+        workflows_client = workflows_v1beta.WorkflowsClient()
 
+        parent = workflows_client.workflow_path(project, location, workflow)
+
+        response = execution_client.create_execution(request={"parent": parent})
+        print(f"Created execution: {response.name}")
+
+        # Wait for execution to finish, then print results.
+        execution_finished = False
+        backoff_delay = 1  # Start wait with delay of 1 second
+        print('Poll every second for result...')
+        while (not execution_finished):
+            execution = execution_client.get_execution(request={"name": response.name})
+            execution_finished = execution.state != executions.Execution.State.ACTIVE
+
+            # If we haven't seen the result yet, wait a second.
+            if not execution_finished:
+                print('- Waiting for results...')
+                time.sleep(backoff_delay)
+                backoff_delay *= 2  # Double the delay to provide exponential backoff.
+            else:
+                print(f'Execution finished with state: {execution.state.name}')
+                print(execution.result)
+                return execution.result
+            
     except Exception as err:
         message = "Error: " + str(err)
         print(message)

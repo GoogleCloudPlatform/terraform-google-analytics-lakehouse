@@ -1,5 +1,5 @@
 #remove region?
-#remove gs://da-solutions-assets-1484658051840
+#remove gs://gcp-lakehouse-edw-export
 #how to pass in var from tf
 #are these only ones supported in workflows:  https://cloud.google.com/workflows/docs/reference/stdlib/sys/get_env
 main:
@@ -30,7 +30,7 @@ main:
                                 query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_order_items` 
                                         WITH CONNECTION `us-central1.gcp_lakehouse_connection` 
                                         OPTIONS(object_metadata = 'SIMPLE', 
-                                        uris = ['gs://da-solutions-assets-1484658051840/thelook_ecommerce/order_items-*.Parquet'], 
+                                        uris = ['gs://gcp-lakehouse-edw-export/thelook_ecommerce/order_items-*.Parquet'], 
                                         max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                         result: queryResult
                     - returnResult_create_gcp_tbl_order_items:
@@ -51,10 +51,10 @@ main:
                                 useQueryCache: false
                                 location: 'us-central1'
                                 timeoutMs: 600000
-                                query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_orders` 
+                                query: ${"CREATE OR REPLACE EXTERNAL TABLE `steveswalker-solutions-202.gcp_lakehouse_ds.gcp_tbl_orders`
                                         WITH CONNECTION `us-central1.gcp_lakehouse_connection` 
                                         OPTIONS(object_metadata = 'SIMPLE', 
-                                        uris = ['gs://da-solutions-assets-1484658051840/thelook_ecommerce/orders-*.Parquet'], 
+                                        uris = ['gs://gcp-lakehouse-edw-export/thelook_ecommerce/orders-*.Parquet'], 
                                         max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                         result: queryResult
                     - returnResult_create_gcp_tblorders:
@@ -78,7 +78,7 @@ main:
                                 query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_events` 
                                         WITH CONNECTION `us-central1.gcp_lakehouse_connection` 
                                         OPTIONS(object_metadata = 'SIMPLE', 
-                                        uris = ['gs://da-solutions-assets-1484658051840/thelook_ecommerce/events-*.Parquet'], 
+                                        uris = ['gs://gcp-lakehouse-edw-export/thelook_ecommerce/events-*.Parquet'], 
                                         max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                         result: queryResult
                     - returnResult_create_gcp_tbl_events:
@@ -103,7 +103,7 @@ main:
                                 query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_users` 
                                         WITH CONNECTION `us-central1.gcp_lakehouse_connection` 
                                         OPTIONS(object_metadata = 'SIMPLE', 
-                                        uris = ['gs://da-solutions-assets-1484658051840/thelook_ecommerce/users-*.Parquet'], 
+                                        uris = ['gs://gcp-lakehouse-edw-export/thelook_ecommerce/users-*.Parquet'], 
                                         max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                         result: queryResult
                     - returnResult_create_gcp_tbl_users:
@@ -128,7 +128,7 @@ main:
                                 query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_distribution_centers` 
                                         WITH CONNECTION `us-central1.gcp_lakehouse_connection` 
                                         OPTIONS(object_metadata = 'SIMPLE', 
-                                        uris = ['gs://da-solutions-assets-1484658051840/thelook_ecommerce/distribution_centers-*.Parquet'], 
+                                        uris = ['gs://gcp-lakehouse-edw-export/thelook_ecommerce/distribution_centers-*.Parquet'], 
                                         max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                         result: queryResult
                     - returnResult_create_gcp_tbl_distribution_centers:
@@ -153,7 +153,7 @@ main:
                                 query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_inventory_items` 
                                         WITH CONNECTION `us-central1.gcp_lakehouse_connection` 
                                         OPTIONS(object_metadata = 'SIMPLE', 
-                                        uris = ['gs://da-solutions-assets-1484658051840/thelook_ecommerce/inventory_items-*.Parquet'], 
+                                        uris = ['gs://gcp-lakehouse-edw-export/thelook_ecommerce/inventory_items-*.Parquet'], 
                                         max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                         result: queryResult
                     - returnResult_create_gcp_tbl_inventory_items:
@@ -178,7 +178,7 @@ main:
                                 query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_products` 
                                         WITH CONNECTION `us-central1.gcp_lakehouse_connection` 
                                         OPTIONS(object_metadata = 'SIMPLE', 
-                                        uris = ['gs://da-solutions-assets-1484658051840/thelook_ecommerce/products-*.Parquet'], 
+                                        uris = ['gs://gcp-lakehouse-edw-export/thelook_ecommerce/products-*.Parquet'], 
                                         max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                         result: queryResult
                     - returnResult_create_gcp_tbl_products:

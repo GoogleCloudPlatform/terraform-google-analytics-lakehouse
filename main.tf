@@ -92,12 +92,10 @@ resource "google_project_iam_member" "eventarc_svg_agent" {
   ]
 }
 
-
-
 # Set up BigQuery resources
 # # Create the BigQuery dataset
 resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
-  project       = var.project_id
+  project       = module.project-services.project_id
   dataset_id    = "gcp_lakehouse_ds"
   friendly_name = "My gcp_lakehouse Dataset"
   description   = "My gcp_lakehouse Dataset with tables"
@@ -110,7 +108,7 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
 
 # # Create a BigQuery connection
 resource "google_bigquery_connection" "gcp_lakehouse_connection" {
-  project       = var.project_id
+  project       = module.project-services.project_id
   connection_id = "gcp_lakehouse_connection"
   location      = var.region
   friendly_name = "gcp lakehouse storage bucket connection"
@@ -118,14 +116,34 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
+## This grants permissions to the service account of the connection created in the last step.
+resource "google_project_iam_member" "connectionPermissionGrant" {
+        project = module.project-services.project_id
+        role = "roles/storage.objectViewer"
+        member = format("serviceAccount:%s", google_bigquery_connection.gcp_lakehouse_connection.cloud_resource[0].service_account_id)
+    }    
 
+#set up workflows svg acct
 resource "google_service_account" "workflows_sa" {
-  account_id   = "sample-workflows-sa-2"
-  display_name = "Sample Workflows Service Account"
+  project    = module.project-services.project_id
+  account_id   = "workflows-sa"
+  display_name = "Workflows Service Account"
 }
+
+#give workflows_sa bq access 
 resource "google_project_iam_member" "workflows_sa_bq_read" {
   project = module.project-services.project_id
-  role    = "roles/bigquery.dataowner"
+  role    = "roles/bigquery.dataOwner"
+  member  = "serviceAccount:${google_service_account.workflows_sa.email}"
+
+  depends_on = [
+    google_service_account.workflows_sa
+  ]
+}
+
+resource "google_project_iam_member" "workflows_sa_log_writer" {
+  project = module.project-services.project_id
+  role    = "roles/logging.logWriter"
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
@@ -134,47 +152,39 @@ resource "google_project_iam_member" "workflows_sa_bq_read" {
 }
 
 
-
 resource "google_workflows_workflow" "workflows_bqml" {
   name            = "workflow-bqml"
+  project    = module.project-services.project_id
   region          = "us-central1"
   description     = "Create BQML Model 113"
   service_account = google_service_account.workflows_sa.email
   source_contents = file("${path.module}/assets/yaml/workflow_bqml.yaml")
-  depends_on      = [google_project_service.workflows]
+  depends_on      = [google_project_iam_member.workflows_sa_bq_read]
 }
 
 resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
   name            = "workflow-create-gcp-biglake-tables"
+  project    = module.project-services.project_id
   region          = "us-central1"
-  description     = "create gcp biglake tables_8"
+  description     = "create gcp biglake tables_18"
   service_account = google_service_account.workflows_sa.email
   source_contents = file("${path.module}/assets/yaml/workflow_create_ gcp_tbl_events.yaml")
-  depends_on      = [google_project_service.workflows]
+  depends_on      = [google_project_iam_member.workflows_sa_bq_read]
 }
-
-
 
 resource "google_bigquery_table" "view_ecommerce" {
   dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
   table_id            = "vw_ecommerce"
-  project             = var.project_id
+  project             = module.project-services.project_id
   depends_on          = [
-    google_bigquery_dataset.gcp_lakehouse_ds,
-    google_bigquery_table.gcp_tbl_distribution_centers,
-    google_bigquery_table.gcp_tbl_events,
-    google_bigquery_table.gcp_tbl_inventory_items,
-    google_bigquery_table.gcp_tbl_users,
-    google_bigquery_table.gcp_tbl_products,
-    google_bigquery_table.gcp_tbl_orders,
-    google_bigquery_table.gcp_tbl_inventory_items
-    ]
+    google_workflows_workflow.workflows_create_gcp_biglake_tables]
   deletion_protection = "false"
 
   view {
-    query = file("${path.module}/assets/sql/view_ecommerce.sql")
+    query = file("${path.module}/assets/sql/view_test.sql")
     use_legacy_sql = false 
   }
+
 }
 
 
@@ -191,7 +201,7 @@ resource "google_storage_bucket" "provisioning_bucket" {
 
 # # Set up the export storage bucket
 resource "google_storage_bucket" "destination_bucket" {
-  name                        = "gcp-edw-export-${random_id.id.hex}"
+  name                        = "gcp-lakehouse-edw-export"
   project                     = module.project-services.project_id
   location                    = "us-central1"
   uniform_bucket_level_access = true
@@ -206,6 +216,7 @@ resource "google_service_account" "cloud_function_service_account" {
   account_id   = "cloud-function-sa-${random_id.id.hex}"
   display_name = "Service Account for Cloud Function Execution"
 }
+
 
 resource "google_project_iam_member" "cloud_function_service_account_editor_role" {
   project = module.project-services.project_id
@@ -278,7 +289,7 @@ resource "google_cloudfunctions2_function" "function" {
   project     = module.project-services.project_id
   name        = "gcp-run-gcf-${random_id.id.hex}"
   location    = var.region
-  description = "run python code that Terraform cannot currently handle"
+  description = "run python code that Terraform cannot currently handle..."
 
   build_config {
     runtime     = "python310"
@@ -402,7 +413,7 @@ resource "google_storage_bucket_object" "pyspark_file" {
 #get dataplex svc acct info
 resource "google_project_service_identity" "dataplex_sa" {
   provider   = google-beta
-  project    = var.project_id
+  project    = module.project-services.project_id
   service    = "dataplex.googleapis.com"
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
@@ -418,7 +429,7 @@ resource "google_dataplex_lake" "gcp_primary" {
     gcp-lake = "exists"
   }
 
-  project    = var.project_id
+  project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
@@ -440,13 +451,13 @@ resource "google_dataplex_zone" "gcp_primary_zone" {
   description  = "Zone for thelookecommerce"
   display_name = "Zone 1"
   labels       = {}
-  project      = var.project_id
+  project      = module.project-services.project_id
   depends_on   = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
 #give dataplex access to biglake bucket
 resource "google_project_iam_member" "dataplex_bucket_access" {
-  project = var.project_id
+  project = module.project-services.project_id
   role    = "roles/dataplex.serviceAgent"
   member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
 
@@ -466,11 +477,11 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
   }
 
   resource_spec {
-    name = "projects/${var.project_id}/buckets/${google_storage_bucket.destination_bucket.name}"
+    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.destination_bucket.name}"
     type = "STORAGE_BUCKET"
   }
 
-  project    = var.project_id
+  project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent, google_project_iam_member.dataplex_bucket_access]
 }
 
