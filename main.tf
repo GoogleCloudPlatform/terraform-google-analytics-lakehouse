@@ -27,6 +27,7 @@ module "project-services" {
   enable_apis = var.enable_apis
 
   activate_apis = [
+    "config.googleapis.com",
     "compute.googleapis.com",
     "cloudapis.googleapis.com",
     "cloudbuild.googleapis.com",
@@ -74,6 +75,7 @@ resource "random_id" "id" {
 }
 
 
+#get service acct IDs
 resource "google_project_service_identity" "eventarc" {
   provider   = google-beta
   project    = module.project-services.project_id
@@ -94,9 +96,14 @@ resource "google_project_service_identity" "workflows" {
   service    = "workflows.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
+resource "google_project_service_identity" "dataplex_sa" {
+  provider   = google-beta
+  project    = module.project-services.project_id
+  service    = "dataplex.googleapis.com"
+  depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
+}
 
-
-
+#eventarc svg agent permissions 
 resource "google_project_iam_member" "eventarc_svg_agent" {
   project = module.project-services.project_id
   role    = "roles/eventarc.serviceAgent"
@@ -117,12 +124,7 @@ resource "google_project_iam_member" "eventarc_log_writer" {
   ]
 }
 
-resource "google_project_iam_member" "computedeveloper_privleges" {
-  project = module.project-services.project_id
-  role    = "roles/run.admin"
-  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
-}
-
+#default compute permissions for cloud functions
 resource "google_project_iam_member" "workflow_event_receiver" {
   project = module.project-services.project_id
   role    = "roles/cloudfunctions.admin"
@@ -164,8 +166,6 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   depends_on    = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
-
-
 # # Create a BigQuery connection
 resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   project       = module.project-services.project_id
@@ -193,7 +193,7 @@ resource "google_service_account" "workflows_sa" {
 #give workflows_sa bq access 
 resource "google_project_iam_member" "workflows_sa_bq_read" {
   project = module.project-services.project_id
-  role    = "roles/bigquery.dataOwner"
+  role    = "roles/bigquery.jobUser"
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
@@ -220,6 +220,8 @@ resource "google_workflows_workflow" "workflows_bqml" {
   service_account = google_service_account.workflows_sa.email
   source_contents = file("${path.module}/assets/yaml/workflow_bqml.yaml")
   depends_on      = [google_project_iam_member.workflows_sa_bq_read]
+
+
 }
 
 resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
@@ -287,7 +289,6 @@ resource "google_project_iam_member" "cloud_function_service_account_function_in
 
 
 # Create a Cloud Function resource
-
 # # Zip the function file
 data "archive_file" "bigquery_external_function_zip" {
   type        = "zip"
@@ -392,8 +393,6 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
 }
 
-
-
 resource "google_storage_bucket_object" "startfile" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "startfile"
@@ -412,14 +411,7 @@ resource "time_sleep" "wait_after_cloud_function_creation" {
 
 
 
-#dataplex
-#get dataplex svc acct info
-resource "google_project_service_identity" "dataplex_sa" {
-  provider   = google-beta
-  project    = module.project-services.project_id
-  service    = "dataplex.googleapis.com"
-  depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
-}
+
 
 #lake
 resource "google_dataplex_lake" "gcp_primary" {
@@ -488,6 +480,8 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent, google_project_iam_member.dataplex_bucket_access]
 }
 
+
+#ICEBERG setup
 # Set up networking
 resource "google_compute_network" "default_network" {
   project                 = module.project-services.project_id
@@ -752,6 +746,8 @@ EOF
 }
 
 
+# Set up Workflows service account
+# # Set up the Workflows service account
 resource "google_service_account" "workflow_service_account" {
   project      = module.project-services.project_id
   account_id   = "cloud-workflow-sa-${random_id.id.hex}"
@@ -781,7 +777,7 @@ resource "google_project_iam_member" "workflow_service_account_dataproc_role" {
 }
 
 # # Grant the Workflow service account BQ admin
-resource "google_project_iam_member" "workflow_service_account_bqrole" {
+resource "google_project_iam_member" "workflow_service_account_bqadmin" {
   project = module.project-services.project_id
   role    = "roles/bigquery.admin"
   member  = "serviceAccount:${google_service_account.workflow_service_account.email}"
@@ -797,9 +793,15 @@ resource "google_workflows_workflow" "workflow" {
   region          = var.region
   description     = "Runs post Terraform setup steps for Solution in Console"
   service_account = google_service_account.workflow_service_account.id
-  source_contents = templatefile("${path.module}/assets/yaml/workflow.yaml", { project_id = module.project-services.project_id })
+  source_contents = templatefile("${path.module}/assets/yaml/workflow.yaml", {
+    dataproc_service_account = google_service_account.dataproc_service_account.email,
+    provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
+    warehouse_bucket         = google_storage_bucket.raw_bucket.name,
+    temp_bucket              = google_storage_bucket.raw_bucket.name
+  })
 
 }
+
 
 # Create Eventarc Trigger
 // Create a Pub/Sub topic.
@@ -872,7 +874,7 @@ resource "google_eventarc_trigger" "trigger_pubsub_tf" {
   }
   destination {
     workflow = google_workflows_workflow.workflow.id
-     }
+  }
 
   transport {
     pubsub {
@@ -887,15 +889,15 @@ resource "google_eventarc_trigger" "trigger_pubsub_tf" {
   ]
 }
 
-# Set up Workflows service account for the Cloud Function to execute as
-# # Set up the Workflows service account
+# Set up Eventarc service account for the Cloud Function to execute as
+# # Set up the Eventarc service account
 resource "google_service_account" "eventarc_service_account" {
   project      = module.project-services.project_id
   account_id   = "eventarc-sa-${random_id.id.hex}"
   display_name = "Service Account for Cloud Eventarc"
 }
 
-# # Grant the Functions service account Functions Invoker Access
+# # Grant the Eventar service account Workflow Invoker Access
 resource "google_project_iam_member" "eventarc_service_account_invoke_role" {
   project = module.project-services.project_id
   role    = "roles/workflows.invoker"
@@ -903,5 +905,15 @@ resource "google_project_iam_member" "eventarc_service_account_invoke_role" {
 
   depends_on = [
     google_service_account.eventarc_service_account
+  ]
+}
+
+resource "google_project_iam_member" "workflow_service_account_token_role" {
+  project = module.project-services.project_id
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:${google_service_account.workflow_service_account.email}"
+
+  depends_on = [
+    google_service_account.workflow_service_account
   ]
 }
