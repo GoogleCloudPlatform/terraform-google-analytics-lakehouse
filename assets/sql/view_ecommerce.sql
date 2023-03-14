@@ -1,3 +1,8 @@
+CREATE OR REPLACE PROCEDURE
+  gcp_lakehouse_ds.create_view_ecommerce()
+BEGIN
+CREATE OR REPLACE VIEW
+  gcp_lakehouse_ds.view_ecommerce AS
 SELECT
   o.order_id,
   o.user_id order_user_id,
@@ -53,3 +58,5 @@ INNER JOIN
   `gcp_lakehouse_ds.gcp_tbl_users` u
 ON
   o.user_id = u.id
+;
+END 

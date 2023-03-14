@@ -147,7 +147,7 @@ resource "google_service_account" "lake_admin_user" {
 }
 
 # Set up service accounts fine grain sec.
-resource "google_service_account" "analyst_user" {
+resource "google_service_account" "data_analyst_user" {
   project      = module.project-services.project_id
   account_id   = "user-analyst-sa-${random_id.id.hex}"
   display_name = "Service Account for  user"
@@ -166,6 +166,16 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   depends_on    = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
+
+resource "google_bigquery_routine" "create_view_ecommerce" {
+  project      = module.project-services.project_id
+  dataset_id   = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
+  routine_id   = "create_view_ecommerce"
+  routine_type = "PROCEDURE"
+  language     = "SQL"
+  definition_body = file("${path.module}/assets/sql/view_ecommerce.sql")
+}
+
 # # Create a BigQuery connection
 resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   project       = module.project-services.project_id
@@ -175,6 +185,8 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   cloud_resource {}
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
+
+
 
 ## This grants permissions to the service account of the connection created in the last step.
 resource "google_project_iam_member" "connectionPermissionGrant" {
@@ -230,12 +242,13 @@ resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
   region          = "us-central1"
   description     = "create gcp biglake tables_18"
   service_account = google_service_account.workflows_sa.email
-  source_contents = file("${path.module}/assets/yaml/workflow_create_ gcp_lakehouse_tables.yaml")
-  depends_on      = [google_project_iam_member.workflows_sa_bq_read]
+#  source_contents = file("${path.module}/assets/yaml/workflow_create_ gcp_lakehouse_tables.yaml") 
+  source_contents = templatefile("${path.module}/assets/yaml/workflow_create_ gcp_lakehouse_tables.yaml", {
+    data_analyst_user = google_service_account.data_analyst_user.email,
+    marketing_user       = google_service_account.marketing_user.email
+  })
+
 }
-
-
-
 
 # # Set up the provisioning bucketstorage bucket
 resource "google_storage_bucket" "provisioning_bucket" {
@@ -845,7 +858,7 @@ resource "google_eventarc_trigger" "trigger_pubsub_for_provisioning_bucket" {
   }
   destination {
     workflow = google_workflows_workflow.workflows_create_gcp_biglake_tables.id
-     }
+  }
 
   transport {
     pubsub {

@@ -1,249 +1,189 @@
+# Argument Formatting Notes:
+# One $ denotes resources that will be formatted by terraform upon deployment
+# Two $$ denotes resources that will be formatted at runtime
+# The event payload is not used but contains the Pub/Sub message if required for future use
 main:
-  params: [input]
-  steps:
-    - init:
+    params: [event]
+    steps:
+    - assign_values:
         assign:
-          - results : {} # result from each branch iteration 
+            - project_id: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+            - location: sys.get_env("GOOGLE_CLOUD_LOCATION")
+            - data_analyst_user: ${data_analyst_user}
+            - marketing_user: ${marketing_user}
+            - results : {} # result from each branch iteration 
+            - queryResult
     - create_gcp_tbl_order_items:
-            steps:
-                - logTable_gcp_tbl_order_items:
-                    call: sys.log
-                    args:
-                        text: ${"Creating gcp_tbl_order_items..."}
-                - runQuery_gcp_tbl_order_items:
-                        call: googleapis.bigquery.v2.jobs.query
+                steps:
+                    - logTable_gcp_tbl_order_items:
+                        call: sys.log
                         args:
-                            projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                            body:
-                                useLegacySql: false
-                                useQueryCache: false
-                                location: 'us-central1'
-                                timeoutMs: 600000
-                                query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_order_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/order_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                        result: queryResult
-                - returnResult_create_gcp_tbl_order_items:
-                    assign:
-                        - results.create_gcp_tbl_order_items: ${queryResult}
-    - create_gcp_tblorders:
-        steps:
-            - logTable_create_gcp_tbl_orders:
-                call: sys.log
-                args:
-                    text: ${"Creating gcp_tbl_orders..."}
-            - runQuery_gcp_tbl_orders:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_orders` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/orders-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                result: queryResult
-            - returnResult_create_gcp_tbl_orders:
-                assign:
-                    - results.create_gcp_tbl_orders: ${queryResult}
+                            text: ${"Creating gcp_tbl_order_items..."}
+                    - runQuery_gcp_tbl_order_items:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                    query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_order_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"} + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ${"/thelook_ecommerce/order_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+                            result: queryResult
+    - create_gcp_tbl_orders:
+                steps:
+                    - logTable_create_gcp_tbl_orders:
+                        call: sys.log
+                        args:
+                            text: ${"Creating gcp_tbl_order_items..."}
+                    - runQuery_create_gcp_tbl_orders:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                    query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_orders` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"} 
+                                    + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") 
+                                    + ${"/thelook_ecommerce/orders-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+                            result: queryResult
     - create_gcp_tbl_users:
-        steps:
-            - logTable_create_gcp_tbl_users:
-                call: sys.log
-                args:
-                    text: ${"Creating gcp_tbl_users..."}
-            - runQuery_create_gcp_tbl_users:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_users` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/users-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                result: queryResult
-            - returnResult_create_gcp_tbl_users:
-                assign:
-                    - results.create_gcp_tbl_users: ${queryResult}
-         
+                steps:
+                    - logTable_create_gcp_tbl_users:
+                        call: sys.log
+                        args:
+                            text: ${"Creating create_gcp_tbl_users..."}
+                    - runQuery_create_gcp_tbl_users:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                    query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_users` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"} 
+                                    + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") 
+                                    + ${"/thelook_ecommerce/users-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+                            result: queryResult
     - create_gcp_tbl_distribution_centers:
-        steps:
-            - logTable_create_gcp_tbl_distribution_centers:
-                call: sys.log
-                args:
-                    text: ${"Creating gcp_tbl_distribution_centers..."}
-            - runQuery_create_gcp_tbl_distribution_centers:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_distribution_centers` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/distribution_centers-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                result: queryResult
-            - returnResult_create_gcp_tbl_distribution_centers:
-               assign:
-                    - results.create_gcp_tbl_distribution_centers: ${queryResult}
+                steps:
+                    - logTable_gcp_tbl_distribution_centers:
+                        call: sys.log
+                        args:
+                            text: ${"Creating gcp_tbl_distribution_centers..."}
+                    - runQuery_gcp_tbl_distribution_centers:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                    query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_distribution_centers` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"} 
+                                    + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") 
+                                    + ${"/thelook_ecommerce/distribution_centers-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+                            result: queryResult
     - create_gcp_tbl_inventory_items:
-        steps:
-            - logTable_create_gcp_tbl_inventory_items:
-                call: sys.log
-                args:
-                    text: ${"Creating gcp_tbl_inventory_items..."}
-            - runQuery_create_gcp_tbl_inventory_items:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_inventory_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/inventory_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                result: queryResult
-            - returnResult_create_gcp_tbl_inventory_items:
-                assign:
-                    - results.create_gcp_tbl_inventory_items: ${queryResult}
-    - create_gcp_tbl_products:
-        steps:
-            - logTable_create_gcp_tbl_products:
-                call: sys.log
-                args:
-                    text: ${"Creating gcp_tbl_products..."}
-            - runQuery_create_gcp_tbl_products:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_products` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/products-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                result: queryResult
-            - returnResult_create_gcp_tbl_products:
-                assign:
-                    - results.create_gcp_tbl_products: ${queryResult}
-    - create_row_access_policy_usa_filter:
-        steps:
-            - logTable_create_row_access_policy_usa_filter:
-                call: sys.log
-                args:
-                    text: ${"Creating row_access_policy_usa_filter..."}
-            - run_create_row_access_policy_usa_filter:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${"CREATE OR REPLACE ROW ACCESS POLICY usa_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_users` GRANT TO ('serviceAccount:user-marketing-sa-2989a9b5@steveswalker-solutions-207.iam.gserviceaccount.com') FILTER USING (Country = 'United States');"}
-                result: queryResult
-            - returnResult_create_row_access_policy_usa_filter:
-                assign:
-                    - results.create_row_access_policy_usa_filter: ${queryResult}                            
-    - create_row_access_policy_product_category_filter:
-        steps:
-            - logTable_create_row_access_policy_product_category_filter:
-                call: sys.log
-                args:
-                    text: ${"Creating product_category_filter..."}
-            - run_create_row_access_policy_product_category_filter:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${"CREATE OR REPLACE ROW ACCESS POLICY product_category_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_products` GRANT TO ('serviceAccount:user-analyst-sa-2989a9b5@steveswalker-solutions-207.iam.gserviceaccount.com') FILTER USING (Category = 'Swim' or Category = 'Active' or Category = 'Fashion Hoodies & Sweatshirts');"}
-                result: queryResult
-            - returnResult_create_row_access_policy_product_category_filter:
-                assign:
-                    - results.create_row_access_policy_product_category_filter: ${queryResult}
-    - create_view_ecommerce:
-        steps:
-            - strings:
-                assign:
-                    - str_a: "CREATE OR REPLACE VIEW
-                                gcp_lakehouse_ds.view_ecommerce AS
-                                SELECT
-                                o.order_id,
-                                o.user_id order_user_id,
-                                o.status order_status,
-                                o.created_at order_created_at,
-                                o.returned_at order_returned_at,
-                                o.shipped_at order_shipped_at,
-                                o.delivered_at order_delivered_at,
-                                o.num_of_item order_number_of_items,
-                                i.id AS order_items_id,
-                                i.product_id AS order_items_product_id,
-                                i.status order_items_status,
-                                i.sale_price order_items_sale_price,
-                                p.id AS product_id,"
-                    - str_b: "    p.cost product_cost,
-                                p.category product_category,
-                                p.name product_name,
-                                p.brand product_brand,
-                                p.retail_price product_retail_price,
-                                p.department product_department,
-                                p.sku product_sku,
-                                p.distribution_center_id,
-                                d.name AS dist_center_name,
-                                d.latitude dist_center_lat,
-                                d.longitude dist_center_long,"
-                    - str_c: "    u.id AS user_id,
-                                u.first_name user_first_name,
-                                u.last_name user_last_name,
-                                u.age user_age,
-                                u.gender user_gender,
-                                u.state user_state,
-                                u.postal_code user_postal_code,
-                                u.city user_city,
-                                u.country user_country,
-                                u.latitude user_lat,
-                                u.longitude user_long,"
-                    - str_d:  "   u.traffic_source user_traffic_source
-                                FROM
-                                gcp_lakehouse_ds.gcp_tbl_orders o
-                                INNER JOIN
-                                gcp_lakehouse_ds.gcp_tbl_order_items i
-                                ON
-                                o.order_id = i.order_id
-                                INNER JOIN
-                                `gcp_lakehouse_ds.gcp_tbl_products` p
-                                ON
-                                i.product_id = p.id
-                                INNER JOIN
-                                `gcp_lakehouse_ds.gcp_tbl_distribution_centers` d
-                                ON
-                                p.distribution_center_id = d.id
-                                INNER JOIN
-                                `gcp_lakehouse_ds.gcp_tbl_users` u
-                                ON
-                                o.user_id = u.id;"
-            - logTable_create_view_ecommerce:
-                call: sys.log
-                args:
-                    text: ${"create_view_ecommerce..."}
-            - run_create_view_ecommerce:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                    projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                    body:
-                        useLegacySql: false
-                        useQueryCache: false
-                        location: 'us-central1'
-                        timeoutMs: 600000
-                        query: ${str_a + str_b + str_c + str_d}
-                result: queryResult
-            - returnResult_create_view_ecommerce:
-                assign:
-                    - results.create_view_ecommerce: ${queryResult}
+                steps:
+                    - logTable_gcp_tbl_inventory_items:
+                        call: sys.log
+                        args:
+                            text: ${"Creating gcp_tbl_inventory_items..."}
+                    - runQuery_gcp_tbl_inventory_items:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                    query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_inventory_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"} 
+                                    + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") 
+                                    + ${"/thelook_ecommerce/inventory_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+                            result: queryResult
 
-    - returnResults:
-        return: ${results}
+    - create_gcp_tbl_products:
+                steps:
+                    - logTable_create_gcp_tbl_products:
+                        call: sys.log
+                        args:
+                            text: ${"Creating create_gcp_tbl_products..."}
+                    - runQuery_create_gcp_tbl_products:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                    query: ${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_products` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"} 
+                                    + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") 
+                                    + ${"/thelook_ecommerce/products-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+                            result: queryResult
+
+    - create_view_ecommerce:
+                steps:
+                    - logTable_create_view_ecommerce:
+                        call: sys.log
+                        args:
+                            text: ${"Creating create_view_ecommerce..."}
+                    - runQuery_create_gcp_tbl_products:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                query: ${"call gcp_lakehouse_ds.create_view_ecommerce()"}
+                            result: queryResult
+
+    - create_row_access_policy_usa_filter:
+                steps:
+                    - logTable_create_row_access_policy_usa_filter:
+                        call: sys.log
+                        args:
+                            text: ${"Creating create_row_access_policy_usa_filter..."}
+                    - runQuery_create_row_access_policy_usa_filter:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                query: ${"CREATE OR REPLACE ROW ACCESS POLICY usa_filter ON `"} 
+                                + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") 
+                                + ${".gcp_lakehouse_ds.gcp_tbl_users` GRANT TO ('serviceAccount:"} 
+                                + ${data_analyst_user} + ${"')  FILTER USING (Country = 'United States')"}
+                            result: queryResult
+
+    - create_row_access_policy_product_category_filter:
+                steps:
+                    - logTable_create_row_access_policy_product_category_filter:
+                        call: sys.log
+                        args:
+                            text: ${"Creating create_row_access_policy_product_category_filter..."}
+                    - runQuery_create_row_access_policy_product_category_filter:
+                            call: googleapis.bigquery.v2.jobs.query
+                            args:
+                                projectId: sys.get_env("GOOGLE_CLOUD_PROJECT_ID")
+                                body:
+                                    useLegacySql: false
+                                    useQueryCache: false
+                                    location: 'us-central1'
+                                    timeoutMs: 600000
+                                query: ${"CREATE OR REPLACE ROW ACCESS POLICY product_category_filter ON `"} 
+                                + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") 
+                                + ${".gcp_lakehouse_ds.gcp_tbl_products` GRANT TO ('serviceAccount:"} 
+                                + marketing_user 
+                                + ${"') FILTER USING (Category = 'Swim' or Category = 'Active' or Category = 'Fashion Hoodies & Sweatshirts')"}
+                            result: queryResult
