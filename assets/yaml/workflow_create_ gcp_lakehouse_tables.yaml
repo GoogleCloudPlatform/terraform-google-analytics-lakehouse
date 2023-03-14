@@ -13,7 +13,7 @@ main:
                     - logTable_gcp_tbl_order_items:
                         call: sys.log
                         args:
-                            text: $${project_id}
+                            text: ${"Creating tbl_order_items..."}
                     - runQuery_gcp_tbl_order_items:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -25,12 +25,15 @@ main:
                                     timeoutMs: 600000
                                     query: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_order_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"+project_id+"/thelook_ecommerce/order_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                             result: queryResult
+                    - returncreate_gcp_tbl_order_items:
+                        assign:
+                            - results.create_gcp_tbl_order_items: $${queryResult}
     - create_gcp_tbl_orders:
                 steps:
                     - logTable_create_gcp_tbl_orders:
                         call: sys.log
                         args:
-                            text: ${"Creating gcp_tbl_order_items..."}
+                            text: ${"Creating gcp_tbl_orders..."}
                     - runQuery_create_gcp_tbl_orders:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -42,12 +45,15 @@ main:
                                     timeoutMs: 600000
                                     query: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_orders` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"+project_id+"/thelook_ecommerce/orders-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                             result: queryResult
+                    - returncreate_gcp_tbl_orders:
+                        assign:
+                            - results.create_gcp_tbl_orders: $${queryResult}
     - create_gcp_tbl_users:
                 steps:
                     - logTable_create_gcp_tbl_users:
                         call: sys.log
                         args:
-                            text: ${"Creating create_gcp_tbl_users..."}
+                            text: ${"Creating gcp_tbl_users..."}
                     - runQuery_create_gcp_tbl_users:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -59,12 +65,15 @@ main:
                                     timeoutMs: 600000
                                     query: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_users` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"+project_id+"/thelook_ecommerce/users-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}                            
                             result: queryResult
+                    - returnResult_create_gcp_tbl_users:
+                        assign:
+                            - results.create_gcp_tbl_userss: $${queryResult}
     - create_gcp_tbl_distribution_centers:
                 steps:
                     - logTable_gcp_tbl_distribution_centers:
                         call: sys.log
                         args:
-                            text: ${"Creating gcp_tbl_distribution_centers..."}
+                            text: ${"Creating tbl_distribution_centers..."}
                     - runQuery_gcp_tbl_distribution_centers:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -76,12 +85,15 @@ main:
                                     timeoutMs: 600000
                                     query: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_distribution_centers` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"+project_id+"/thelook_ecommerce/distribution_centers-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                             result: queryResult
+                    - returnResult_create_gcp_tbl_distribution_centers:
+                        assign:
+                            - results.create_gcp_tbl_distribution_centers: $${queryResult}
     - create_gcp_tbl_inventory_items:
                 steps:
                     - logTable_gcp_tbl_inventory_items:
                         call: sys.log
                         args:
-                            text: ${"Creating gcp_tbl_inventory_items..."}
+                            text: ${"Creating tbl_inventory_items..."}
                     - runQuery_gcp_tbl_inventory_items:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -93,13 +105,16 @@ main:
                                     timeoutMs: 600000
                                     query: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_inventory_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"+project_id+"/thelook_ecommerce/inventory_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                             result: queryResult
+                    - returnResult_create_gcp_tbl_inventory_items:
+                        assign:
+                            - results.create_gcp_tbl_inventory_items: $${queryResult}
 
     - create_gcp_tbl_products:
                 steps:
                     - logTable_create_gcp_tbl_products:
                         call: sys.log
                         args:
-                            text: ${"Creating create_gcp_tbl_products..."}
+                            text: ${"Creating gcp_tbl_products..."}
                     - runQuery_create_gcp_tbl_products:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -111,12 +126,16 @@ main:
                                     timeoutMs: 600000
                                     query: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_products` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-"+project_id+"/thelook_ecommerce/products-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
                             result: queryResult
+                    - returnResult_create_gcp_tbl_products:
+                        assign:
+                            - results.create_gcp_tbl_products: $${queryResult}
+
     - create_view_ecommerce:
                 steps:
                     - logTable_create_view_ecommerce:
                         call: sys.log
                         args:
-                            text: ${"Creating create_view_ecommerce..."}
+                            text: ${"Creating view_ecommerce..."}
                     - runQuery_create_view_ecommerce:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -137,7 +156,7 @@ main:
                     - logTable_create_row_access_policy_usa_filter:
                         call: sys.log
                         args:
-                            text: ${"Creating create_row_access_policy_usa_filter..."}
+                            text: ${"Setting create_row_access_policy_usa_filter..."}
                     - runQuery_create_row_access_policy_usa_filter:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
@@ -149,12 +168,15 @@ main:
                                     timeoutMs: 600000
                                     query: $${"CREATE OR REPLACE ROW ACCESS POLICY usa_filter ON `"+project_id+".gcp_lakehouse_ds.gcp_tbl_users` GRANT TO ('serviceAccount:"+data_analyst_user+"')  FILTER USING (Country = 'United States')"}
                             result: queryResult
+                    - returnResult_create_row_access_policy_usa_filter:
+                        assign:
+                            - results.create_row_access_policy_usa_filter: $${queryResult}
     - create_row_access_policy_product_category_filter:
                 steps:
                     - logTable_create_row_access_policy_product_category_filter:
                         call: sys.log
                         args:
-                            text: ${"Creating create_row_access_policy_product_category_filter..."}
+                            text: ${"Setting row_access_policy_product_category_filter..."}
                     - runQuery_create_row_access_policy_product_category_filter:
                             call: googleapis.bigquery.v2.jobs.query
                             args:
