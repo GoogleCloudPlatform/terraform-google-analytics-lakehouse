@@ -168,11 +168,11 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
 
 
 resource "google_bigquery_routine" "create_view_ecommerce" {
-  project      = module.project-services.project_id
-  dataset_id   = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  routine_id   = "create_view_ecommerce"
-  routine_type = "PROCEDURE"
-  language     = "SQL"
+  project         = module.project-services.project_id
+  dataset_id      = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
+  routine_id      = "create_view_ecommerce"
+  routine_type    = "PROCEDURE"
+  language        = "SQL"
   definition_body = file("${path.module}/assets/sql/view_ecommerce.sql")
 }
 
@@ -242,10 +242,9 @@ resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
   region          = "us-central1"
   description     = "create gcp biglake tables_18"
   service_account = google_service_account.workflows_sa.email
-#  source_contents = file("${path.module}/assets/yaml/workflow_create_ gcp_lakehouse_tables.yaml") 
   source_contents = templatefile("${path.module}/assets/yaml/workflow_create_ gcp_lakehouse_tables.yaml", {
     data_analyst_user = google_service_account.data_analyst_user.email,
-    marketing_user       = google_service_account.marketing_user.email
+    marketing_user    = google_service_account.marketing_user.email
   })
 
 }
