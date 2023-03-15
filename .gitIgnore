@@ -61,3 +61,7 @@ credentials.json
 
 # tf lock file
 .terraform.lock.hcl
+assets/yaml/blah.yaml
+assets/yaml/test.yaml
+assets/yaml/test.yaml
+assets/yaml/test.yaml

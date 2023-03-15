@@ -153,6 +153,26 @@ resource "google_service_account" "data_analyst_user" {
   display_name = "Service Account for  user"
 }
 
+resource "google_project_iam_member" "workflows_sa_bq_data" {
+  project = module.project-services.project_id
+  role    = "roles/bigquery.dataOwner"
+  member  = "serviceAccount:${google_service_account.workflows_sa.email}"
+
+  depends_on = [
+    google_service_account.workflows_sa
+  ]
+}
+
+#give workflows_sa bq data access 
+resource "google_project_iam_member" "workflows_sa_bq_connection" {
+  project = module.project-services.project_id
+  role    = "roles/bigquery.connectionAdmin"
+  member  = "serviceAccount:${google_service_account.workflows_sa.email}"
+
+  depends_on = [
+    google_service_account.workflows_sa
+  ]
+}
 
 # Set up BigQuery resources
 # # Create the BigQuery dataset
@@ -235,6 +255,11 @@ resource "google_workflows_workflow" "workflows_bqml" {
 
 
 }
+variable "x" {
+  type = map(string)
+  default = {t = "tblname"
+  }
+}
 
 resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
   name            = "workflow-create-gcp-biglake-tables"
@@ -245,7 +270,7 @@ resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
   source_contents = templatefile("${path.module}/assets/yaml/workflow_create_ gcp_lakehouse_tables.yaml", {
     data_analyst_user = google_service_account.data_analyst_user.email,
     marketing_user    = google_service_account.marketing_user.email
-  })
+})
 
 }
 
