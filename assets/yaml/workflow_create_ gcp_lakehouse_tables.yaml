@@ -12,6 +12,10 @@
             4: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_distribution_centers` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/distribution_centers-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
             5: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_inventory_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/inventory_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
             6: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_products` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/products-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+            7: $${"CREATE OR REPLACE ROW ACCESS POLICY usa_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_users` GRANT TO ('serviceAccount:" + data_analyst_user + "')  FILTER USING (Country = 'United States')"}
+            8: $${"CREATE OR REPLACE ROW ACCESS POLICY product_category_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_products` GRANT TO ('serviceAccount:" + marketing_user + "') FILTER USING (Category = 'Swim' or Category = 'Active' or Category = 'Fashion Hoodies & Sweatshirts')"}
+            9: $${"call gcp_lakehouse_ds.create_view_ecommerce()"}
+
 - loopStep:
     for:
       value: key                      
