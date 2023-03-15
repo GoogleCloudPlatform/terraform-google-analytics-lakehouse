@@ -27,34 +27,33 @@ module "project-services" {
   enable_apis = var.enable_apis
 
   activate_apis = [
-    "config.googleapis.com",
-    "compute.googleapis.com",
-    "cloudapis.googleapis.com",
-    "cloudbuild.googleapis.com",
-    "datacatalog.googleapis.com",
-    "datalineage.googleapis.com",
-    "eventarc.googleapis.com",
-    "bigquerymigration.googleapis.com",
-    "bigquerystorage.googleapis.com",
-    "bigqueryconnection.googleapis.com",
-    "bigqueryreservation.googleapis.com",
-    "bigquery.googleapis.com",
-    "storage.googleapis.com",
-    "storage-api.googleapis.com",
-    "run.googleapis.com",
-    "pubsub.googleapis.com",
-    "bigqueryconnection.googleapis.com",
-    "cloudfunctions.googleapis.com",
-    "run.googleapis.com",
-    "bigquerydatatransfer.googleapis.com",
-    "artifactregistry.googleapis.com",
-    "metastore.googleapis.com",
-    "dataproc.googleapis.com",
-    "dataplex.googleapis.com",
-    "datacatalog.googleapis.com",
-    "workflows.googleapis.com"
-
-  ]
+"artifactregistry.googleapis.com",
+"bigquery.googleapis.com",
+"bigqueryconnection.googleapis.com",
+"bigqueryconnection.googleapis.com",
+"bigquerydatapolicy.googleapis.com",
+"bigquerydatatransfer.googleapis.com",
+"bigquerymigration.googleapis.com",
+"bigqueryreservation.googleapis.com",
+"bigquerystorage.googleapis.com",
+"cloudapis.googleapis.com",
+"cloudbuild.googleapis.com",
+"cloudfunctions.googleapis.com",
+"compute.googleapis.com",
+"config.googleapis.com",
+"datalineage.googleapis.com",
+"dataplex.googleapis.com",
+"dataproc.googleapis.com",
+"eventarc.googleapis.com",
+"iam.googleapis.com",
+"metastore.googleapis.com",
+"pubsub.googleapis.com",
+"run.googleapis.com",
+"serviceusage.googleapis.com",
+"storage-api.googleapis.com",
+"storage.googleapis.com",
+"workflows.googleapis.com"
+ ]
 }
 
 resource "time_sleep" "wait_after_apis_activate" {
