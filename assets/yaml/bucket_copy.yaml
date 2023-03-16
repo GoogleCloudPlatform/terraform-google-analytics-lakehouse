@@ -1,0 +1,43 @@
+main:
+    params: []
+    steps:
+        - init:
+            assign:
+                - source_bucket: "bucket-copy-fths"
+                - dest_bucket: "bucket-copy-workflow-nw"
+                - copied_objects: []
+        - list_objects:
+            call: googleapis.storage.v1.objects.list
+            args:
+                bucket: ${source_bucket}
+            result: list_result
+        - copy_objects:
+                for:
+                    value: object
+                    index: i
+                    in: ${list_result.items}
+                    steps:
+                      - step1:
+                            try:
+                                steps:                            
+                                  - copy_object:
+                                      call: googleapis.storage.v1.objects.copy
+                                      args:
+                                          sourceBucket: ${source_bucket}
+                                          sourceObject: ${object.name}
+                                          destinationBucket: ${dest_bucket}
+                                          destinationObject: ${object.name}
+                                      result: copy_result
+                                #   - save_result:
+                                #       assign:
+                                #           - copied_objects: ${list.concat(copied_objects, copy_result)}
+                            except:
+                                as: e
+                                raise:
+                                    exception: ${e}
+                                    sourceBucket: ${source_bucket}
+                                    sourceObject: ${object.name}
+                                    destinationBucket: ${dest_bucket}
+                                    destinationObject: ${object.name}
+        - finish:
+            return: ${copied_objects}

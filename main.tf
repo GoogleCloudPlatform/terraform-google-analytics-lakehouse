@@ -41,6 +41,7 @@ module "project-services" {
 "cloudfunctions.googleapis.com",
 "compute.googleapis.com",
 "config.googleapis.com",
+"datacatalog.googleapis.com",
 "datalineage.googleapis.com",
 "dataplex.googleapis.com",
 "dataproc.googleapis.com",
@@ -243,17 +244,31 @@ resource "google_project_iam_member" "workflows_sa_log_writer" {
 }
 
 
-resource "google_workflows_workflow" "workflows_bqml" {
-  name            = "workflow-bqml"
+resource "google_workflows_workflow" "workflow_bqml" {
+  name            = "workflow-bqml-create"
   project         = module.project-services.project_id
   region          = "us-central1"
-  description     = "Create BQML Model 173"
+  description     = "Create BQML Model"
   service_account = google_service_account.workflows_sa.email
   source_contents = file("${path.module}/assets/yaml/workflow_bqml.yaml")
   depends_on      = [google_project_iam_member.workflows_sa_bq_read]
 
 
 }
+
+resource "google_workflows_workflow" "workflow_bucket_copy" {
+  name            = "workflow-bucket-copy"
+  project         = module.project-services.project_id
+  region          = "us-central1"
+  description     = "Copy data files from public bucket to solution project"
+  service_account = google_service_account.workflows_sa.email
+  source_contents = file("${path.module}/assets/yaml/bucket_copy.yaml")
+  depends_on      = [google_project_iam_member.workflows_sa_bq_read]
+
+
+}
+
+
 variable "x" {
   type = map(string)
   default = {t = "tblname"
@@ -444,10 +459,6 @@ resource "time_sleep" "wait_after_cloud_function_creation" {
   depends_on      = [google_storage_bucket_object.startfile]
   create_duration = "15s"
 }
-
-
-
-
 
 #lake
 resource "google_dataplex_lake" "gcp_primary" {
@@ -952,4 +963,13 @@ resource "google_project_iam_member" "workflow_service_account_token_role" {
   depends_on = [
     google_service_account.workflow_service_account
   ]
+}
+
+resource "google_data_catalog_taxonomy" "finegrain_taxonomy" {
+  provider   = google-beta
+  project = module.project-services.project_id
+  display_name =  "fine_grain_taxonomy"
+  description = "A collection of policy tags"
+  activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
+  region    = var.region 
 }
