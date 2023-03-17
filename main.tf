@@ -163,6 +163,17 @@ resource "google_project_iam_member" "workflows_sa_bq_data" {
   ]
 }
 
+resource "google_project_iam_member" "workflows_sa_bq_resource_mgr" {
+  project = module.project-services.project_id
+  role    = "roles/bigquery.resourceAdmin"
+  member  = "serviceAccount:${google_service_account.workflows_sa.email}"
+
+  depends_on = [
+    google_service_account.workflows_sa
+  ]
+}
+
+
 #give workflows_sa bq data access 
 resource "google_project_iam_member" "workflows_sa_bq_connection" {
   project = module.project-services.project_id
@@ -965,10 +976,10 @@ resource "google_project_iam_member" "workflow_service_account_token_role" {
   ]
 }
 
-resource "google_data_catalog_taxonomy" "finegrain_taxonomy" {
+resource "google_data_catalog_taxonomy" "gcp_finegrain_taxonomy" {
   provider   = google-beta
   project = module.project-services.project_id
-  display_name =  "fine_grain_taxonomy"
+  display_name =  "gcp_finegrain_taxonomy"
   description = "A collection of policy tags"
   activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
   region    = var.region 
