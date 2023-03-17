@@ -1,4 +1,4 @@
-# terraform-google-
+# terraform-google-lakehouse
 
 ## Description
 ### tagline
