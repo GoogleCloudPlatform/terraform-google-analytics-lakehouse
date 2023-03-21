@@ -385,48 +385,6 @@ resource "google_project_iam_member" "gcs_run_invoker" {
   member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
-#Create gcp cloud function
-resource "google_cloudfunctions2_function" "function" {
-  project     = module.project-services.project_id
-  name        = "gcp-run-gcf-${random_id.id.hex}"
-  location    = var.region
-  description = "run python code that Terraform cannot currently handle..."
-
-  build_config {
-    runtime     = "python310"
-    entry_point = "gcp_main"
-    source {
-      storage_source {
-        bucket = google_storage_bucket.provisioning_bucket.name
-        object = "assets/bigquery-external-function.zip"
-      }
-    }
-  }
-
-  service_config {
-    max_instance_count = 1
-    available_memory   = "256M"
-    timeout_seconds    = 539
-    environment_variables = {
-      PROJECT_ID            = module.project-services.project_id
-      DATASET_ID            = ""
-      TABLE_NAME            = ""
-      DESTINATION_BUCKET_ID = google_storage_bucket.destination_bucket.name
-      SOURCE_BUCKET_ID      = var.bucket_name
-      REGION                = var.region
-      CONN_NAME             = google_bigquery_connection.gcp_lakehouse_connection.name
-    }
-    service_account_email = google_service_account.cloud_function_service_account.email
-  }
-
-  depends_on = [
-    google_storage_bucket.provisioning_bucket,
-    google_project_iam_member.cloud_function_service_account_editor_role,
-    google_project_iam_member.eventarc_svg_agent,
-    time_sleep.wait_after_adding_eventarc_svc_agent
-  ]
-}
-
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "bigquery.py"
