@@ -103,7 +103,7 @@ resource "google_project_service_identity" "dataplex_sa" {
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
-#eventarc svg agent permissions 
+#eventarc svg agent permissions
 resource "google_project_iam_member" "eventarc_svg_agent" {
   project = module.project-services.project_id
   role    = "roles/eventarc.serviceAgent"
@@ -174,7 +174,7 @@ resource "google_project_iam_member" "workflows_sa_bq_resource_mgr" {
 }
 
 
-#give workflows_sa bq data access 
+#give workflows_sa bq data access
 resource "google_project_iam_member" "workflows_sa_bq_connection" {
   project = module.project-services.project_id
   role    = "roles/bigquery.connectionAdmin"
@@ -233,7 +233,7 @@ resource "google_service_account" "workflows_sa" {
   display_name = "Workflows Service Account"
 }
 
-#give workflows_sa bq access 
+#give workflows_sa bq access
 resource "google_project_iam_member" "workflows_sa_bq_read" {
   project = module.project-services.project_id
   role    = "roles/bigquery.jobUser"
@@ -277,13 +277,6 @@ resource "google_workflows_workflow" "workflow_bucket_copy" {
   depends_on      = [google_project_iam_member.workflows_sa_bq_read]
 
 
-}
-
-
-variable "x" {
-  type = map(string)
-  default = { t = "tblname"
-  }
 }
 
 resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
@@ -424,16 +417,6 @@ resource "google_cloudfunctions2_function" "function" {
       CONN_NAME             = google_bigquery_connection.gcp_lakehouse_connection.name
     }
     service_account_email = google_service_account.cloud_function_service_account.email
-  }
-
-  event_trigger {
-    trigger_region = var.region
-    event_type     = "google.cloud.storage.object.v1.finalized"
-    event_filters {
-      attribute = "bucket"
-      value     = google_storage_bucket.provisioning_bucket.name
-    }
-    retry_policy = "RETRY_POLICY_RETRY"
   }
 
   depends_on = [
