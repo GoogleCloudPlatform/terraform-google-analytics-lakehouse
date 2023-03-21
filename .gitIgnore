@@ -65,3 +65,5 @@ assets/yaml/blah.yaml
 assets/yaml/test.yaml
 assets/yaml/test.yaml
 assets/yaml/test.yaml
+
+**/*.zip
