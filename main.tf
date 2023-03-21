@@ -27,34 +27,34 @@ module "project-services" {
   enable_apis = var.enable_apis
 
   activate_apis = [
-"artifactregistry.googleapis.com",
-"bigquery.googleapis.com",
-"bigqueryconnection.googleapis.com",
-"bigqueryconnection.googleapis.com",
-"bigquerydatapolicy.googleapis.com",
-"bigquerydatatransfer.googleapis.com",
-"bigquerymigration.googleapis.com",
-"bigqueryreservation.googleapis.com",
-"bigquerystorage.googleapis.com",
-"cloudapis.googleapis.com",
-"cloudbuild.googleapis.com",
-"cloudfunctions.googleapis.com",
-"compute.googleapis.com",
-"config.googleapis.com",
-"datacatalog.googleapis.com",
-"datalineage.googleapis.com",
-"dataplex.googleapis.com",
-"dataproc.googleapis.com",
-"eventarc.googleapis.com",
-"iam.googleapis.com",
-"metastore.googleapis.com",
-"pubsub.googleapis.com",
-"run.googleapis.com",
-"serviceusage.googleapis.com",
-"storage-api.googleapis.com",
-"storage.googleapis.com",
-"workflows.googleapis.com"
- ]
+    "artifactregistry.googleapis.com",
+    "bigquery.googleapis.com",
+    "bigqueryconnection.googleapis.com",
+    "bigqueryconnection.googleapis.com",
+    "bigquerydatapolicy.googleapis.com",
+    "bigquerydatatransfer.googleapis.com",
+    "bigquerymigration.googleapis.com",
+    "bigqueryreservation.googleapis.com",
+    "bigquerystorage.googleapis.com",
+    "cloudapis.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "compute.googleapis.com",
+    "config.googleapis.com",
+    "datacatalog.googleapis.com",
+    "datalineage.googleapis.com",
+    "dataplex.googleapis.com",
+    "dataproc.googleapis.com",
+    "eventarc.googleapis.com",
+    "iam.googleapis.com",
+    "metastore.googleapis.com",
+    "pubsub.googleapis.com",
+    "run.googleapis.com",
+    "serviceusage.googleapis.com",
+    "storage-api.googleapis.com",
+    "storage.googleapis.com",
+    "workflows.googleapis.com"
+  ]
 }
 
 resource "time_sleep" "wait_after_apis_activate" {
@@ -282,7 +282,7 @@ resource "google_workflows_workflow" "workflow_bucket_copy" {
 
 variable "x" {
   type = map(string)
-  default = {t = "tblname"
+  default = { t = "tblname"
   }
 }
 
@@ -295,7 +295,7 @@ resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
   source_contents = templatefile("${path.module}/assets/yaml/workflow_create_gcp_lakehouse_tables.yaml", {
     data_analyst_user = google_service_account.data_analyst_user.email,
     marketing_user    = google_service_account.marketing_user.email
-})
+  })
 
 }
 
@@ -977,10 +977,10 @@ resource "google_project_iam_member" "workflow_service_account_token_role" {
 }
 
 resource "google_data_catalog_taxonomy" "gcp_finegrain_taxonomy" {
-  provider   = google-beta
-  project = module.project-services.project_id
-  display_name =  "gcp_finegrain_taxonomy"
-  description = "A collection of policy tags"
+  provider               = google-beta
+  project                = module.project-services.project_id
+  display_name           = "gcp_finegrain_taxonomy"
+  description            = "A collection of policy tags"
   activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
-  region    = var.region 
+  region                 = var.region
 }
