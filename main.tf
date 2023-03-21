@@ -976,10 +976,10 @@ resource "google_project_iam_member" "workflow_service_account_token_role" {
   ]
 }
 
-resource "google_data_catalog_taxonomy" "gcp_finegrain_taxonomy" {
+resource "google_data_catalog_taxonomy" "gcp_lakehouse_taxonomy" {
   provider   = google-beta
   project = module.project-services.project_id
-  display_name =  "gcp_finegrain_taxonomy"
+  display_name =  "gcp_lakehouse_taxonomy"
   description = "A collection of policy tags"
   activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
   region    = var.region 
