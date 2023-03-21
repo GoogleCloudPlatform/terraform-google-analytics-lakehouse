@@ -58,7 +58,6 @@ resource "time_sleep" "wait_after_apis_activate" {
   create_duration = "30s"
 }
 
-
 # Set up service accounts fine grain sec.
 resource "google_service_account" "marketing_user" {
   project      = module.project-services.project_id
@@ -91,7 +90,6 @@ resource "random_id" "id" {
   byte_length = 4
 }
 
-
 # # Set up the provisioning bucketstorage bucket
 resource "google_storage_bucket" "provisioning_bucket" {
   name                        = "gcp_gcf_source_code-${random_id.id.hex}"
@@ -111,8 +109,6 @@ resource "google_storage_bucket" "destination_bucket" {
   force_destroy               = var.force_destroy
 
 }
-
-
 
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name

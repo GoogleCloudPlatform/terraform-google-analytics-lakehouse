@@ -8,23 +8,11 @@ variable "project_id" {
   description = "Google Cloud Project ID"
 }
 
-variable "bucket_name" {
-  type        = string
-  description = "Bucket where source data is stored"
-  default     = "data-analytics-demos"
-}
 variable "region" {
   type        = string
   description = "Google Cloud Region"
   default     = "us-central1"
 }
-
-variable "dataset_id" {
-  type        = string
-  description = "Google Cloud BQ Dataset ID"
-  default     = "gcp"
-}
-
 
 variable "labels" {
   type        = map(string)
