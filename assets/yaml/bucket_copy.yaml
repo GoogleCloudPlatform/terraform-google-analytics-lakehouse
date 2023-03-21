@@ -19,7 +19,7 @@ main:
                     steps:
                       - step1:
                             try:
-                                steps:                            
+                                steps:
                                   - copy_object:
                                       call: googleapis.storage.v1.objects.copy
                                       args:

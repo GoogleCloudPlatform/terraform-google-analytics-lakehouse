@@ -77,27 +77,27 @@ resource "random_id" "id" {
 
 #get service acct IDs
 resource "google_project_service_identity" "eventarc" {
-  provider   = google
+  provider   = google-beta
   project    = module.project-services.project_id
   service    = "eventarc.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 
 resource "google_project_service_identity" "pubsub" {
-  provider   = google
+  provider   = google-beta
   project    = module.project-services.project_id
   service    = "pubsub.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 
 resource "google_project_service_identity" "workflows" {
-  provider   = google
+  provider   = google-beta
   project    = module.project-services.project_id
   service    = "workflows.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 resource "google_project_service_identity" "dataplex_sa" {
-  provider   = google
+  provider   = google-beta
   project    = module.project-services.project_id
   service    = "dataplex.googleapis.com"
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
@@ -402,7 +402,10 @@ resource "google_storage_bucket_object" "startfile" {
   source = "${path.module}/assets/startfile"
 
   depends_on = [
-    google_cloudfunctions2_function.function
+    google_workflows_workflow.workflow,
+    google_workflows_workflow.workflow_bqml,
+    google_workflows_workflow.workflow_create_gcp_lakehouse_tables,
+    google_workflows_workflow.workflow_bucket_copy,
   ]
 }
 
@@ -792,7 +795,7 @@ resource "google_workflows_workflow" "workflow" {
   region          = var.region
   description     = "Runs post Terraform setup steps for Solution in Console"
   service_account = google_service_account.workflow_service_account.id
-  source_contents = templatefile("${path.module}/assets/yaml/workflow-pyspark.yaml", {
+  source_contents = templatefile("${path.module}/assets/yaml/workflow_pyspark.yaml", {
     dataproc_service_account = google_service_account.dataproc_service_account.email,
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket         = google_storage_bucket.raw_bucket.name,

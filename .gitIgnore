@@ -16,8 +16,8 @@
 *.pyc
 *.txt
 *.exe
-*.cfg 
-*.sh 
+*.cfg
+*.sh
 
 
 
