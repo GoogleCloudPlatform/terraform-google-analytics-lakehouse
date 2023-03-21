@@ -77,27 +77,27 @@ resource "random_id" "id" {
 
 #get service acct IDs
 resource "google_project_service_identity" "eventarc" {
-  provider   = google-beta
+  provider   = google
   project    = module.project-services.project_id
   service    = "eventarc.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 
 resource "google_project_service_identity" "pubsub" {
-  provider   = google-beta
+  provider   = google
   project    = module.project-services.project_id
   service    = "pubsub.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 
 resource "google_project_service_identity" "workflows" {
-  provider   = google-beta
+  provider   = google
   project    = module.project-services.project_id
   service    = "workflows.googleapis.com"
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 resource "google_project_service_identity" "dataplex_sa" {
-  provider   = google-beta
+  provider   = google
   project    = module.project-services.project_id
   service    = "dataplex.googleapis.com"
   depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
@@ -918,10 +918,10 @@ resource "google_project_iam_member" "workflow_service_account_token_role" {
 }
 
 resource "google_data_catalog_taxonomy" "gcp_lakehouse_taxonomy" {
-  provider   = google-beta
-  project = module.project-services.project_id
-  display_name =  "gcp_lakehouse_taxonomy"
-  description = "A collection of policy tags"
+  provider               = google
+  project                = module.project-services.project_id
+  display_name           = "gcp_lakehouse_taxonomy"
+  description            = "A collection of policy tags"
   activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
   region                 = var.region
 }
