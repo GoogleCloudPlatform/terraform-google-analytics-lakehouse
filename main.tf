@@ -292,7 +292,7 @@ resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
   region          = "us-central1"
   description     = "create gcp biglake tables_18"
   service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/assets/yaml/workflow_create_ gcp_lakehouse_tables.yaml", {
+  source_contents = templatefile("${path.module}/assets/yaml/workflow_create_gcp_lakehouse_tables.yaml", {
     data_analyst_user = google_service_account.data_analyst_user.email,
     marketing_user    = google_service_account.marketing_user.email
 })

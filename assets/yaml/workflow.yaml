@@ -27,14 +27,14 @@ main:
             auth:
                 type: OAuth2
             body:
-                pysparkBatch: 
+                pysparkBatch:
                     mainPythonFileUri: $${"gs://"+provisioner_bucket_name+"/bigquery.py"}
-                    jarFileUris: 
+                    jarFileUris:
                         - "gs://spark-lib/bigquery/spark-bigquery-with-dependencies_2.12-0.29.0.jar"
                         - "gs://spark-lib/biglake/iceberg-biglake-catalog-0.0.1-with-dependencies.jar"
-                runtimeConfig: 
+                runtimeConfig:
                     version: "1.0.29"
-                    properties: 
+                    properties:
                         "spark.sql.catalog.lakehouse_catalog": "org.apache.iceberg.spark.SparkCatalog"
                         "spark.sql.catalog.lakehouse_catalog.blms_catalog": "$${lakehouse_catalog}"
                         "spark.sql.catalog.lakehouse_catalog.catalog-impl": "org.apache.iceberg.gcp.biglake.BigLakeCatalog"
@@ -47,8 +47,8 @@ main:
                         temp_bucket: $${temp_bucket_name}
                         bq_dataset: $${bq_dataset}
                         bq_gcs_connection: $${bq_gcs_connection}
-                
-                environmentConfig: 
+
+                environmentConfig:
                     executionConfig:
                         serviceAccount: $${dataproc_service_account}
                         subnetworkUri: "dataproc-subnet"
