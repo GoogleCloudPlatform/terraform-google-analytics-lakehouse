@@ -846,12 +846,12 @@ resource "google_project_iam_member" "workflow_service_account_bqadmin" {
 }
 
 resource "google_workflows_workflow" "workflow" {
-  name            = "initial-workflow"
+  name            = "initial-workflow-pyspark"
   project         = module.project-services.project_id
   region          = var.region
   description     = "Runs post Terraform setup steps for Solution in Console"
   service_account = google_service_account.workflow_service_account.id
-  source_contents = templatefile("${path.module}/assets/yaml/workflow.yaml", {
+  source_contents = templatefile("${path.module}/assets/yaml/workflow-pyspark.yaml", {
     dataproc_service_account = google_service_account.dataproc_service_account.email,
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket         = google_storage_bucket.raw_bucket.name,
