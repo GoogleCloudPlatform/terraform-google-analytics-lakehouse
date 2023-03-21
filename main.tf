@@ -273,7 +273,6 @@ resource "google_storage_bucket" "destination_bucket" {
 
 }
 
-
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "bigquery.py"
