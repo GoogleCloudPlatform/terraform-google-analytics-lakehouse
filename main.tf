@@ -58,56 +58,6 @@ resource "time_sleep" "wait_after_apis_activate" {
   create_duration = "30s"
 }
 
-
-resource "google_project_service_identity" "pubsub" {
-  provider   = google-beta
-  project    = module.project-services.project_id
-  service    = "pubsub.googleapis.com"
-  depends_on = [time_sleep.wait_after_apis_activate]
-}
-
-resource "google_project_service_identity" "workflows" {
-  provider   = google-beta
-  project    = module.project-services.project_id
-  service    = "workflows.googleapis.com"
-  depends_on = [time_sleep.wait_after_apis_activate]
-}
-resource "google_project_service_identity" "dataplex_sa" {
-  provider   = google-beta
-  project    = module.project-services.project_id
-  service    = "dataplex.googleapis.com"
-  depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
-}
-
-#eventarc svg agent permissions
-resource "google_project_iam_member" "eventarc_svg_agent" {
-  project = module.project-services.project_id
-  role    = "roles/eventarc.serviceAgent"
-  member  = "serviceAccount:${google_project_service_identity.eventarc.email}"
-
-  depends_on = [
-    google_project_service_identity.eventarc
-  ]
-}
-
-resource "google_project_iam_member" "eventarc_log_writer" {
-  project = module.project-services.project_id
-  role    = "roles/logging.logWriter"
-  member  = "serviceAccount:${google_project_service_identity.eventarc.email}"
-
-  depends_on = [
-    google_project_iam_member.eventarc_svg_agent
-  ]
-}
-
-#default compute permissions for cloud functions
-resource "google_project_iam_member" "workflow_event_receiver" {
-  project = module.project-services.project_id
-  role    = "roles/cloudfunctions.admin"
-  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
-}
-
-
 # Set up service accounts fine grain sec.
 resource "google_service_account" "marketing_user" {
   project      = module.project-services.project_id
