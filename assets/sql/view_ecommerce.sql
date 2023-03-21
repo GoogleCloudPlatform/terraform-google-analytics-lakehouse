@@ -59,4 +59,4 @@ INNER JOIN
 ON
   o.user_id = u.id
 ;
-END 
+END
