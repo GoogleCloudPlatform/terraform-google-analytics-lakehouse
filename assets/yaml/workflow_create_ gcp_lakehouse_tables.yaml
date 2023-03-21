@@ -1,7 +1,5 @@
 - assignStep:
     assign:
-        - marketing_user: ${marketing_user}
-        - data_analyst_user: ${data_analyst_user}  
         - results: {}      
         - map:
             gcp_tbl_order_items: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_order_items` WITH CONNECTION `us-central1.gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/thelook_ecommerce/order_items-0*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
