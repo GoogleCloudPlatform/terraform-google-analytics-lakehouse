@@ -58,6 +58,5 @@ main:
         result: Operation
     # TODO: add await result until Operation is complete
 
-
     - returnOutput:
             return: Operation
