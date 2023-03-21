@@ -649,7 +649,7 @@ resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
   ]
 }
 
-# # Create a BigQuery external table
+# # Create a BigQuery external table.
 resource "google_bigquery_table" "tbl_thelook_events" {
   dataset_id          = google_bigquery_dataset.ds.dataset_id
   table_id            = "events"
