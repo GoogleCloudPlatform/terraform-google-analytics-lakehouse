@@ -67,3 +67,5 @@ assets/yaml/test.yaml
 assets/yaml/test.yaml
 
 **/*.zip
+
+.vscode/
