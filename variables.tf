@@ -47,5 +47,5 @@ variable "use_case_short" {
 variable "public_data_bucket" {
   type        = string
   description = "Public Data bucket for access"
-  default     = "da-solutions-assets-1484658051840"
+  default     = "data-analytics-demos"
 }
