@@ -11,7 +11,7 @@ variable "project_id" {
 variable "bucket_name" {
   type        = string
   description = "Bucket where source data is stored"
-  default     = "da-solutions-assets-1484658051840"
+  default     = "data-analytics-demos"
 }
 variable "region" {
   type        = string
@@ -41,7 +41,7 @@ variable "enable_apis" {
 variable "force_destroy" {
   type        = string
   description = "Whether or not to protect BigQuery resources from deletion when solution is modified or changed."
-  default     = false
+  default     = true
 }
 
 variable "deletion_protection" {
@@ -59,5 +59,5 @@ variable "use_case_short" {
 variable "public_data_bucket" {
   type        = string
   description = "Public Data bucket for access"
-  default     = "da-solutions-assets-1484658051840"
+  default     = "data-analytics-demos"
 }
