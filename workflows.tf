@@ -16,7 +16,10 @@ resource "google_project_iam_member" "workflow_service_account_invoke_role" {
   project = module.project-services.project_id
   role    = "roles/workflows.admin"
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
-  depends_on   = [google_service_account.workflows_sa]
+
+  depends_on = [
+    google_service_account.workflows_sa
+  ]
 }
 
 resource "google_project_iam_member" "workflows_sa_bq_data" {
@@ -25,7 +28,7 @@ resource "google_project_iam_member" "workflows_sa_bq_data" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflow_service_account_invoke_role
+    google_service_account.workflows_sa
   ]
 }
 resource "google_project_iam_member" "workflows_sa_gcs_admin" {
@@ -34,7 +37,7 @@ resource "google_project_iam_member" "workflows_sa_gcs_admin" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflows_sa_bq_data
+    google_service_account.workflows_sa
   ]
 }
 resource "google_project_iam_member" "workflows_sa_bq_resource_mgr" {
@@ -43,7 +46,7 @@ resource "google_project_iam_member" "workflows_sa_bq_resource_mgr" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflows_sa_gcs_admin
+    google_service_account.workflows_sa
   ]
 }
 resource "google_project_iam_member" "workflow_service_account_token_role" {
@@ -52,7 +55,7 @@ resource "google_project_iam_member" "workflow_service_account_token_role" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflows_sa_bq_resource_mgr
+    google_service_account.workflows_sa
   ]
 }
 
@@ -63,7 +66,7 @@ resource "google_project_iam_member" "workflows_sa_bq_connection" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflow_service_account_token_role
+    google_service_account.workflows_sa
   ]
 }
 resource "google_project_iam_member" "workflows_sa_bq_read" {
@@ -72,7 +75,7 @@ resource "google_project_iam_member" "workflows_sa_bq_read" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflows_sa_bq_connection
+    google_service_account.workflows_sa
   ]
 }
 resource "google_project_iam_member" "workflows_sa_log_writer" {
@@ -81,7 +84,7 @@ resource "google_project_iam_member" "workflows_sa_log_writer" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflows_sa_bq_read
+    google_service_account.workflows_sa
   ]
 }
 
@@ -92,7 +95,7 @@ resource "google_project_iam_member" "workflow_service_account_dataproc_role" {
   member  = "serviceAccount:${google_service_account.workflows_sa.email}"
 
   depends_on = [
-    google_project_iam_member.workflow_service_account_dataproc_role
+    google_service_account.workflows_sa
   ]
 }
 
@@ -138,23 +141,23 @@ resource "google_workflows_workflow" "workflow_bqml" {
 }
 
 resource "google_workflows_workflow" "workflow_bucket_copy" {
-  name            = "workflow_bucket_copy"
+  name            = "workflow-bucket-copy"
   project         = module.project-services.project_id
   region          = "us-central1"
   description     = "Copy data files from public bucket to solution project"
   service_account = google_service_account.workflows_sa.email
   source_contents = file("${path.module}/assets/yaml/bucket_copy.yaml")
-  depends_on = [
-    google_project_iam_member.workflow_service_account_invoke_role,
-    google_project_iam_member.workflows_sa_bq_read,
-    google_project_iam_member.workflows_sa_bq_data,
-    google_project_iam_member.workflows_sa_gcs_admin,
-    google_project_iam_member.workflows_sa_bq_resource_mgr,
-    google_project_iam_member.workflow_service_account_token_role,
-    google_project_iam_member.workflows_sa_bq_connection,
-    google_project_iam_member.workflows_sa_log_writer,
-    google_project_iam_member.workflow_service_account_bqadmin,
-    google_project_iam_member.workflow_service_account_dataproc_role
+  depends_on      = [
+  google_project_iam_member.workflow_service_account_invoke_role,
+  google_project_iam_member.workflows_sa_bq_read,
+  google_project_iam_member.workflows_sa_bq_data,
+  google_project_iam_member.workflows_sa_gcs_admin,
+  google_project_iam_member.workflows_sa_bq_resource_mgr,
+  google_project_iam_member.workflow_service_account_token_role,
+  google_project_iam_member.workflows_sa_bq_connection,
+  google_project_iam_member.workflows_sa_log_writer, 
+  google_project_iam_member.workflow_service_account_bqadmin,
+  google_project_iam_member.workflow_service_account_dataproc_role  
   ]
 
 }

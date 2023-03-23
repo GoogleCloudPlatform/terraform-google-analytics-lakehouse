@@ -67,7 +67,6 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
     type = "STORAGE_BUCKET"
   }
 
-  project = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_workflows, google_project_iam_member.dataplex_bucket_access]
-
+  project    = module.project-services.project_id
+  depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent, google_project_iam_member.dataplex_bucket_access]
 }

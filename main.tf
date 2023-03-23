@@ -49,7 +49,8 @@ module "project-services" {
     "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
     "storage.googleapis.com",
-    "workflows.googleapis.com"
+    "workflows.googleapis.com",
+    "cloudscheduler.googleapis.com"
   ]
 }
 

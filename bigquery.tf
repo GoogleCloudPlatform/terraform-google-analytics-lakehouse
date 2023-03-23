@@ -7,6 +7,7 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   description   = "My gcp_lakehouse Dataset with tables"
   location      = var.region
   labels        = var.labels
+  depends_on    = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
 
@@ -18,6 +19,7 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   location      = var.region
   friendly_name = "gcp lakehouse storage bucket connection"
   cloud_resource {}
+  depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
 }
 
 
