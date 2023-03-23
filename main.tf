@@ -53,7 +53,8 @@ module "project-services" {
     "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
     "storage.googleapis.com",
-    "workflows.googleapis.com"
+    "workflows.googleapis.com",
+    "cloudscheduler.googleapis.com"
   ]
 }
 
@@ -61,27 +62,7 @@ resource "time_sleep" "wait_after_apis_activate" {
   depends_on      = [module.project-services]
   create_duration = "30s"
 }
-resource "time_sleep" "wait_after_adding_eventarc_svc_agent" {
-  depends_on = [time_sleep.wait_after_apis_activate,
-    google_project_iam_member.eventarc_svg_agent
-  ]
-  #actually waits 180 seconds
-  create_duration = "60s"
-}
 
-#random id
-resource "random_id" "id" {
-  byte_length = 4
-}
-
-
-#get service acct IDs
-resource "google_project_service_identity" "eventarc" {
-  provider   = google-beta
-  project    = module.project-services.project_id
-  service    = "eventarc.googleapis.com"
-  depends_on = [time_sleep.wait_after_apis_activate]
-}
 
 resource "google_project_service_identity" "pubsub" {
   provider   = google-beta
@@ -153,24 +134,9 @@ resource "google_service_account" "data_analyst_user" {
   display_name = "Service Account for  user"
 }
 
-resource "google_project_iam_member" "workflows_sa_bq_data" {
+#get gcs svc account
+data "google_storage_project_service_account" "gcs_account" {
   project = module.project-services.project_id
-  role    = "roles/bigquery.dataOwner"
-  member  = "serviceAccount:${google_service_account.workflows_sa.email}"
-
-  depends_on = [
-    google_service_account.workflows_sa
-  ]
-}
-
-resource "google_project_iam_member" "workflows_sa_bq_resource_mgr" {
-  project = module.project-services.project_id
-  role    = "roles/bigquery.resourceAdmin"
-  member  = "serviceAccount:${google_service_account.workflows_sa.email}"
-
-  depends_on = [
-    google_service_account.workflows_sa
-  ]
 }
 
 
@@ -312,67 +278,6 @@ resource "google_storage_bucket" "destination_bucket" {
 
 }
 
-
-# Set up service account for the Cloud Function to execute as
-resource "google_service_account" "cloud_function_service_account" {
-  project      = module.project-services.project_id
-  account_id   = "cloud-function-sa-${random_id.id.hex}"
-  display_name = "Service Account for Cloud Function Execution"
-}
-
-
-resource "google_project_iam_member" "cloud_function_service_account_editor_role" {
-  project = module.project-services.project_id
-  role    = "roles/editor"
-  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
-
-  depends_on = [
-    google_service_account.cloud_function_service_account
-  ]
-}
-
-
-resource "google_project_iam_member" "cloud_function_service_account_function_invoker" {
-  project = module.project-services.project_id
-  role    = "roles/run.invoker"
-  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
-
-  depends_on = [
-    google_service_account.cloud_function_service_account
-  ]
-}
-
-
-# Create a Cloud Function resource
-# # Zip the function file
-data "archive_file" "bigquery_external_function_zip" {
-  type        = "zip"
-  source_dir  = "${path.module}/assets/bigquery-external-function"
-  output_path = "${path.module}/assets/bigquery-external-function.zip"
-
-  depends_on = [
-    google_storage_bucket.provisioning_bucket
-  ]
-}
-
-# # Place the cloud function code (zip file) on Cloud Storage
-resource "google_storage_bucket_object" "cloud_function_zip_upload" {
-  name   = "assets/bigquery-external-function.zip"
-  bucket = google_storage_bucket.provisioning_bucket.name
-  source = data.archive_file.bigquery_external_function_zip.output_path
-
-  depends_on = [
-    google_storage_bucket.provisioning_bucket,
-    data.archive_file.bigquery_external_function_zip
-  ]
-}
-
-
-#get gcs svc account
-data "google_storage_project_service_account" "gcs_account" {
-  project = module.project-services.project_id
-}
-
 resource "google_project_iam_member" "gcs_pubsub_publisher" {
   project = module.project-services.project_id
   role    = "roles/pubsub.publisher"
@@ -409,47 +314,19 @@ resource "google_storage_bucket_object" "startfile" {
   ]
 }
 
-#we need to wait after file is dropped in bucket, to trigger cf, and copy data files
-resource "time_sleep" "wait_after_cloud_function_creation" {
-  depends_on      = [google_storage_bucket_object.startfile]
-  create_duration = "15s"
+#execute workflows
+provider "http" {
+}
+data "http" "easier_workflow_exec" {
+  url = "https://workflowexecutions.googleapis.com/v1/projects/bp-steveswalker-solutions-300/locations/us-central1/workflows/workflow-123/executions"
+
+  request_headers = {
+    Authorization = "Bearer ${data.google_service_account_id_token.oidc.id_token}"
+  }
 }
 
-#lake
-resource "google_dataplex_lake" "gcp_primary" {
-  location     = var.region
-  name         = "gcp-primary-lake"
-  description  = "gcp primary lake"
-  display_name = "gcp primary lake"
-
-  labels = {
-    gcp-lake = "exists"
-  }
-
-  project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_adding_eventarc_svc_agent]
-}
-
-#zone
-resource "google_dataplex_zone" "gcp_primary_zone" {
-  discovery_spec {
-    enabled = true
-  }
-
-  lake     = google_dataplex_lake.gcp_primary.name
-  location = var.region
-  name     = "gcp-primary-zone"
-
-  resource_spec {
-    location_type = "SINGLE_REGION"
-  }
-
-  type         = "RAW"
-  description  = "Zone for thelookecommerce"
-  display_name = "Zone 1"
-  labels       = {}
-  project      = module.project-services.project_id
-  depends_on   = [time_sleep.wait_after_adding_eventarc_svc_agent]
+output "workflow_return" {
+  value = data.http.easier_workflow_exec.body
 }
 
 #give dataplex access to biglake bucket
