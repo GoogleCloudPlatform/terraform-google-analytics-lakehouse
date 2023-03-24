@@ -20,7 +20,7 @@ variable "project_id" {
 }
 
 variable "bucket_name" {
-  description = "The name of the bucket to use."
+  description = "The name of the bucket to create."
   type        = string
 }
 

@@ -15,6 +15,6 @@
  */
 
 output "bucket_name" {
-  description = "Output of the create view workflow"
+  description = "The name of the bucket."
   value       = "Value"
 }
