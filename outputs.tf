@@ -15,16 +15,20 @@
  */
 
 output "workflow_return_bucket_copy" {
-  value = data.http.call_workflows_bucket_copy_run.response_body
+  description = "Output of the bucket copy workflow"
+  value       = data.http.call_workflows_bucket_copy_run.response_body
 }
 
 output "workflow_return_create_bq_tables" {
-  value = data.http.call_workflows_create_gcp_biglake_tables_run.response_body
+  description = "Output of the create bigquery tables workflow"
+  value       = data.http.call_workflows_create_gcp_biglake_tables_run.response_body
 }
 
 output "call_workflows_create_views_and_others" {
-  value = data.http.call_workflows_create_views_and_others.response_body
+  description = "Output of the create view workflow"
+  value       = data.http.call_workflows_create_views_and_others.response_body
 }
 output "call_workflows_create_iceberg_table" {
-  value = data.http.call_workflows_create_iceberg_table.response_body
+  description = "Output of the iceberg tables workflow"
+  value       = data.http.call_workflows_create_iceberg_table.response_body
 }

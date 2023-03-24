@@ -56,7 +56,7 @@ resource "google_project_iam_member" "workflow_service_account_token_role" {
   ]
 }
 
-#give workflows_sa bq data access 
+#give workflows_sa bq data access
 resource "google_project_iam_member" "workflows_sa_bq_connection" {
   project = module.project-services.project_id
   role    = "roles/bigquery.connectionAdmin"
