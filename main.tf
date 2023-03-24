@@ -84,7 +84,6 @@ data "google_storage_project_service_account" "gcs_account" {
   project = module.project-services.project_id
 }
 
-
 #random id
 resource "random_id" "id" {
   byte_length = 4
