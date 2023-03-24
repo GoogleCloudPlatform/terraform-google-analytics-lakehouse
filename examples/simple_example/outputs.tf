@@ -14,3 +14,7 @@
  * limitations under the License.
  */
 
+output "bucket_name" {
+  description = "Output of the create view workflow"
+  value       = "Value"
+}
