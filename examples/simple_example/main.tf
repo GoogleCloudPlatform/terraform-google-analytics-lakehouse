@@ -14,3 +14,7 @@
  * limitations under the License.
  */
 
+module "analytics_lakehouse" {
+  source = "/"
+
+}

@@ -1,7 +1,7 @@
 resource "google_project_service_identity" "dataplex_sa" {
-  provider = google-beta
-  project  = module.project-services.project_id
-  service  = "dataplex.googleapis.com"
+  provider   = google-beta
+  project    = module.project-services.project_id
+  service    = "dataplex.googleapis.com"
   depends_on = [time_sleep.wait_after_all_workflows]
 }
 
@@ -15,7 +15,7 @@ resource "google_dataplex_lake" "gcp_primary" {
     gcp-lake = "exists"
   }
 
-  project = module.project-services.project_id
+  project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_all_workflows]
 
 }
@@ -39,14 +39,14 @@ resource "google_dataplex_zone" "gcp_primary_zone" {
   display_name = "Zone 1"
   labels       = {}
   project      = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_workflows]
+  depends_on   = [time_sleep.wait_after_all_workflows]
 }
 
 #give dataplex access to biglake bucket
 resource "google_project_iam_member" "dataplex_bucket_access" {
-  project = module.project-services.project_id
-  role    = "roles/dataplex.serviceAgent"
-  member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
+  project    = module.project-services.project_id
+  role       = "roles/dataplex.serviceAgent"
+  member     = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
   depends_on = [time_sleep.wait_after_all_workflows]
 }
 
@@ -67,7 +67,7 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
     type = "STORAGE_BUCKET"
   }
 
-  project = module.project-services.project_id
+  project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_all_workflows, google_project_iam_member.dataplex_bucket_access]
 
 }
