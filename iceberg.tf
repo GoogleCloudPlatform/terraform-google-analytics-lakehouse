@@ -132,8 +132,6 @@ resource "google_storage_bucket" "provisioning_bucket_short" {
   # public_access_prevention = "enforced"
 }
 
-# Set up BigQuery resources
-# # Create the BigQuery dataset
 resource "google_bigquery_dataset" "ds" {
   project                    = module.project-services.project_id
   dataset_id                 = "gcp_${var.use_case_short}"
@@ -166,7 +164,7 @@ resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
 
 # # Create a BigQuery external table.
 resource "google_bigquery_table" "tbl_thelook_events" {
-  dataset_id          = google_bigquery_dataset.ds.dataset_id
+  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
   table_id            = "events"
   project             = module.project-services.project_id
   deletion_protection = var.deletion_protection
