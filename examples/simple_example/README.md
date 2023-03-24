@@ -13,7 +13,10 @@ This example illustrates how to use the `` module.
 
 | Name | Description |
 |------|-------------|
-| bucket\_name | The name of the bucket. |
+| call\_workflows\_create\_iceberg\_table | Output of the iceberg tables workflow |
+| call\_workflows\_create\_views\_and\_others | Output of the create view workflow |
+| workflow\_return\_bucket\_copy | Output of the bucket copy workflow |
+| workflow\_return\_create\_bq\_tables | Output of the create bigquery tables workflow |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
