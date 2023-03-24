@@ -14,7 +14,22 @@
  * limitations under the License.
  */
 
-output "bucket_name" {
-  description = "The name of the bucket."
-  value       = "Value"
+output "workflow_return_bucket_copy" {
+  description = "Output of the bucket copy workflow"
+  value       = module.analytics_lakehouse.workflow_return_bucket_copy
+}
+
+output "workflow_return_create_bq_tables" {
+  description = "Output of the create bigquery tables workflow"
+  value       = module.analytics_lakehouse.workflow_return_create_bq_tables
+}
+
+output "call_workflows_create_views_and_others" {
+  description = "Output of the create view workflow"
+  value       = module.analytics_lakehouse.call_workflows_create_views_and_others
+}
+
+output "call_workflows_create_iceberg_table" {
+  description = "Output of the iceberg tables workflow"
+  value       = module.analytics_lakehouse.call_workflows_create_iceberg_table
 }
