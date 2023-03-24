@@ -119,7 +119,7 @@ resource "google_storage_bucket_object" "pyspark_file" {
 #we will use this as a wait and to make sure every other resource in this project has completed.
 #we will then make the last four workflow steps dependent on this
 resource "time_sleep" "wait_after_all_resources" {
-  create_duration = "30s"
+  create_duration = "120s"
   depends_on = [
     module.project-services,
     google_storage_bucket.provisioning_bucket,
