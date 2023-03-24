@@ -45,16 +45,11 @@ module "project-services" {
     "datalineage.googleapis.com",
     "dataplex.googleapis.com",
     "dataproc.googleapis.com",
-    "eventarc.googleapis.com",
     "iam.googleapis.com",
-    "metastore.googleapis.com",
-    "pubsub.googleapis.com",
-    "run.googleapis.com",
     "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
     "storage.googleapis.com",
-    "workflows.googleapis.com",
-    "cloudscheduler.googleapis.com"
+    "workflows.googleapis.com"
   ]
 }
 
@@ -130,7 +125,42 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
 }
 
+#we will use this as a wait and to make sure every other resource in this project has completed.
+#we will then make the last four workflow steps dependent on this
+resource "time_sleep" "wait_after_all_resources" {
+  create_duration = "30s"
+  depends_on = [
+    module.project-services,
+    google_storage_bucket.provisioning_bucket,
+    google_storage_bucket.destination_bucket,
+    google_project_service_identity.workflows,
+    google_service_account.workflows_sa,
+    google_project_iam_member.workflow_service_account_invoke_role,
+    google_project_iam_member.workflows_sa_bq_data,
+    google_project_iam_member.workflows_sa_gcs_admin,
+    google_project_iam_member.workflows_sa_bq_resource_mgr,
+    google_project_iam_member.workflow_service_account_token_role,
+    google_project_iam_member.workflows_sa_bq_connection,
+    google_project_iam_member.workflows_sa_bq_read,
+    google_project_iam_member.workflows_sa_log_writer,
+    google_project_iam_member.workflow_service_account_dataproc_role,
+    google_project_iam_member.workflow_service_account_bqadmin,
+    google_bigquery_dataset.gcp_lakehouse_ds,
+    google_bigquery_connection.gcp_lakehouse_connection,
+    google_project_iam_member.connectionPermissionGrant,
+    google_workflows_workflow.workflows_create_gcp_biglake_tables,
+    data.google_storage_project_service_account.gcs_account
+  ]  
+}
 
+resource "time_sleep" "wait_after_all_workflows" {
+  create_duration = "30s"
+  depends_on = [data.http.call_workflows_bucket_copy_run,
+  data.http.call_workflows_create_gcp_biglake_tables_run,
+  data.http.call_workflows_create_iceberg_table,
+  data.http.call_workflows_create_views_and_others
+  ]  
+}
 #execute workflows
 data "google_client_config" "current" {
 }
@@ -143,25 +173,8 @@ data "http" "call_workflows_create_gcp_biglake_tables_run" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    module.project-services,
-    google_storage_bucket.provisioning_bucket,
-    google_storage_bucket.destination_bucket,
-    google_project_service_identity.workflows,
-    google_service_account.workflows_sa,
-    google_project_iam_member.workflow_service_account_invoke_role,
-    google_project_iam_member.workflows_sa_bq_data,
-    google_project_iam_member.workflows_sa_gcs_admin,
-    google_project_iam_member.workflows_sa_bq_resource_mgr,
-    google_project_iam_member.workflow_service_account_token_role,
-    google_project_iam_member.workflows_sa_bq_connection,
-    google_project_iam_member.workflows_sa_bq_read,
-    google_project_iam_member.workflows_sa_log_writer,
-    google_project_iam_member.workflow_service_account_dataproc_role,
-    google_project_iam_member.workflow_service_account_bqadmin,
-    google_bigquery_dataset.gcp_lakehouse_ds,
-    google_bigquery_connection.gcp_lakehouse_connection,
-    google_project_iam_member.connectionPermissionGrant,
-    google_workflows_workflow.workflows_create_gcp_biglake_tables
+    time_sleep.wait_after_all_resources,
+    data.http.call_workflows_bucket_copy_run
   ]
 }
 
@@ -171,27 +184,15 @@ data "http" "call_workflows_bucket_copy_run" {
   request_headers = {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-  depends_on = [
-    module.project-services,
-    google_storage_bucket.provisioning_bucket,
-    google_storage_bucket.destination_bucket,
-    google_project_service_identity.workflows,
-    google_service_account.workflows_sa,
-    google_project_iam_member.workflow_service_account_invoke_role,
-    google_project_iam_member.workflows_sa_bq_data,
-    google_project_iam_member.workflows_sa_gcs_admin,
-    google_project_iam_member.workflows_sa_bq_resource_mgr,
-    google_project_iam_member.workflow_service_account_token_role,
-    google_project_iam_member.workflows_sa_bq_connection,
-    google_project_iam_member.workflows_sa_bq_read,
-    google_project_iam_member.workflows_sa_log_writer,
-    google_project_iam_member.workflow_service_account_dataproc_role,
-    google_project_iam_member.workflow_service_account_bqadmin,
-    google_bigquery_dataset.gcp_lakehouse_ds,
-    google_bigquery_connection.gcp_lakehouse_connection,
-    google_project_iam_member.connectionPermissionGrant,
-    google_workflows_workflow.workflow_bucket_copy
+    depends_on = [
+    time_sleep.wait_after_all_resources
   ]
+}
+
+resource "time_sleep" "wait_after_bucket_copy" {
+  create_duration = "30s"
+  depends_on = [data.http.call_workflows_bucket_copy_run
+  ]  
 }
 
 data "http" "call_workflows_create_views_and_others" {
@@ -201,25 +202,8 @@ data "http" "call_workflows_create_views_and_others" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    module.project-services,
-    google_storage_bucket.provisioning_bucket,
-    google_storage_bucket.destination_bucket,
-    google_project_service_identity.workflows,
-    google_service_account.workflows_sa,
-    google_project_iam_member.workflow_service_account_invoke_role,
-    google_project_iam_member.workflows_sa_bq_data,
-    google_project_iam_member.workflows_sa_gcs_admin,
-    google_project_iam_member.workflows_sa_bq_resource_mgr,
-    google_project_iam_member.workflow_service_account_token_role,
-    google_project_iam_member.workflows_sa_bq_connection,
-    google_project_iam_member.workflows_sa_bq_read,
-    google_project_iam_member.workflows_sa_log_writer,
-    google_project_iam_member.workflow_service_account_dataproc_role,
-    google_project_iam_member.workflow_service_account_bqadmin,
-    google_bigquery_dataset.gcp_lakehouse_ds,
-    google_bigquery_connection.gcp_lakehouse_connection,
-    google_project_iam_member.connectionPermissionGrant,
-    google_workflows_workflow.workflow_create_views_and_others
+    time_sleep.wait_after_all_resources,
+        data.http.call_workflows_create_gcp_biglake_tables_run
   ]
 }
 
@@ -230,25 +214,7 @@ data "http" "call_workflows_create_iceberg_table" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    module.project-services,
-    google_storage_bucket.provisioning_bucket,
-    google_storage_bucket.destination_bucket,
-    google_project_service_identity.workflows,
-    google_service_account.workflows_sa,
-    google_project_iam_member.workflow_service_account_invoke_role,
-    google_project_iam_member.workflows_sa_bq_data,
-    google_project_iam_member.workflows_sa_gcs_admin,
-    google_project_iam_member.workflows_sa_bq_resource_mgr,
-    google_project_iam_member.workflow_service_account_token_role,
-    google_project_iam_member.workflows_sa_bq_connection,
-    google_project_iam_member.workflows_sa_bq_read,
-    google_project_iam_member.workflows_sa_log_writer,
-    google_project_iam_member.workflow_service_account_dataproc_role,
-    google_project_iam_member.workflow_service_account_bqadmin,
-    google_bigquery_dataset.gcp_lakehouse_ds,
-    google_bigquery_connection.gcp_lakehouse_connection,
-    google_project_iam_member.connectionPermissionGrant,
-    google_workflows_workflow.initial-workflow-pyspark
+    time_sleep.wait_after_all_resources
   ]
 }
 
