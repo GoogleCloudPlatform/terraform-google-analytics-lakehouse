@@ -2,8 +2,7 @@ resource "google_project_service_identity" "dataplex_sa" {
   provider = google-beta
   project  = module.project-services.project_id
   service  = "dataplex.googleapis.com"
-  depends_on = [data.http.call_workflows_bucket_copy_run,
-  data.http.call_workflows_create_gcp_biglake_tables_run]
+  depends_on = [time_sleep.wait_after_all_workflows]
 }
 
 resource "google_dataplex_lake" "gcp_primary" {
@@ -17,8 +16,7 @@ resource "google_dataplex_lake" "gcp_primary" {
   }
 
   project = module.project-services.project_id
-  depends_on = [data.http.call_workflows_bucket_copy_run,
-  data.http.call_workflows_create_gcp_biglake_tables_run]
+  depends_on = [time_sleep.wait_after_all_workflows]
 
 }
 
@@ -41,8 +39,7 @@ resource "google_dataplex_zone" "gcp_primary_zone" {
   display_name = "Zone 1"
   labels       = {}
   project      = module.project-services.project_id
-  depends_on = [data.http.call_workflows_bucket_copy_run,
-  data.http.call_workflows_create_gcp_biglake_tables_run]
+  depends_on = [time_sleep.wait_after_all_workflows]
 }
 
 #give dataplex access to biglake bucket
@@ -50,8 +47,7 @@ resource "google_project_iam_member" "dataplex_bucket_access" {
   project = module.project-services.project_id
   role    = "roles/dataplex.serviceAgent"
   member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
-  depends_on = [data.http.call_workflows_bucket_copy_run,
-  data.http.call_workflows_create_gcp_biglake_tables_run]
+  depends_on = [time_sleep.wait_after_all_workflows]
 }
 
 #asset
@@ -72,7 +68,6 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
   }
 
   project = module.project-services.project_id
-  depends_on = [data.http.call_workflows_bucket_copy_run,
-  data.http.call_workflows_create_gcp_biglake_tables_run, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_all_workflows, google_project_iam_member.dataplex_bucket_access]
 
 }
