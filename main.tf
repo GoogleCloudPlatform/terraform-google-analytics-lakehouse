@@ -144,19 +144,10 @@ resource "time_sleep" "wait_after_all_resources" {
   ]
 }
 
-resource "time_sleep" "wait_after_all_workflows" {
-  create_duration = "30s"
-  depends_on = [data.http.call_workflows_bucket_copy_run,
-    data.http.call_workflows_create_gcp_biglake_tables_run,
-    data.http.call_workflows_create_iceberg_table,
-    data.http.call_workflows_create_views_and_others
-  ]
-}
 #execute workflows
 data "google_client_config" "current" {
 }
-provider "http" {
-}
+
 data "http" "call_workflows_create_gcp_biglake_tables_run" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflows_create_gcp_biglake_tables.name}/executions"
   method = "POST"
@@ -195,11 +186,7 @@ resource "time_sleep" "wait_after_all_workflows" {
     data.http.call_workflows_create_views_and_others
   ]
 }
-#execute workflows
-data "google_client_config" "current" {
-}
-provider "http" {
-}
+
 data "http" "call_workflows_create_gcp_biglake_tables_run" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflows_create_gcp_biglake_tables.name}/executions"
   method = "POST"
