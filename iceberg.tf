@@ -132,16 +132,6 @@ resource "google_storage_bucket" "provisioning_bucket_short" {
   # public_access_prevention = "enforced"
 }
 
-resource "google_bigquery_dataset" "ds" {
-  project                    = module.project-services.project_id
-  dataset_id                 = "gcp_${var.use_case_short}"
-  friendly_name              = "My Dataset"
-  description                = "My Dataset with tables"
-  location                   = var.region
-  labels                     = var.labels
-  delete_contents_on_destroy = var.force_destroy
-}
-
 # # Create a BigQuery connection
 resource "google_bigquery_connection" "ds_connection" {
   project       = module.project-services.project_id

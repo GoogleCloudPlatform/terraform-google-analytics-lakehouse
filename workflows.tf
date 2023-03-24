@@ -192,31 +192,6 @@ resource "google_workflows_workflow" "workflow_create_views_and_others" {
   source_contents = templatefile("${path.module}/assets/yaml/workflow_create_views_and_others.yaml", {
     data_analyst_user = google_service_account.data_analyst_user.email,
     marketing_user    = google_service_account.marketing_user.email
-    })
-  depends_on = [
-  google_project_iam_member.workflow_service_account_invoke_role,
-  google_project_iam_member.workflows_sa_bq_read,
-  google_project_iam_member.workflows_sa_bq_data,
-  google_project_iam_member.workflows_sa_gcs_admin,
-  google_project_iam_member.workflows_sa_bq_resource_mgr,
-  google_project_iam_member.workflow_service_account_token_role,
-  google_project_iam_member.workflows_sa_bq_connection,
-  google_project_iam_member.workflows_sa_log_writer,
-  google_project_iam_member.workflow_service_account_bqadmin,
-  google_project_iam_member.workflow_service_account_dataproc_role
-  ]
-
-}
-
-resource "google_workflows_workflow" "workflow_create_views_and_others" {
-  name            = "workflow_create_views_and_others"
-  project         = module.project-services.project_id
-  region          = "us-central1"
-  description     = "create gcp biglake tables_18"
-  service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/assets/yaml/workflow_create_views_and_others.yaml", {
-    data_analyst_user = google_service_account.data_analyst_user.email,
-    marketing_user    = google_service_account.marketing_user.email
   })
   depends_on = [
   google_project_iam_member.workflow_service_account_invoke_role,
