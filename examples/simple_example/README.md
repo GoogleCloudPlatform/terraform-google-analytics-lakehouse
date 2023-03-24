@@ -7,16 +7,11 @@ This example illustrates how to use the `` module.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| project\_id | The ID of the project in which to provision resources. | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| call\_workflows\_create\_iceberg\_table | Output of the iceberg tables workflow |
-| call\_workflows\_create\_views\_and\_others | Output of the create view workflow |
-| workflow\_return\_bucket\_copy | Output of the bucket copy workflow |
-| workflow\_return\_create\_bq\_tables | Output of the create bigquery tables workflow |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
