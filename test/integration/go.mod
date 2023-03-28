@@ -1,4 +1,4 @@
-module github.com/terraform-google-modules//test/integration
+module github.com/terraform-google-modules/terraform-google-analytics-lakehouse/test/integration
 
 go 1.18
 
