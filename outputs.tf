@@ -43,11 +43,16 @@ output "bigquery_editor_url" {
 }
 
 output "solution_guide_url" {
-  value       = "https://cloud.google.com/"
+  value       = "http://bit.ly/3FNWhjH"
   description = "The URL to Solution Guide for the EDW solution"
 }
 
 output "neos_tutorial_url" {
-  value       = "https://cloud.google.com/"
+  value       = "http://bit.ly/3nc8M25"
+  description = "The URL to launch the in-console tutorial for the EDW solution"
+}
+
+output "colab_url" {
+  value       = "http://bit.ly/3K4CmQ4"
   description = "The URL to launch the in-console tutorial for the EDW solution"
 }
