@@ -52,15 +52,15 @@ Functional examples are included in the
 
 | Name | Description |
 |------|-------------|
-| call\_workflows\_create\_iceberg\_table | Output of the iceberg tables workflow |
-| call\_workflows\_create\_views\_and\_others | Output of the create view workflow |
 | workflow\_return\_bucket\_copy | Output of the bucket copy workflow |
 | workflow\_return\_create\_bq\_tables | Output of the create bigquery tables workflow |
-| bigquery\_editor\_url | The URL to launch the BigQuery editor |
-| lakehouse\_colab\_url | The URL to launch the in-console tutorial for the EDW solution |
+| call\_workflows\_create\_views\_and\_others | Output of the create view workflow |
+| call\_workflows\_create\_iceberg\_table | Output of the iceberg tables workflow |
 | lookerstudio\_report\_url | The URL to create a new Looker Studio report displays a sample dashboard for data analysis |
-| neos\_tutorial\_url | The URL to launch the in-console tutorial for the EDW solution |
+| bigquery\_editor\_url | The URL to launch the BigQuery editor |
 | solution\_guide\_url | The URL to Solution Guide for the EDW solution |
+| neos\_tutorial\_url | The URL to launch the in-console tutorial for the EDW solution |
+| lakehouse\_colab\_url | The URL to launch the in-console tutorial for the EDW solution |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
