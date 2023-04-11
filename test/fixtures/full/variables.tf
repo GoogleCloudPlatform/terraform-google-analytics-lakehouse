@@ -13,21 +13,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-variable "default_table_expiration_ms" {
-  description = "Default TTL of tables using the dataset in MS"
-}
-
-variable "project_id" {
-  description = "Project where the dataset and table are created"
-}
-
-variable "kms_keys" {
-  description = "The KMS key module output"
-  default     = null
-}
-
-variable "dataset_labels" {
-  description = "Key value pairs in a map for dataset labels"
-  type        = map(string)
-}

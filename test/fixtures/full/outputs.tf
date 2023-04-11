@@ -13,23 +13,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-output "bigquery_dataset" {
-  value       = module.example.bigquery_dataset
-  description = "Bigquery dataset resource."
-}
-
-output "bigquery_tables" {
-  value       = module.example.bigquery_tables
-  description = "Map of bigquery table resources being provisioned."
-}
-
-output "bigquery_external_tables" {
-  value       = module.example.bigquery_external_tables
-  description = "Map of bigquery table resources being provisioned."
-}
-
-output "authorization" {
-  value       = module.example.authorization
-  description = "Authorized dataset for the BQ dataset"
-}
