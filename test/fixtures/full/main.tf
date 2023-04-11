@@ -15,5 +15,5 @@
  */
 
 module "example" {
-  source                      = "../../../examples/simple_example"
+  source = "../../../examples/simple_example"
 }
