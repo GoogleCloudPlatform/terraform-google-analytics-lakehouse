@@ -52,7 +52,7 @@ output "neos_tutorial_url" {
   description = "The URL to launch the in-console tutorial for the EDW solution"
 }
 
-output "colab_url" {
+output "lakehouse_colab_url" {
   value       = "http://bit.ly/3K4CmQ4"
   description = "The URL to launch the in-console tutorial for the EDW solution"
 }
