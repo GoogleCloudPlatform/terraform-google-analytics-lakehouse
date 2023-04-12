@@ -27,13 +27,9 @@ steps:
 - id: apply-dwh
   name: 'gcr.io/cloud-foundation-cicd/$_DOCKER_IMAGE_DEVELOPER_TOOLS:$_DOCKER_TAG_VERSION_DEVELOPER_TOOLS'
   args: ['/bin/bash', '-c', 'cft test run TestAnalyticsLakehouse --stage apply --verbose']
-- name: 'ubuntu'
-  args: ['sleep', '300']
 - id: verify-dwh
   name: 'gcr.io/cloud-foundation-cicd/$_DOCKER_IMAGE_DEVELOPER_TOOLS:$_DOCKER_TAG_VERSION_DEVELOPER_TOOLS'
   args: ['/bin/bash', '-c', 'cft test run TestAnalyticsLakehouse --stage verify --verbose']
-- name: 'ubuntu'
-  args: ['sleep', '2100']
 - id: destroy-dwh
   name: 'gcr.io/cloud-foundation-cicd/$_DOCKER_IMAGE_DEVELOPER_TOOLS:$_DOCKER_TAG_VERSION_DEVELOPER_TOOLS'
   args: ['/bin/bash', '-c', 'cft test run TestAnalyticsLakehouse --stage destroy --verbose']

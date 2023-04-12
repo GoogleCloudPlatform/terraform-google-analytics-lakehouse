@@ -18,8 +18,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/tft"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/gcloud"
+	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/tft"
+	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/utils"
 )
 
 // Retry if these errors are encountered.
@@ -35,6 +38,26 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		dwh.DefaultVerify(assert)
 
 		// TODO: Add additional asserts for other resources
+	})
+
+	dwh.DefineTeardown(func(assert *assert.Assertions) {
+
+		projectID := dwh.GetTFSetupStringOutput("project_id")
+
+		// TODO: Call Polling Utility
+		triggerWorkflowFn := func() (bool, error) {
+			// Change this to list instances for the gcloud run
+			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
+			// If compute instances is greater than 0, wait and check again until 0 to complete destroy
+			if len(currentComputeInstances) > 0 {
+				return true, nil
+			}
+			return false, nil
+		}
+		utils.Poll(t, triggerWorkflowFn, 120, 30*time.Second)
+
+		dwh.DefaultTeardown(assert)
+
 	})
 	dwh.Test()
 }
