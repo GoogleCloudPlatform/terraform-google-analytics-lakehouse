@@ -46,7 +46,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		// TODO: Call Polling Utility
 		triggerWorkflowFn := func() (bool, error) {
-			gcloud.Runf(t, "compute network-attachments list --region us-central1")
+			gcloud.Runf(t, "compute network-attachments list --regions us-central1")
 			// Change this to list instances for the gcloud run
 			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
 			// If compute instances is greater than 0, wait and check again until 0 to complete destroy
