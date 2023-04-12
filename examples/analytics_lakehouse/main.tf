@@ -15,6 +15,6 @@
  */
 
 module "analytics_lakehouse" {
-  source = "/"
+  source = "../.."
 
 }
