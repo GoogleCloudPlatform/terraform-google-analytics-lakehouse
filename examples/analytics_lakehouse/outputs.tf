@@ -15,16 +15,16 @@
  */
 
 output "lookerstudio_report_url" {
-  value       = module.data_warehouse.lookerstudio_report_url
+  value       = module.analytics_lakehouse.lookerstudio_report_url
   description = "The URL to create a new Looker Studio report"
 }
 
 output "bigquery_editor_url" {
-  value       = module.data_warehouse.bigquery_editor_url
+  value       = module.analytics_lakehouse.bigquery_editor_url
   description = "The URL to launch the BigQuery editor"
 }
 
 output "lakehouse_colab_url" {
-  value       = module.data_warehouse.lakehouse_colab_url
+  value       = module.analytics_lakehouse.lakehouse_colab_url
   description = "The URL to launch the Colab instance"
 }
