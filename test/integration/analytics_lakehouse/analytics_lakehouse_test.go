@@ -45,9 +45,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		projectID := dwh.GetTFSetupStringOutput("project_id")
 
-		// TODO: Call Polling Utility
-		triggerWorkflowFn := func() (bool, error) {
-			// Change this to list instances for the gcloud run
+		verifyNoVMs := func() (bool, error) {
 			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
 			// If compute instances is greater than 0, wait and check again until 0 to complete destroy
 			if len(currentComputeInstances) > 0 {
@@ -55,7 +53,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			}
 			return false, nil
 		}
-		utils.Poll(t, triggerWorkflowFn, 120, 30*time.Second)
+		utils.Poll(t, verifyNoVMs, 120, 30*time.Second)
 
 		dwh.DefaultTeardown(assert)
 
