@@ -13,3 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+module "analytics_lakehouse" {
+  source = "../.."
+
+  project_id          = var.project_id
+  region              = "us-central1"
+  deletion_protection = false
+  force_destroy       = true
+
+}
