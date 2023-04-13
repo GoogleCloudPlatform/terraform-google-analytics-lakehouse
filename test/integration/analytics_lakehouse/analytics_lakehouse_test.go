@@ -29,6 +29,7 @@ import (
 var retryErrors = map[string]string{
 	// IAM for Eventarc service agent is eventually consistent
 	".*Permission denied while using the Eventarc Service Agent.*": "Eventarc Service Agent IAM is eventually consistent",
+	".*Error 400: The subnetwork resource*":                        "Subnet is eventually drained",
 }
 
 func TestAnalyticsLakehouse(t *testing.T) {
@@ -46,7 +47,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		// TODO: Call Polling Utility
 		triggerWorkflowFn := func() (bool, error) {
-			gcloud.Runf(t, "compute network-attachments list --regions us-central1 --project %s", projectID)
 			// Change this to list instances for the gcloud run
 			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
 			// If compute instances is greater than 0, wait and check again until 0 to complete destroy
