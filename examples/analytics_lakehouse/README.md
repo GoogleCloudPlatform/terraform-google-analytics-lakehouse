@@ -1,20 +1,21 @@
-# Simple Example
+# Analytics Lakehouse Example
 
-This example illustrates how to use the `` module.
+This example illustrates how to use the `analytics_lakehouse` module.
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| bucket\_name | The name of the bucket to create. | `string` | n/a | yes |
 | project\_id | The ID of the project in which to provision resources. | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| bucket\_name | The name of the bucket. |
+| bigquery\_editor\_url | The URL to launch the BigQuery editor |
+| lakehouse\_colab\_url | The URL to launch the Colab instance |
+| lookerstudio\_report\_url | The URL to create a new Looker Studio report |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 

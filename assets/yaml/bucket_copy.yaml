@@ -1,0 +1,49 @@
+main:
+    params: []
+    steps:
+        - init:
+            assign:
+                - source_bucket: "data-analytics-demos" # "devrel-abc-def-ghi" # "bucket-copy-fths"
+                - dest_bucket: ${"gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                - copied_objects: []
+        - list_objects:
+            call: googleapis.storage.v1.objects.list
+            args:
+                bucket: ${source_bucket}
+                # delimiter: "/"s
+                # prefix: "*.Parquet"
+            result: list_result
+        - objects:
+            call: sys.log
+            args:
+                text: ${list_result.items}
+        - copy_objects:
+                for:
+                    value: object
+                    index: i
+                    in: ${list_result.items}
+                    steps:
+                      - step1:
+                            try:
+                                steps:
+                                  - copy_object:
+                                      call: googleapis.storage.v1.objects.copy
+                                      args:
+                                          sourceBucket: ${source_bucket}
+                                          sourceObject: ${text.url_encode(object.name)}
+                                          destinationBucket: ${dest_bucket}
+                                          destinationObject: ${text.url_encode(object.name)}
+                                      result: copy_result
+                                  - save_result:
+                                      assign:
+                                          - copied_objects: ${list.concat(copied_objects, copy_result)}
+                            except:
+                                as: e
+                                raise:
+                                    exception: ${e}
+                                    sourceBucket: ${source_bucket}
+                                    sourceObject: ${object.name}
+                                    destinationBucket: ${dest_bucket}
+                                    # destinationObject: ${object.name}
+        - finish:
+            return: ${copied_objects}

@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-data "google_project" "project" {
-  project_id = var.project_id
-}
-
 module "project-services" {
   source                      = "terraform-google-modules/project-factory/google//modules/project_services"
   version                     = "13.0.0"
@@ -27,516 +23,187 @@ module "project-services" {
   enable_apis = var.enable_apis
 
   activate_apis = [
-    "compute.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "bigquery.googleapis.com",
+    "bigqueryconnection.googleapis.com",
+    "bigqueryconnection.googleapis.com",
+    "bigquerydatapolicy.googleapis.com",
+    "bigquerydatatransfer.googleapis.com",
+    "bigquerymigration.googleapis.com",
+    "bigqueryreservation.googleapis.com",
+    "bigquerystorage.googleapis.com",
     "cloudapis.googleapis.com",
     "cloudbuild.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "compute.googleapis.com",
+    "config.googleapis.com",
     "datacatalog.googleapis.com",
     "datalineage.googleapis.com",
-    "eventarc.googleapis.com",
-    "bigquerymigration.googleapis.com",
-    "bigquerystorage.googleapis.com",
-    "bigqueryconnection.googleapis.com",
-    "bigqueryreservation.googleapis.com",
-    "bigquery.googleapis.com",
-    "storage.googleapis.com",
+    "dataplex.googleapis.com",
+    "dataproc.googleapis.com",
+    "iam.googleapis.com",
+    "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
-    "run.googleapis.com",
-    "pubsub.googleapis.com",
-    "bigqueryconnection.googleapis.com",
-    "cloudfunctions.googleapis.com",
-    "bigquerydatatransfer.googleapis.com",
-    "artifactregistry.googleapis.com",
+    "storage.googleapis.com",
+    "workflows.googleapis.com"
   ]
 }
-#this could be one second.  
-#the previous api module does not signal 'done' until all APIs are registered.
-#so, all we need is something to wait for that return ( depends_on = [module.project-services])
 
-
-
-resource "time_sleep" "wait_5_seconds" {
-  depends_on = [module.project-services]
-
-  create_duration = "5s"
+resource "time_sleep" "wait_after_apis_activate" {
+  depends_on      = [module.project-services]
+  create_duration = "30s"
 }
+
+# Set up service accounts fine grain sec.
+resource "google_service_account" "marketing_user" {
+  project      = module.project-services.project_id
+  account_id   = "user-marketing-sa-${random_id.id.hex}"
+  display_name = "Service Account for marketing user"
+}
+
+# Set up service accounts fine grain sec.
+resource "google_service_account" "lake_admin_user" {
+  project      = module.project-services.project_id
+  account_id   = "user-lake-admin-sa-${random_id.id.hex}"
+  display_name = "Service Account for lake admin user"
+}
+
+# Set up service accounts fine grain sec.
+resource "google_service_account" "data_analyst_user" {
+  project      = module.project-services.project_id
+  account_id   = "user-analyst-sa-${random_id.id.hex}"
+  display_name = "Service Account for  user"
+}
+
+#get gcs svc account
+data "google_storage_project_service_account" "gcs_account" {
+  project = module.project-services.project_id
+}
+
 #random id
 resource "random_id" "id" {
   byte_length = 4
 }
 
-# Set up service account for the Cloud Function to execute as
-resource "google_service_account" "cloud_function_service_account" {
-  project      = var.project_id
-  account_id   = "cloud-function-sa-${random_id.id.hex}"
-  display_name = "Service Account for Cloud Function Execution"
-  depends_on = [time_sleep.wait_5_seconds]
+# # Set up the provisioning bucketstorage bucket
+resource "google_storage_bucket" "provisioning_bucket" {
+  name                        = "gcp_gcf_source_code-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
 }
 
-# TODO: scope this down
-resource "google_project_iam_member" "cloud_function_service_account_editor_role" {
-  project = var.project_id
-  role    = "roles/editor"
-  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_service_account.cloud_function_service_account
-  ]
-}
-
-# Set up Storage Buckets
 # # Set up the export storage bucket
-resource "google_storage_bucket" "export_bucket" {
-  name                        = "ds-edw-export-${random_id.id.hex}"
-  project                     = var.project_id
+resource "google_storage_bucket" "destination_bucket" {
+  name                        = "gcp-lakehouse-edw-export-${module.project-services.project_id}"
+  project                     = module.project-services.project_id
   location                    = "us-central1"
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
-  depends_on = [time_sleep.wait_5_seconds]
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
+
 }
 
-# # Set up the raw storage bucket
-resource "google_storage_bucket" "raw_bucket" {
-  name                        = "ds-edw-raw-${random_id.id.hex}"
-  project                     = var.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-  depends_on = [time_sleep.wait_5_seconds]
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the provisioning bucketstorage bucket
-resource "google_storage_bucket" "provisioning_bucket" {
-  name                        = "ds-edw-provisioner-${random_id.id.hex}"
-  project                     = var.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-  depends_on = [time_sleep.wait_5_seconds]
-  # public_access_prevention = "enforced"
-}
-
-# Set up BigQuery resources
-# # Create the BigQuery dataset
-resource "google_bigquery_dataset" "ds_edw" {
-  project       = var.project_id
-  dataset_id    = "ds_edw"
-  friendly_name = "My EDW Dataset"
-  description   = "My EDW Dataset with tables"
-  location      = var.region
-  labels        = var.labels
-  depends_on = [time_sleep.wait_5_seconds]
-}
-
-# # Create a BigQuery connection
-resource "google_bigquery_connection" "ds_connection" {
-  project       = var.project_id
-  connection_id = "ds_connection"
-  location      = var.region
-  friendly_name = "Storage Bucket Connection"
-  cloud_resource {}
-  depends_on = [time_sleep.wait_5_seconds]
-}
-
-# # Grant IAM access to the BigQuery Connection account for Cloud Storage
-resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
-  project = var.project_id
-  role    = "roles/storage.objectViewer"
-  member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_bigquery_connection.ds_connection
-  ]
-}
-
-# # Create a BigQuery external table
-resource "google_bigquery_table" "tbl_edw_taxi" {
-  dataset_id          = google_bigquery_dataset.ds_edw.dataset_id
-  table_id            = "taxi_trips"
-  project             = var.project_id
-  deletion_protection = var.deletion_protection
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = "${var.project_id}.${var.region}.ds_connection"
-    source_format = "PARQUET"
-    source_uris   = ["gs://${google_storage_bucket.raw_bucket.name}/taxi-*.Parquet"]
-
-  }
-
-  schema = <<EOF
-[
-  {
-    "name": "vendor_id",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "pickup_datetime",
-    "type": "TIMESTAMP",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "dropoff_datetime",
-    "type": "TIMESTAMP",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "passenger_count",
-    "type": "INTEGER",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "trip_distance",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "rate_code",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "store_and_fwd_flag",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "payment_type",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "fare_amount",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "extra",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "mta_tax",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "tip_amount",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "tolls_amount",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "imp_surcharge",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "airport_fee",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "total_amount",
-    "type": "NUMERIC",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "pickup_location_id",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "data_file_year",
-    "type": "INTEGER",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "data_file_month",
-    "type": "INTEGER",
-    "mode": "NULLABLE",
-    "description": ""
-  }
-]
-EOF
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_bigquery_connection.ds_connection,
-    google_storage_bucket.raw_bucket
-  ]
-}
-
-# Load Queries for Stored Procedure Execution
-# # Load Lookup Data Tables
-data "template_file" "sp_provision_lookup_tables" {
-  template = file("${path.module}/assets/sql/sp_provision_lookup_tables.sql")
-  vars = {
-    project_id = var.project_id
-  }
-}
-resource "google_bigquery_routine" "sp_provision_lookup_tables" {
-  project         = var.project_id
-  dataset_id      = google_bigquery_dataset.ds_edw.dataset_id
-  routine_id      = "sp_provision_lookup_tables"
-  routine_type    = "PROCEDURE"
-  language        = "SQL"
-  definition_body = data.template_file.sp_provision_lookup_tables.rendered
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_bigquery_dataset.ds_edw,
-    data.template_file.sp_provision_lookup_tables
-  ]
-}
-
-
-# # Add Looker Studio Data Report Procedure
-data "template_file" "sp_lookerstudio_report" {
-  template = file("${path.module}/assets/sql/sp_lookerstudio_report.sql")
-  vars = {
-    project_id = var.project_id
-  }
-}
-resource "google_bigquery_routine" "sproc_sp_demo_datastudio_report" {
-  project         = var.project_id
-  dataset_id      = google_bigquery_dataset.ds_edw.dataset_id
-  routine_id      = "sp_lookerstudio_report"
-  routine_type    = "PROCEDURE"
-  language        = "SQL"
-  definition_body = data.template_file.sp_lookerstudio_report.rendered
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_bigquery_table.tbl_edw_taxi,
-    data.template_file.sp_lookerstudio_report
-  ]
-}
-
-# # Add Sample Queries
-data "template_file" "sp_sample_queries" {
-  template = file("${path.module}/assets/sql/sp_sample_queries.sql")
-  vars = {
-    project_id = var.project_id
-  }
-}
-resource "google_bigquery_routine" "sp_sample_queries" {
-  project         = var.project_id
-  dataset_id      = google_bigquery_dataset.ds_edw.dataset_id
-  routine_id      = "sp_sample_queries"
-  routine_type    = "PROCEDURE"
-  language        = "SQL"
-  definition_body = data.template_file.sp_sample_queries.rendered
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_bigquery_table.tbl_edw_taxi,
-    data.template_file.sp_sample_queries
-  ]
-}
-
-# # Add Bigquery ML Model
-data "template_file" "sp_bigqueryml_model" {
-  template = file("${path.module}/assets/sql/sp_bigqueryml_model.sql")
-  vars = {
-    project_id = var.project_id
-  }
-}
-resource "google_bigquery_routine" "sp_bigqueryml_model" {
-  project         = var.project_id
-  dataset_id      = google_bigquery_dataset.ds_edw.dataset_id
-  routine_id      = "sp_bigqueryml_model"
-  routine_type    = "PROCEDURE"
-  language        = "SQL"
-  definition_body = data.template_file.sp_bigqueryml_model.rendered
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_bigquery_table.tbl_edw_taxi,
-    data.template_file.sp_bigqueryml_model
-  ]
-}
-
-# # Add Translation Scripts
-data "template_file" "sp_sample_translation_queries" {
-  template = file("${path.module}/assets/sql/sp_sample_translation_queries.sql")
-  vars = {
-    project_id = var.project_id
-  }
-}
-resource "google_bigquery_routine" "sp_sample_translation_queries" {
-  project         = var.project_id
-  dataset_id      = google_bigquery_dataset.ds_edw.dataset_id
-  routine_id      = "sp_sample_translation_queries"
-  routine_type    = "PROCEDURE"
-  language        = "SQL"
-  definition_body = data.template_file.sp_sample_translation_queries.rendered
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_bigquery_table.tbl_edw_taxi,
-    data.template_file.sp_sample_translation_queries
-  ]
-}
-
-# Add Scheduled Query
-# # Set up DTS permissions
-resource "google_project_service_identity" "bigquery_data_transfer_sa" {
-  provider = google-beta
-  project  = var.project_id
-  service  = "bigquerydatatransfer.googleapis.com"
-  depends_on = [time_sleep.wait_5_seconds]
-}
-
-resource "google_project_iam_member" "dts_permissions_token" {
-  project = data.google_project.project.project_id
-  role    = "roles/iam.serviceAccountTokenCreator"
-  member  = "serviceAccount:${google_project_service_identity.bigquery_data_transfer_sa.email}"
-  depends_on = [time_sleep.wait_5_seconds]
-}
-
-resource "google_project_iam_member" "dts_permissions_agent" {
-  project = data.google_project.project.project_id
-  role    = "roles/bigquerydatatransfer.serviceAgent"
-  member  = "serviceAccount:${google_project_service_identity.bigquery_data_transfer_sa.email}"
-  depends_on = [time_sleep.wait_5_seconds]
-}
-
-# Set up scheduled query
-resource "google_bigquery_data_transfer_config" "dts_config" {
-
-  display_name   = "nightlyloadquery"
-  project        = var.project_id
-  location       = var.region
-  data_source_id = "scheduled_query"
-  schedule       = "every day 00:00"
-  params = {
-    query = "CALL `${var.project_id}.ds_edw.sp_lookerstudio_report`()"
-  }
-
-  depends_on = [
-    time_sleep.wait_5_seconds,
-    google_project_iam_member.dts_permissions_token,
-    google_project_iam_member.dts_permissions_agent,
-    google_bigquery_dataset.ds_edw
-  ]
-}
-
-# Create a Cloud Function resource
-# # Zip the function file
-data "archive_file" "bigquery_external_function_zip" {
-  type        = "zip"
-  source_dir  = "${path.module}/assets/bigquery-external-function"
-  output_path = "${path.module}/assets/bigquery-external-function.zip"
+resource "google_storage_bucket_object" "pyspark_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "bigquery.py"
+  source = "${path.module}/assets/bigquery.py"
 
   depends_on = [
     google_storage_bucket.provisioning_bucket
   ]
+
 }
 
-# # Place the function file on Cloud Storage
-resource "google_storage_bucket_object" "cloud_function_zip_upload" {
-  name   = "assets/bigquery-external-function.zip"
-  bucket = google_storage_bucket.provisioning_bucket.name
-  source = data.archive_file.bigquery_external_function_zip.output_path
-
+#we will use this as a wait and to make sure every other resource in this project has completed.
+#we will then make the last four workflow steps dependent on this
+resource "time_sleep" "wait_after_all_resources" {
+  create_duration = "120s"
   depends_on = [
-    time_sleep.wait_5_seconds,
+    module.project-services,
     google_storage_bucket.provisioning_bucket,
-    data.archive_file.bigquery_external_function_zip
+    google_storage_bucket.destination_bucket,
+    google_project_service_identity.workflows,
+    google_service_account.workflows_sa,
+    google_project_iam_member.workflow_service_account_invoke_role,
+    google_project_iam_member.workflows_sa_bq_data,
+    google_project_iam_member.workflows_sa_gcs_admin,
+    google_project_iam_member.workflows_sa_bq_resource_mgr,
+    google_project_iam_member.workflow_service_account_token_role,
+    google_project_iam_member.workflows_sa_bq_connection,
+    google_project_iam_member.workflows_sa_bq_read,
+    google_project_iam_member.workflows_sa_log_writer,
+    google_project_iam_member.workflow_service_account_dataproc_role,
+    google_project_iam_member.workflow_service_account_bqadmin,
+    google_bigquery_dataset.gcp_lakehouse_ds,
+    google_bigquery_connection.gcp_lakehouse_connection,
+    google_project_iam_member.connectionPermissionGrant,
+    google_workflows_workflow.workflows_create_gcp_biglake_tables,
+    data.google_storage_project_service_account.gcs_account
   ]
 }
 
-# # Create the function
-resource "google_cloudfunctions2_function" "function" {
-  #provider = google-beta
-  project     = var.project_id
-  name        = "bq-sp-transform-${random_id.id.hex}"
-  location    = var.region
-  description = "gcs-load-bq"
+#execute workflows
+data "google_client_config" "current" {
+}
 
-  build_config {
-    runtime     = "python310"
-    entry_point = "bq_sp_transform"
-    source {
-      storage_source {
-        bucket = google_storage_bucket.provisioning_bucket.name
-        object = "assets/bigquery-external-function.zip"
-      }
-    }
-  }
+resource "time_sleep" "wait_after_all_workflows" {
+  create_duration = "30s"
+  depends_on = [data.http.call_workflows_bucket_copy_run,
+    data.http.call_workflows_create_gcp_biglake_tables_run,
+    data.http.call_workflows_create_iceberg_table,
+    data.http.call_workflows_create_views_and_others
+  ]
+}
 
-  service_config {
-    max_instance_count = 1
-    available_memory   = "256M"
-    timeout_seconds    = 540
-    environment_variables = {
-      PROJECT_ID       = var.project_id
-      BUCKET_ID        = google_storage_bucket.raw_bucket.name
-      EXPORT_BUCKET_ID = google_storage_bucket.export_bucket.name
-    }
-    service_account_email = google_service_account.cloud_function_service_account.email
-  }
-
-  event_trigger {
-    trigger_region = var.region
-    event_type     = "google.cloud.storage.object.v1.finalized"
-    event_filters {
-      attribute = "bucket"
-      value     = google_storage_bucket.provisioning_bucket.name
-    }
-    retry_policy = "RETRY_POLICY_RETRY"
-  }
-
+data "http" "call_workflows_bucket_copy_run" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflow_bucket_copy.name}/executions"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    time_sleep.wait_5_seconds,
-    google_storage_bucket.provisioning_bucket,
-    google_storage_bucket.raw_bucket,
-    google_project_iam_member.cloud_function_service_account_editor_role
+    time_sleep.wait_after_all_resources
   ]
 }
 
-resource "google_project_iam_member" "workflow_event_receiver" {
-  project = var.project_id
-  role    = "roles/eventarc.eventReceiver"
-  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
-  depends_on = [time_sleep.wait_5_seconds]
-}
-
-resource "google_storage_bucket_object" "startfile" {
-  bucket = google_storage_bucket.provisioning_bucket.name
-  name   = "startfile"
-  source = "${path.module}/assets/startfile"
-
+data "http" "call_workflows_create_gcp_biglake_tables_run" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflows_create_gcp_biglake_tables.name}/executions"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    time_sleep.wait_5_seconds,
-    google_cloudfunctions2_function.function
+    time_sleep.wait_after_all_resources
   ]
+}
 
+resource "time_sleep" "wait_after_bucket_copy" {
+  create_duration = "30s"
+  depends_on = [data.http.call_workflows_bucket_copy_run
+  ]
+}
+
+data "http" "call_workflows_create_views_and_others" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflow_create_views_and_others.name}/executions"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
+  depends_on = [
+    time_sleep.wait_after_all_resources,
+    data.http.call_workflows_create_gcp_biglake_tables_run
+  ]
+}
+
+data "http" "call_workflows_create_iceberg_table" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.initial-workflow-pyspark.name}/executions"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
+  depends_on = [
+    time_sleep.wait_after_all_resources
+  ]
 }
