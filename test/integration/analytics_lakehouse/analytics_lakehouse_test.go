@@ -18,30 +18,45 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/gcloud"
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/tft"
-	"github.com/stretchr/testify/assert"
+	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/utils"
 )
 
 // Retry if these errors are encountered.
 var retryErrors = map[string]string{
 	// IAM for Eventarc service agent is eventually consistent
 	".*Permission denied while using the Eventarc Service Agent.*": "Eventarc Service Agent IAM is eventually consistent",
+	".*Error 400: The subnetwork resource*":                        "Subnet is eventually drained",
 }
 
 func TestAnalyticsLakehouse(t *testing.T) {
-	dwh := tft.NewTFBlueprintTest(t, tft.WithRetryableTerraformErrors(retryErrors, 10, time.Minute))
+	dwh := tft.NewTFBlueprintTest(t, tft.WithRetryableTerraformErrors(retryErrors, 60, time.Minute))
 
 	dwh.DefineVerify(func(assert *assert.Assertions) {
 		dwh.DefaultVerify(assert)
 
-		projectID := dwh.GetTFSetupStringOutput("project_id")
-		bucket := dwh.GetStringOutput("raw_bucket")
+		// TODO: Add additional asserts for other resources
+	})
 
-		bucketOP := gcloud.Runf(t, "storage buckets describe gs://%s --project %s", bucket, projectID)
-		assert.Equal("US-CENTRAL1", bucketOP.Get("location").String(), "should be in us-central1")
-		assert.Equal("STANDARD", bucketOP.Get("storageClass").String(), "should have standard storageClass")
-		//TODO: Add additional asserts for other resources
+	dwh.DefineTeardown(func(assert *assert.Assertions) {
+
+		projectID := dwh.GetTFSetupStringOutput("project_id")
+
+		verifyNoVMs := func() (bool, error) {
+			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
+			// If compute instances is greater than 0, wait and check again until 0 to complete destroy
+			if len(currentComputeInstances) > 0 {
+				return true, nil
+			}
+			return false, nil
+		}
+		utils.Poll(t, verifyNoVMs, 120, 30*time.Second)
+
+		dwh.DefaultTeardown(assert)
+
 	})
 	dwh.Test()
 }

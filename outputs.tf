@@ -28,7 +28,28 @@ output "call_workflows_create_views_and_others" {
   description = "Output of the create view workflow"
   value       = data.http.call_workflows_create_views_and_others.response_body
 }
+
 output "call_workflows_create_iceberg_table" {
   description = "Output of the iceberg tables workflow"
   value       = data.http.call_workflows_create_iceberg_table.response_body
+}
+
+output "lookerstudio_report_url" {
+  value       = "http://bit.ly/42GJaei"
+  description = "The URL to create a new Looker Studio report displays a sample dashboard for data analysis"
+}
+
+output "bigquery_editor_url" {
+  value       = "https://console.cloud.google.com/bigquery?project=${var.project_id}"
+  description = "The URL to launch the BigQuery editor"
+}
+
+output "neos_tutorial_url" {
+  value       = "https://console.cloud.google.com/welcome?walkthrough_id=analytics-lakehouse_tour&project=${var.project_id}"
+  description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
+}
+
+output "lakehouse_colab_url" {
+  value       = "http://bit.ly/3K4CmQ4"
+  description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
 }
