@@ -1,0 +1,18 @@
+main:
+    params: [event]
+    steps:
+    - assign_values:
+        assign:
+            - results: {}
+    - ufdataplex_job:
+        call: http.post
+        args:
+            url: "https://dataplex.googleapis.com/v1/projects/bp-steveswalker-solutions-300/locations/us-central1/dataTaxonomies?alt=json&dataTaxonomyId=test-taxonomy-4&validateOnly=False"
+            auth:
+                type: OAuth2
+            body:
+              description: "my taxonomy descr"
+              displayName: "my taxonomy display"
+        result: operation
+    - returnResult:
+        return: ${operation}
