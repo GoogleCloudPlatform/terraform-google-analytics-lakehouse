@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 4.0"
-    }
-  }
-  required_version = ">= 0.13"
+output "lookerstudio_report_url" {
+  value       = module.analytics_lakehouse.lookerstudio_report_url
+  description = "The URL to create a new Looker Studio report"
+}
+
+output "bigquery_editor_url" {
+  value       = module.analytics_lakehouse.bigquery_editor_url
+  description = "The URL to launch the BigQuery editor"
+}
+
+output "lakehouse_colab_url" {
+  value       = module.analytics_lakehouse.lakehouse_colab_url
+  description = "The URL to launch the Colab instance"
 }
