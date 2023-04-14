@@ -1,4 +1,4 @@
-# terraform-google-
+# terraform-google-lakehouse
 
 ## Description
 ### tagline
@@ -39,14 +39,27 @@ Functional examples are included in the
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| bucket\_name | The name of the bucket to create | `string` | n/a | yes |
-| project\_id | The project ID to deploy to | `string` | n/a | yes |
+| deletion\_protection | Whether or not to protect GCS resources from deletion when solution is modified or changed. | `string` | `true` | no |
+| enable\_apis | Whether or not to enable underlying apis in this solution. . | `string` | `true` | no |
+| force\_destroy | Whether or not to protect BigQuery resources from deletion when solution is modified or changed. | `string` | `true` | no |
+| labels | A map of labels to apply to contained resources. | `map(string)` | <pre>{<br>  "edw-bigquery": true<br>}</pre> | no |
+| project\_id | Google Cloud Project ID | `string` | n/a | yes |
+| public\_data\_bucket | Public Data bucket for access | `string` | `"data-analytics-demos"` | no |
+| region | Google Cloud Region | `string` | `"us-central1"` | no |
+| use\_case\_short | Short name for use case | `string` | `"lakehouse"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| bucket\_name | Name of the bucket |
+| bigquery\_editor\_url | The URL to launch the BigQuery editor |
+| call\_workflows\_create\_iceberg\_table | Output of the iceberg tables workflow |
+| call\_workflows\_create\_views\_and\_others | Output of the create view workflow |
+| lakehouse\_colab\_url | The URL to launch the in-console tutorial for the Analytics Lakehouse solution |
+| lookerstudio\_report\_url | The URL to create a new Looker Studio report displays a sample dashboard for data analysis |
+| neos\_tutorial\_url | The URL to launch the in-console tutorial for the Analytics Lakehouse solution |
+| workflow\_return\_bucket\_copy | Output of the bucket copy workflow |
+| workflow\_return\_create\_bq\_tables | Output of the create bigquery tables workflow |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 

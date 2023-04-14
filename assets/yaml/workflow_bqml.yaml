@@ -1,0 +1,21 @@
+main:
+    steps:
+    - runQueries:
+                steps:
+                - logTable:
+                    call: sys.log
+                    args:
+                        text: ${"Building BQML Model"}
+                - runQuery:
+                    call: googleapis.bigquery.v2.jobs.query
+                    args:
+                        projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                        body:
+                            useLegacySql: false
+                            useQueryCache: false
+                            location: 'us'
+                            timeoutMs: 600000
+                            query: "" #${"CREATE OR REPLACE MODEL `gcp_lakehouse_us_ds.census_model` OPTIONS ( model_type='LOGISTIC_REG', auto_class_weights=TRUE, input_label_cols=['income_bracket'] ) AS SELECT age, workclass, marital_status, education_num, occupation, hours_per_week, income_bracket FROM `bigquery-public-data.ml_datasets.census_adult_income`"}
+                    result: queryResult
+    - returnResults:
+        return: ${queryResult}
