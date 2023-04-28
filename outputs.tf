@@ -24,11 +24,6 @@ output "workflow_return_create_bq_tables" {
   value       = data.http.call_workflows_create_gcp_biglake_tables_run.response_body
 }
 
-output "call_workflows_create_views_and_others" {
-  description = "Output of the create view workflow"
-  value       = data.http.call_workflows_create_views_and_others.response_body
-}
-
 output "call_workflows_create_iceberg_table" {
   description = "Output of the iceberg tables workflow"
   value       = data.http.call_workflows_create_iceberg_table.response_body
