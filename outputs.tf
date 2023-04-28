@@ -30,7 +30,7 @@ output "call_workflows_create_iceberg_table" {
 }
 
 output "lookerstudio_report_url" {
-  value       = "http://bit.ly/42GJaei"
+  value       = "https://lookerstudio.google.com/reporting/create?c.reportId=79675b4f-9ed8-4ee4-bb35-709b8fd5306a&ds.ds0.datasourceName=vw_ecommerce&ds.ds0.projectId=${var.project_id}&ds.ds0.type=TABLE&ds.ds0.datasetId=gcp_lakehouse_ds&ds.ds0.tableId=view_ecommerce"
   description = "The URL to create a new Looker Studio report displays a sample dashboard for data analysis"
 }
 
