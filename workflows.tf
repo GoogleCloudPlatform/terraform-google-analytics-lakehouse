@@ -209,7 +209,9 @@ resource "google_workflows_workflow" "workflow_bucket_copy" {
   region          = var.region
   description     = "Copy data files from public bucket to solution project"
   service_account = google_service_account.workflows_sa.email
-  source_contents = file("${path.module}/assets/yaml/initial-workflow-copy-data.yaml")
+  source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-copy-data.yaml", {
+    raw_bucket = google_storage_bucket.raw_bucket.name
+  })
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles
@@ -290,8 +292,8 @@ resource "google_workflows_workflow" "initial-workflow-pyspark" {
   source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-pyspark.yaml", {
     dataproc_service_account = google_service_account.dataproc_service_account.email,
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
-    warehouse_bucket         = google_storage_bucket.raw_bucket.name,
-    temp_bucket              = google_storage_bucket.raw_bucket.name
+    warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
+    temp_bucket              = google_storage_bucket.warehouse_bucket.name
   })
 
   depends_on = [

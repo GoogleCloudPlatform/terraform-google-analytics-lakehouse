@@ -33,7 +33,7 @@ variable "region" {
 variable "labels" {
   type        = map(string)
   description = "A map of labels to apply to contained resources."
-  default     = { "edw-bigquery" = true }
+  default     = { "analytics-lakehouse" = true }
 }
 
 variable "enable_apis" {
