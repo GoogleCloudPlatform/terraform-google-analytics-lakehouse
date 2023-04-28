@@ -85,9 +85,22 @@ resource "random_id" "id" {
   byte_length = 4
 }
 
+# Set up Storage Buckets
+
+# # Set up the raw storage bucket
+resource "google_storage_bucket" "raw_bucket" {
+  name                        = "gcp-${var.use_case_short}-raw-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
+  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
+}
+
 # # Set up the provisioning bucketstorage bucket
 resource "google_storage_bucket" "provisioning_bucket" {
-  name                        = "gcp_gcf_source_code-${random_id.id.hex}"
+  name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
@@ -95,15 +108,6 @@ resource "google_storage_bucket" "provisioning_bucket" {
 
 }
 
-# # Set up the export storage bucket
-resource "google_storage_bucket" "destination_bucket" {
-  name                        = "gcp-lakehouse-edw-export-${module.project-services.project_id}"
-  project                     = module.project-services.project_id
-  location                    = "us-central1"
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-}
 
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
@@ -123,7 +127,6 @@ resource "time_sleep" "wait_after_all_resources" {
   depends_on = [
     module.project-services,
     google_storage_bucket.provisioning_bucket,
-    google_storage_bucket.destination_bucket,
     google_project_service_identity.workflows,
     google_service_account.workflows_sa,
     google_project_iam_member.workflow_service_account_invoke_role,
@@ -148,15 +151,6 @@ resource "time_sleep" "wait_after_all_resources" {
 data "google_client_config" "current" {
 }
 
-resource "time_sleep" "wait_after_all_workflows" {
-  create_duration = "30s"
-  depends_on = [data.http.call_workflows_bucket_copy_run,
-    data.http.call_workflows_create_gcp_biglake_tables_run,
-    data.http.call_workflows_create_iceberg_table,
-    data.http.call_workflows_create_views_and_others
-  ]
-}
-
 data "http" "call_workflows_bucket_copy_run" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflow_bucket_copy.name}/executions"
   method = "POST"
@@ -175,13 +169,8 @@ data "http" "call_workflows_create_gcp_biglake_tables_run" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    time_sleep.wait_after_all_resources
-  ]
-}
-
-resource "time_sleep" "wait_after_bucket_copy" {
-  create_duration = "30s"
-  depends_on = [data.http.call_workflows_bucket_copy_run
+    time_sleep.wait_after_all_resources,
+    data.http.call_workflows_bucket_copy_run
   ]
 }
 
@@ -204,6 +193,7 @@ data "http" "call_workflows_create_iceberg_table" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    time_sleep.wait_after_all_resources
+    time_sleep.wait_after_all_resources,
+    data.http.call_workflows_create_gcp_biglake_tables_run
   ]
 }

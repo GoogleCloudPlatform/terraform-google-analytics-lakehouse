@@ -17,16 +17,17 @@ main:
     steps:
     - assign_values:
         assign:
-            - results: {}
+            - project_id: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+            - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
     - ufdataplex_job:
         call: http.post
         args:
-            url: "https://dataplex.googleapis.com/v1/projects/bp-steveswalker-solutions-300/locations/us-central1/dataTaxonomies?alt=json&dataTaxonomyId=test-taxonomy-4&validateOnly=False"
+            url: $${"https://dataplex.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/dataTaxonomies?alt=json&dataTaxonomyId=sample-taxonomy&validateOnly=False"}
             auth:
                 type: OAuth2
             body:
-              description: "my taxonomy descr"
-              displayName: "my taxonomy display"
-        result: operation
+              description: "Sample Taxonomy Description"
+              displayName: "Sample Taxonomy Display Name"
+        result: Operation
     - returnResult:
-        return: ${operation}
+        return: ${Operation}

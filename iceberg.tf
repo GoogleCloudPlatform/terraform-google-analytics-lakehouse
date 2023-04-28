@@ -136,40 +136,6 @@ resource "google_project_iam_member" "dataproc_service_account_dataproc_worker_r
   ]
 }
 
-# Set up Storage Buckets
-# # Set up the export storage bucket
-resource "google_storage_bucket" "export_bucket" {
-  name                        = "gcp-${var.use_case_short}-export-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = "us-central1"
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the raw storage bucket
-resource "google_storage_bucket" "raw_bucket" {
-  name                        = "gcp-${var.use_case_short}-raw-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the provisioning bucketstorage bucket
-resource "google_storage_bucket" "provisioning_bucket_short" {
-  name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced"
-}
-
 # # Create a BigQuery connection
 resource "google_bigquery_connection" "ds_connection" {
   project       = module.project-services.project_id
@@ -204,7 +170,7 @@ resource "google_project_iam_member" "bq_connection_iam_biglake" {
 # # Create a BigQuery external table.
 resource "google_bigquery_table" "tbl_thelook_events" {
   dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "events"
+  table_id            = "gcp_tbl_events"
   project             = module.project-services.project_id
   deletion_protection = var.deletion_protection
 
