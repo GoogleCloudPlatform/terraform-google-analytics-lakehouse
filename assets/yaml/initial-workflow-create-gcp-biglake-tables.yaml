@@ -68,7 +68,7 @@
                     useQueryCache: false
                     location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
                     timeoutMs: 600000
-                    query: $${map[key]}
+                    query: $${policy_map[key]}
             result: queryResult
         - sumStepPolicies:
             assign:
