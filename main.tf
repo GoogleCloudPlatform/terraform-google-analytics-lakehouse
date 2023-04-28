@@ -98,6 +98,17 @@ resource "google_storage_bucket" "raw_bucket" {
   # public_access_prevention = "enforced" # need to validate if this is a hard requirement
 }
 
+# # Set up the warehouse storage bucket
+resource "google_storage_bucket" "warehouse_bucket" {
+  name                        = "gcp-${var.use_case_short}-warehouse-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
+  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
+}
+
 # # Set up the provisioning bucketstorage bucket
 resource "google_storage_bucket" "provisioning_bucket" {
   name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
