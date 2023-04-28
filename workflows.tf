@@ -66,6 +66,7 @@ resource "google_workflows_workflow" "workflow_bqml" {
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
+  ]
 }
 
 resource "google_workflows_workflow" "workflow_bucket_copy" {
@@ -114,7 +115,7 @@ resource "google_workflows_workflow" "workflow_create_views_and_others" {
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
-
+  ]
 }
 
 
