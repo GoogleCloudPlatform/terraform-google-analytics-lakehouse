@@ -103,6 +103,28 @@ resource "google_project_iam_member" "dataproc_service_account_biglake_role" {
   ]
 }
 
+# # Grant the Dataproc service account BigQuery data access
+resource "google_project_iam_member" "dataproc_service_account_bq_data_role" {
+  project = module.project-services.project_id
+  role    = "roles/bigquery.dataOwner"
+  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
+
+  depends_on = [
+    google_service_account.dataproc_service_account
+  ]
+}
+
+# # Grant the Dataproc service account BigQuery user access
+resource "google_project_iam_member" "dataproc_service_account_bq_user_role" {
+  project = module.project-services.project_id
+  role    = "roles/bigquery.user"
+  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
+
+  depends_on = [
+    google_service_account.dataproc_service_account
+  ]
+}
+
 # # Grant the Dataproc service account dataproc access
 resource "google_project_iam_member" "dataproc_service_account_dataproc_worker_role" {
   project = module.project-services.project_id
@@ -161,6 +183,17 @@ resource "google_bigquery_connection" "ds_connection" {
 resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
   project = module.project-services.project_id
   role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
+
+  depends_on = [
+    google_bigquery_connection.ds_connection
+  ]
+}
+
+# # Grant IAM access to the BigQuery Connection account for BigLake Metastore
+resource "google_project_iam_member" "bq_connection_iam_biglake" {
+  project = module.project-services.project_id
+  role    = "roles/biglake.admin"
   member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
 
   depends_on = [
