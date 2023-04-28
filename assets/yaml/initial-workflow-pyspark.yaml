@@ -47,7 +47,7 @@ main:
                         - "gs://spark-lib/bigquery/spark-bigquery-with-dependencies_2.12-0.29.0.jar"
                         - "gs://spark-lib/biglake/iceberg-biglake-catalog-0.0.1-with-dependencies.jar"
                 runtimeConfig:
-                    version: "1.0.29"
+                    version: "1.1"
                     properties:
                         "spark.sql.catalog.lakehouse_catalog": "org.apache.iceberg.spark.SparkCatalog"
                         "spark.sql.catalog.lakehouse_catalog.blms_catalog": "$${lakehouse_catalog}"

@@ -24,18 +24,13 @@ output "workflow_return_create_bq_tables" {
   value       = data.http.call_workflows_create_gcp_biglake_tables_run.response_body
 }
 
-output "call_workflows_create_views_and_others" {
-  description = "Output of the create view workflow"
-  value       = data.http.call_workflows_create_views_and_others.response_body
-}
-
 output "call_workflows_create_iceberg_table" {
   description = "Output of the iceberg tables workflow"
   value       = data.http.call_workflows_create_iceberg_table.response_body
 }
 
 output "lookerstudio_report_url" {
-  value       = "http://bit.ly/42GJaei"
+  value       = "https://lookerstudio.google.com/reporting/create?c.reportId=79675b4f-9ed8-4ee4-bb35-709b8fd5306a&ds.ds0.datasourceName=vw_ecommerce&ds.ds0.projectId=${var.project_id}&ds.ds0.type=TABLE&ds.ds0.datasetId=gcp_lakehouse_ds&ds.ds0.tableId=view_ecommerce"
   description = "The URL to create a new Looker Studio report displays a sample dashboard for data analysis"
 }
 
@@ -45,11 +40,11 @@ output "bigquery_editor_url" {
 }
 
 output "neos_tutorial_url" {
-  value       = "https://console.cloud.google.com/welcome?walkthrough_id=analytics-lakehouse_tour&project=${var.project_id}"
+  value       = "https://console.cloud.google.com/products/solutions/deployments?walkthrough_id=panels--sic--analytics-lakehouse_toc&project=${var.project_id}"
   description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
 }
 
 output "lakehouse_colab_url" {
-  value       = "http://bit.ly/3K4CmQ4"
+  value       = "https://colab.research.google.com/github/GoogleCloudPlatform/terraform-google-analytics-lakehouse/blob/main/assets/ipynb/exploratory-analysis.ipynb"
   description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
 }

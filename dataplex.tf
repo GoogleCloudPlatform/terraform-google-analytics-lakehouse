@@ -51,7 +51,7 @@ resource "google_dataplex_zone" "gcp_primary_zone" {
   }
 
   type         = "RAW"
-  description  = "Zone for thelookecommerce"
+  description  = "Zone for thelook_ecommerce"
   display_name = "Zone 1"
   labels       = {}
   project      = module.project-services.project_id
@@ -79,7 +79,7 @@ resource "google_dataplex_asset" "gcp_primary_asset" {
   }
 
   resource_spec {
-    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.destination_bucket.name}"
+    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.raw_bucket.name}"
     type = "STORAGE_BUCKET"
   }
 

@@ -17,12 +17,13 @@
 # Set up BigQuery resources
 # # Create the BigQuery dataset
 resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
-  project       = module.project-services.project_id
-  dataset_id    = "gcp_lakehouse_ds"
-  friendly_name = "My gcp_lakehouse Dataset"
-  description   = "My gcp_lakehouse Dataset with tables"
-  location      = var.region
-  labels        = var.labels
+  project                    = module.project-services.project_id
+  dataset_id                 = "gcp_lakehouse_ds"
+  friendly_name              = "My gcp_lakehouse Dataset"
+  description                = "My gcp_lakehouse Dataset with tables"
+  location                   = var.region
+  labels                     = var.labels
+  delete_contents_on_destroy = var.force_destroy
 }
 
 

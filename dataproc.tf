@@ -70,82 +70,23 @@ resource "google_service_account" "dataproc_service_account" {
   display_name = "Service Account for Dataproc Execution"
 }
 
-# # Grant the Dataproc service account Object Create / Delete access
-resource "google_project_iam_member" "dataproc_service_account_storage_role" {
+resource "google_project_iam_member" "dataproc_sa_roles" {
+  for_each = toset([
+    "roles/storage.objectAdmin",
+    "roles/bigquery.connectionAdmin",
+    "roles/biglake.admin",
+    "roles/bigquery.dataOwner",
+    "roles/bigquery.user",
+    "roles/dataproc.worker",
+  ])
+
   project = module.project-services.project_id
-  role    = "roles/storage.objectAdmin"
+  role    = each.key
   member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
 
   depends_on = [
     google_service_account.dataproc_service_account
   ]
-}
-
-# # Grant the Dataproc service account BQ Connection Access
-resource "google_project_iam_member" "dataproc_service_account_bq_connection_role" {
-  project = module.project-services.project_id
-  role    = "roles/bigquery.connectionUser"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# # Grant the Dataproc service account BigLake access
-resource "google_project_iam_member" "dataproc_service_account_biglake_role" {
-  project = module.project-services.project_id
-  role    = "roles/biglake.admin"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# # Grant the Dataproc service account dataproc access
-resource "google_project_iam_member" "dataproc_service_account_dataproc_worker_role" {
-  project = module.project-services.project_id
-  role    = "roles/dataproc.worker"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# Set up Storage Buckets
-# # Set up the export storage bucket
-resource "google_storage_bucket" "export_bucket" {
-  name                        = "gcp-${var.use_case_short}-export-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = "us-central1"
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the raw storage bucket
-resource "google_storage_bucket" "raw_bucket" {
-  name                        = "gcp-${var.use_case_short}-raw-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the provisioning bucketstorage bucket
-resource "google_storage_bucket" "provisioning_bucket_short" {
-  name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced"
 }
 
 # # Create a BigQuery connection
@@ -168,10 +109,21 @@ resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
   ]
 }
 
+# # Grant IAM access to the BigQuery Connection account for BigLake Metastore
+resource "google_project_iam_member" "bq_connection_iam_biglake" {
+  project = module.project-services.project_id
+  role    = "roles/biglake.admin"
+  member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
+
+  depends_on = [
+    google_bigquery_connection.ds_connection
+  ]
+}
+
 # # Create a BigQuery external table.
 resource "google_bigquery_table" "tbl_thelook_events" {
   dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "events"
+  table_id            = "gcp_tbl_events"
   project             = module.project-services.project_id
   deletion_protection = var.deletion_protection
 

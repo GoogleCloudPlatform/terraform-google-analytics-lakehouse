@@ -17,25 +17,23 @@ main:
     steps:
         - init:
             assign:
-                - source_bucket: "data-analytics-demos" # "devrel-abc-def-ghi" # "bucket-copy-fths"
-                - dest_bucket: ${"gcp-lakehouse-edw-export-" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                - source_bucket: "data-analytics-demos"
+                - dest_bucket: ${raw_bucket}
                 - copied_objects: []
         - list_objects:
             call: googleapis.storage.v1.objects.list
             args:
-                bucket: ${source_bucket}
-                # delimiter: "/"s
-                # prefix: "*.Parquet"
+                bucket: $${source_bucket}
+                # prefix: "thelook"
             result: list_result
-        - objects:
-            call: sys.log
-            args:
-                text: ${list_result.items}
+        - start_counter:
+            assign:
+                - copied_objects: 0
         - copy_objects:
                 for:
                     value: object
                     index: i
-                    in: ${list_result.items}
+                    in: $${list_result.items}
                     steps:
                       - step1:
                             try:
@@ -43,21 +41,20 @@ main:
                                   - copy_object:
                                       call: googleapis.storage.v1.objects.copy
                                       args:
-                                          sourceBucket: ${source_bucket}
-                                          sourceObject: ${text.url_encode(object.name)}
-                                          destinationBucket: ${dest_bucket}
-                                          destinationObject: ${text.url_encode(object.name)}
+                                          sourceBucket: $${source_bucket}
+                                          sourceObject: $${text.url_encode(object.name)}
+                                          destinationBucket: $${dest_bucket}
+                                          destinationObject: $${text.url_encode(object.name)}
                                       result: copy_result
                                   - save_result:
                                       assign:
-                                          - copied_objects: ${list.concat(copied_objects, copy_result)}
+                                          - copied_objects: $${copied_objects + 1}
                             except:
                                 as: e
                                 raise:
-                                    exception: ${e}
-                                    sourceBucket: ${source_bucket}
-                                    sourceObject: ${object.name}
-                                    destinationBucket: ${dest_bucket}
-                                    # destinationObject: ${object.name}
+                                    exception: $${e}
+                                    sourceBucket: $${source_bucket}
+                                    sourceObject: $${object.name}
+                                    destinationBucket: $${dest_bucket}
         - finish:
-            return: ${copied_objects}
+            return: $${copied_objects + " objects copied"}

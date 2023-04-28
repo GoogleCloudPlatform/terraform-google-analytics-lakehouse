@@ -38,7 +38,7 @@ spark.sql(f"DROP TABLE IF EXISTS {catalog}.{database}.agg_events_iceberg;")
 
 # Load data from BigQuery.
 events = spark.read.format("bigquery") \
-    .option("table", "gcp_lakehouse_ds.events") \
+    .option("table", "gcp_lakehouse_ds.gcp_tbl_events") \
     .load()
 events.createOrReplaceTempView("events")
 

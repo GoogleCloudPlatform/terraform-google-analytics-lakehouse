@@ -1,0 +1,77 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Create tables
+- assignStepTables:
+    assign:
+        - results: {}
+        - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
+        - bucket: ${raw_bucket}
+        - project_id: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+        - map:
+            gcp_tbl_order_items: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_order_items` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/order_items-0*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+            gcp_tbl_orders: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_orders` WITH CONNECTION `"+location+".gcp_lakehouse_connection`     OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/orders-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+            gcp_tbl_users: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_users` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/users-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+            gcp_tbl_distribution_centers: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_distribution_centers` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/distribution_centers-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+            gcp_tbl_inventory_items: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_inventory_items` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/inventory_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+            gcp_tbl_products: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_products` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/products-0*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
+- loopStepTables:
+    for:
+      value: key
+      in: $${keys(map)}
+      steps:
+        - runQuery:
+            call: googleapis.bigquery.v2.jobs.query
+            args:
+                projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                body:
+                    useLegacySql: false
+                    useQueryCache: false
+                    location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
+                    timeoutMs: 600000
+                    query: $${map[key]}
+            result: queryResult
+        - sumStep:
+            assign:
+                - results[key]: $${queryResult}
+# Create and Assign Views
+- assignStepPolicies:
+    assign:
+        - marketing_user: ${marketing_user}
+        - data_analyst_user: ${data_analyst_user}
+        - policy_map:
+            row_policy_usa_filter: $${"CREATE OR REPLACE ROW ACCESS POLICY usa_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_users` GRANT TO ('serviceAccount:" + data_analyst_user + "')  FILTER USING (Country = 'United States')"}
+            row_policy_product_category_filter: $${"CREATE OR REPLACE ROW ACCESS POLICY product_category_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_products` GRANT TO ('serviceAccount:" + marketing_user + "') FILTER USING (Category = 'Swim' or Category = 'Active' or Category = 'Fashion Hoodies & Sweatshirts')"}
+            create_view_ecommerce: $${"call gcp_lakehouse_ds.create_view_ecommerce()"}
+- loopStepPolicies:
+    for:
+      value: key
+      in: $${keys(policy_map)}
+      steps:
+        - runQueryPolicies:
+            call: googleapis.bigquery.v2.jobs.query
+            args:
+                projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                body:
+                    useLegacySql: false
+                    useQueryCache: false
+                    location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
+                    timeoutMs: 600000
+                    query: $${policy_map[key]}
+            result: queryResult
+        - sumStepPolicies:
+            assign:
+                - results[key]: $${queryResult}
+- returnStep:
+    return: $${results}

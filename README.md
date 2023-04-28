@@ -15,19 +15,21 @@ The resources/services/activations/deletions that this module will create/trigge
 To deploy this blueprint you must have an active billing account and billing permissions.
 
 ## Documentation
-- [Hosting a Static Website](https://cloud.google.com/storage/docs/hosting-static-website)
+- [Create an Analytics Lakehouse](https://cloud.google.com/architecture/big-data-analytics/analytics-lakehouse)
 
 ## Usage
 
 Basic usage of this module is as follows:
 
 ```hcl
-module "" {
-  source  = "terraform-google-modules//google"
-  version = "~> 0.1"
+module "analytics_lakehouse" {
+  source = "../.."
 
-  project_id  = "<PROJECT ID>"
-  bucket_name = "gcs-test-bucket"
+  project_id          = var.project_id
+  region              = "us-central1"
+  deletion_protection = false
+  force_destroy       = true
+
 }
 ```
 
@@ -41,8 +43,8 @@ Functional examples are included in the
 |------|-------------|------|---------|:--------:|
 | deletion\_protection | Whether or not to protect GCS resources from deletion when solution is modified or changed. | `string` | `true` | no |
 | enable\_apis | Whether or not to enable underlying apis in this solution. . | `string` | `true` | no |
-| force\_destroy | Whether or not to protect BigQuery resources from deletion when solution is modified or changed. | `string` | `true` | no |
-| labels | A map of labels to apply to contained resources. | `map(string)` | <pre>{<br>  "edw-bigquery": true<br>}</pre> | no |
+| force\_destroy | Whether or not to protect BigQuery resources from deletion when solution is modified or changed. | `string` | `false` | no |
+| labels | A map of labels to apply to contained resources. | `map(string)` | <pre>{<br>  "analytics-lakehouse": true<br>}</pre> | no |
 | project\_id | Google Cloud Project ID | `string` | n/a | yes |
 | public\_data\_bucket | Public Data bucket for access | `string` | `"data-analytics-demos"` | no |
 | region | Google Cloud Region | `string` | `"us-central1"` | no |
@@ -54,7 +56,6 @@ Functional examples are included in the
 |------|-------------|
 | bigquery\_editor\_url | The URL to launch the BigQuery editor |
 | call\_workflows\_create\_iceberg\_table | Output of the iceberg tables workflow |
-| call\_workflows\_create\_views\_and\_others | Output of the create view workflow |
 | lakehouse\_colab\_url | The URL to launch the in-console tutorial for the Analytics Lakehouse solution |
 | lookerstudio\_report\_url | The URL to create a new Looker Studio report displays a sample dashboard for data analysis |
 | neos\_tutorial\_url | The URL to launch the in-console tutorial for the Analytics Lakehouse solution |
