@@ -45,7 +45,7 @@ output "bigquery_editor_url" {
 }
 
 output "neos_tutorial_url" {
-  value       = "https://console.cloud.google.com/welcome?walkthrough_id=analytics-lakehouse_tour&project=${var.project_id}"
+  value       = "https://console.cloud.google.com/products/solutions/deployments?walkthrough_id=panels--sic--analytics-lakehouse_toc&project=${var.project_id}"
   description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
 }
 
