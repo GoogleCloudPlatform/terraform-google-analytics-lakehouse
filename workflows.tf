@@ -102,22 +102,6 @@ resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
 
 }
 
-resource "google_workflows_workflow" "workflow_create_views_and_others" {
-  name            = "initial-workflow-create-views-security"
-  project         = module.project-services.project_id
-  region          = var.region
-  description     = "Runs post Terraform setup steps for Solution in Console"
-  service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-create-views-security.yaml", {
-    data_analyst_user = google_service_account.data_analyst_user.email,
-    marketing_user    = google_service_account.marketing_user.email
-  })
-
-  depends_on = [
-    google_project_iam_member.workflows_sa_roles,
-  ]
-}
-
 
 resource "google_workflows_workflow" "initial-workflow-pyspark" {
   name            = "initial-workflow-pyspark"
@@ -134,6 +118,7 @@ resource "google_workflows_workflow" "initial-workflow-pyspark" {
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
+    google_project_iam_member.dataproc_sa_roles,
   ]
 
 }

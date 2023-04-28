@@ -70,65 +70,18 @@ resource "google_service_account" "dataproc_service_account" {
   display_name = "Service Account for Dataproc Execution"
 }
 
-# # Grant the Dataproc service account Object Create / Delete access
-resource "google_project_iam_member" "dataproc_service_account_storage_role" {
+resource "google_project_iam_member" "dataproc_sa_roles" {
+  for_each = toset([
+    "roles/storage.objectAdmin",
+    "roles/bigquery.connectionAdmin",
+    "roles/biglake.admin",
+    "roles/bigquery.dataOwner",
+    "roles/bigquery.user",
+    "roles/dataproc.worker",
+  ])
+
   project = module.project-services.project_id
-  role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# # Grant the Dataproc service account BQ Connection Access
-resource "google_project_iam_member" "dataproc_service_account_bq_connection_role" {
-  project = module.project-services.project_id
-  role    = "roles/bigquery.connectionUser"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# # Grant the Dataproc service account BigLake access
-resource "google_project_iam_member" "dataproc_service_account_biglake_role" {
-  project = module.project-services.project_id
-  role    = "roles/biglake.admin"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# # Grant the Dataproc service account BigQuery data access
-resource "google_project_iam_member" "dataproc_service_account_bq_data_role" {
-  project = module.project-services.project_id
-  role    = "roles/bigquery.dataOwner"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# # Grant the Dataproc service account BigQuery user access
-resource "google_project_iam_member" "dataproc_service_account_bq_user_role" {
-  project = module.project-services.project_id
-  role    = "roles/bigquery.user"
-  member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
-}
-
-# # Grant the Dataproc service account dataproc access
-resource "google_project_iam_member" "dataproc_service_account_dataproc_worker_role" {
-  project = module.project-services.project_id
-  role    = "roles/dataproc.worker"
+  role    = each.key
   member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
 
   depends_on = [
