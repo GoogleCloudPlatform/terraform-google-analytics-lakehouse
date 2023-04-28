@@ -45,6 +45,6 @@ output "neos_tutorial_url" {
 }
 
 output "lakehouse_colab_url" {
-  value       = "http://bit.ly/3K4CmQ4"
+  value       = "https://colab.research.google.com/github/GoogleCloudPlatform/terraform-google-analytics-lakehouse/blob/main/assets/ipynb/exploratory-analysis.ipynb"
   description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
 }
