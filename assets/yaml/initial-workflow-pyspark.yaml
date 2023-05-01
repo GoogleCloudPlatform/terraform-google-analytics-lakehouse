@@ -29,11 +29,11 @@ main:
             - dataproc_service_account: ${dataproc_service_account}
             - provisioner_bucket_name: ${provisioner_bucket}
             - warehouse_bucket_name: "gs://${warehouse_bucket}/warehouse"
-            - temp_bucket_name: $(temp_bucket}
+            - temp_bucket_name: ${temp_bucket}
             - lakehouse_catalog: lakehouse_catalog
             - lakehouse_database: lakehouse_database
-            - bq_dataset: gcp_lakehouse
-            - bq_gcs_connection: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")+".gcp_gcs_connection"}
+            - bq_dataset: gcp_lakehouse_ds
+            - bq_gcs_connection: $${sys.get_env("GOOGLE_CLOUD_LOCATION")+".gcp_gcs_connection"}
     - dataproc_serverless_job:
         call: http.post
         args:
@@ -56,11 +56,11 @@ main:
                         "spark.sql.catalog.lakehouse_catalog.gcp_project": "$${project_id}"
                         "spark.sql.catalog.lakehouse_catalog.warehouse": "$${warehouse_bucket_name}"
                         "spark.jars.packages": "org.apache.iceberg:iceberg-spark-runtime-3.2_2.12:0.14.1"
-                        lakehouse_catalog: $${lakehouse_catalog}
-                        lakehouse_database: $${lakehouse_database}
-                        temp_bucket: $${temp_bucket_name}
-                        bq_dataset: $${bq_dataset}
-                        bq_gcs_connection: $${bq_gcs_connection}
+                        "spark.dataproc.driverEnv.lakehouse_catalog": $${lakehouse_catalog}
+                        "spark.dataproc.driverEnv.lakehouse_database": $${lakehouse_database}
+                        "spark.dataproc.driverEnv.temp_bucket": $${temp_bucket_name}
+                        "spark.dataproc.driverEnv.bq_dataset": $${bq_dataset}
+                        "spark.dataproc.driverEnv.bq_gcs_connection": $${bq_gcs_connection}
 
                 environmentConfig:
                     executionConfig:
