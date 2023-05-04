@@ -40,6 +40,7 @@ copy_objects:
             call: googleapis.storage.v1.objects.list
             args:
                 bucket: $${source_bucket}
+                prefix: "thelook"
             result: list_result
         - start_counter:
             assign:
