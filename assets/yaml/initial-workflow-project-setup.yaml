@@ -77,7 +77,7 @@ copy_objects:
 
 # Subworkflow to create BigLake tables
 create_tables:
-    steps:      
+    steps:
         - assignStepTables:
             assign:
                 - results: {}
