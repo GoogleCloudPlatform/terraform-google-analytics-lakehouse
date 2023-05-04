@@ -164,7 +164,7 @@ data "http" "call_workflows_initial_project_setup" {
 }
 
 resource "time_sleep" "wait_after_all_workflows" {
-  create_duration = "30s"
+  create_duration = "180s"
 
   depends_on = [
     data.http.call_workflows_initial_project_setup,
