@@ -11,10 +11,6 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
-
-CREATE OR REPLACE PROCEDURE
-  gcp_lakehouse_ds.create_view_ecommerce()
-BEGIN
 CREATE OR REPLACE VIEW
   gcp_lakehouse_ds.view_ecommerce AS
 SELECT
@@ -73,4 +69,3 @@ INNER JOIN
 ON
   o.user_id = u.id
 ;
-END
