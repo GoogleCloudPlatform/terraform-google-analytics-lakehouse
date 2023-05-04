@@ -14,19 +14,9 @@
  * limitations under the License.
  */
 
-output "workflow_return_bucket_copy" {
-  description = "Output of the bucket copy workflow"
-  value       = data.http.call_workflows_bucket_copy_run.response_body
-}
-
-output "workflow_return_create_bq_tables" {
-  description = "Output of the create bigquery tables workflow"
-  value       = data.http.call_workflows_create_gcp_biglake_tables_run.response_body
-}
-
-output "call_workflows_create_iceberg_table" {
-  description = "Output of the iceberg tables workflow"
-  value       = data.http.call_workflows_create_iceberg_table.response_body
+output "workflow_return_project_setup" {
+  description = "Output of the project setup workflow"
+  value       = data.http.call_workflows_initial_project_setup.response_body
 }
 
 output "lookerstudio_report_url" {

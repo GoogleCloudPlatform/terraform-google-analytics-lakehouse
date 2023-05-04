@@ -56,69 +56,25 @@ resource "google_project_iam_member" "workflows_sa_roles" {
   ]
 }
 
-resource "google_workflows_workflow" "workflow_bqml" {
-  name            = "initial-workflow-create-model"
+resource "google_workflows_workflow" "project_setup" {
+  name            = "initial-workflow-project-setup"
   project         = module.project-services.project_id
   region          = var.region
-  description     = "Create BQML Model"
+  description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
-  source_contents = file("${path.module}/assets/yaml/initial-workflow-create-model.yaml")
-
-  depends_on = [
-    google_project_iam_member.workflows_sa_roles,
-  ]
-}
-
-resource "google_workflows_workflow" "workflow_bucket_copy" {
-  name            = "initial-workflow-copy-data"
-  project         = module.project-services.project_id
-  region          = var.region
-  description     = "Copy data files from public bucket to solution project"
-  service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-copy-data.yaml", {
-    raw_bucket = google_storage_bucket.raw_bucket.name
-  })
-
-  depends_on = [
-    google_project_iam_member.workflows_sa_roles,
-  ]
-
-}
-resource "google_workflows_workflow" "workflows_create_gcp_biglake_tables" {
-  name            = "initial-workflow-create-gcp-biglake-tables"
-  project         = module.project-services.project_id
-  region          = var.region
-  description     = "Runs post Terraform setup steps for Solution in Console"
-  service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-create-gcp-biglake-tables.yaml", {
-    data_analyst_user = google_service_account.data_analyst_user.email,
-    marketing_user    = google_service_account.marketing_user.email,
-    raw_bucket        = google_storage_bucket.raw_bucket.name,
-  })
-
-  depends_on = [
-    google_project_iam_member.workflows_sa_roles,
-  ]
-
-}
-
-
-resource "google_workflows_workflow" "initial-workflow-pyspark" {
-  name            = "initial-workflow-pyspark"
-  project         = module.project-services.project_id
-  region          = var.region
-  description     = "Runs post Terraform setup steps for Solution in Console"
-  service_account = google_service_account.workflows_sa.id
-  source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-pyspark.yaml", {
+  source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-project-setup.yaml", {
+    raw_bucket               = google_storage_bucket.raw_bucket.name,
+    data_analyst_user        = google_service_account.data_analyst_user.email,
+    marketing_user           = google_service_account.marketing_user.email,
     dataproc_service_account = google_service_account.dataproc_service_account.email,
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
-    temp_bucket              = google_storage_bucket.warehouse_bucket.name
+    temp_bucket              = google_storage_bucket.warehouse_bucket.name,
   })
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
-    google_project_iam_member.dataproc_sa_roles,
+    google_project_iam_member.dataproc_sa_roles
   ]
 
 }
