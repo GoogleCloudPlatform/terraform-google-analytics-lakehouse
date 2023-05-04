@@ -143,7 +143,7 @@ resource "time_sleep" "wait_after_all_resources" {
     google_bigquery_dataset.gcp_lakehouse_ds,
     google_bigquery_connection.gcp_lakehouse_connection,
     google_project_iam_member.connectionPermissionGrant,
-    google_workflows_workflow.workflows_create_gcp_biglake_tables,
+    google_workflows_workflow.project_setup,
     data.google_storage_project_service_account.gcs_account
   ]
 }
@@ -152,8 +152,8 @@ resource "time_sleep" "wait_after_all_resources" {
 data "google_client_config" "current" {
 }
 
-data "http" "call_workflows_bucket_copy_run" {
-  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflow_bucket_copy.name}/executions"
+data "http" "call_workflows_initial_project_setup" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
   method = "POST"
   request_headers = {
     Accept = "application/json"
@@ -163,36 +163,10 @@ data "http" "call_workflows_bucket_copy_run" {
   ]
 }
 
-data "http" "call_workflows_create_gcp_biglake_tables_run" {
-  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.workflows_create_gcp_biglake_tables.name}/executions"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-  depends_on = [
-    time_sleep.wait_after_all_resources,
-    data.http.call_workflows_bucket_copy_run
-  ]
-}
-
-data "http" "call_workflows_create_iceberg_table" {
-  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.initial-workflow-pyspark.name}/executions"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-  depends_on = [
-    time_sleep.wait_after_all_resources,
-    data.http.call_workflows_create_gcp_biglake_tables_run
-  ]
-}
-
 resource "time_sleep" "wait_after_all_workflows" {
   create_duration = "30s"
 
   depends_on = [
-    data.http.call_workflows_create_iceberg_table,
-    data.http.call_workflows_create_gcp_biglake_tables_run,
-    data.http.call_workflows_bucket_copy_run,
+    data.http.call_workflows_initial_project_setup,
   ]
 }

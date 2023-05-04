@@ -55,12 +55,10 @@ Functional examples are included in the
 | Name | Description |
 |------|-------------|
 | bigquery\_editor\_url | The URL to launch the BigQuery editor |
-| call\_workflows\_create\_iceberg\_table | Output of the iceberg tables workflow |
 | lakehouse\_colab\_url | The URL to launch the in-console tutorial for the Analytics Lakehouse solution |
 | lookerstudio\_report\_url | The URL to create a new Looker Studio report displays a sample dashboard for data analysis |
 | neos\_tutorial\_url | The URL to launch the in-console tutorial for the Analytics Lakehouse solution |
-| workflow\_return\_bucket\_copy | Output of the bucket copy workflow |
-| workflow\_return\_create\_bq\_tables | Output of the create bigquery tables workflow |
+| workflow\_return\_project\_setup | Output of the project setup workflow |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
