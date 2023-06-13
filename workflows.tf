@@ -62,7 +62,7 @@ resource "google_workflows_workflow" "project_setup" {
   region          = var.region
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/assets/yaml/initial-workflow-project-setup.yaml", {
+  source_contents = templatefile("${path.module}/src/yaml/initial-workflow-project-setup.yaml", {
     raw_bucket               = google_storage_bucket.raw_bucket.name,
     data_analyst_user        = google_service_account.data_analyst_user.email,
     marketing_user           = google_service_account.marketing_user.email,
