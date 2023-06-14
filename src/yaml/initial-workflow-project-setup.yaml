@@ -194,7 +194,27 @@ create_iceberg:
                 batchId: $${batch_name}
             timeout: 300
         result: Operation
-    # TODO: add await result until Operation is complete
+        next: check_if_done
+
+    # Poll job until completed
+    - get_operation:
+        call: http.get
+        args:
+            url: $${"https://dataproc.googleapis.com/v1/"+Operation.body.name}
+            auth:
+                type: OAuth2
+        result: Operation
+
+    - check_if_done:
+        switch:
+          - condition: $${"done" in Operation.body and Operation.body.done}
+            next: returnOutput
+
+    - wait:
+        call: sys.sleep
+        args:
+            seconds: 10
+        next: get_operation
 
     - returnOutput:
             return: Operation
