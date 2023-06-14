@@ -61,10 +61,6 @@ credentials.json
 
 # tf lock file
 .terraform.lock.hcl
-src/yaml/blah.yaml
-src/yaml/test.yaml
-src/yaml/test.yaml
-src/yaml/test.yaml
 
 **/*.zip
 
