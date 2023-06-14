@@ -124,7 +124,7 @@ resource "google_storage_bucket" "provisioning_bucket" {
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "bigquery.py"
-  source = "${path.module}/assets/bigquery.py"
+  source = "${path.module}/src/bigquery.py"
 
   depends_on = [
     google_storage_bucket.provisioning_bucket

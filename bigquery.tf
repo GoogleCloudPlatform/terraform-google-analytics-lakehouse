@@ -52,5 +52,5 @@ resource "google_bigquery_routine" "create_view_ecommerce" {
   routine_id      = "create_view_ecommerce"
   routine_type    = "PROCEDURE"
   language        = "SQL"
-  definition_body = file("${path.module}/assets/sql/view_ecommerce.sql")
+  definition_body = file("${path.module}/src/sql/view_ecommerce.sql")
 }
