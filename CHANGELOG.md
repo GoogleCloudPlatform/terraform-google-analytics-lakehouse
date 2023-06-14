@@ -8,6 +8,23 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This changelog is generated automatically based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [0.2.0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.1.0...v0.2.0) (2023-06-14)
+
+
+### Features
+
+* add polling logic to Spark workflow ([9ea1517](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/9ea151703ccdfb13998d1220f29885a55aeae547))
+* adds metadata generation for the blueprint ([#34](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/34)) ([ef1b35c](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/ef1b35cf28d897cae3beff4dd4200617be902d20))
+
+
+### Bug Fixes
+
+* **deps:** update terraform google-beta to v4.69.1 ([28a034d](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/28a034d2115a0982ed3b5df02e7f91be696e8e33))
+* **deps:** update terraform googles to &lt;= 4.69.0, != 4.65.0, != 4.65.1 ([9a9852e](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/9a9852e7084ae0d3e0699437ea8ec78817f33104))
+* **deps:** update terraform terraform-google-modules/project-factory/google to v14 ([e5e5d00](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/e5e5d00774ee5f7881b799fbb4ad435094b3087c))
+* refactor references from 'assets' directory to 'src' ([acf7efb](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/acf7efba619230102e7691778ab69e47facc27aa))
+* Update int.cloudbuild.yaml to use LR billing ([#43](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/43)) ([1d0ddc7](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/1d0ddc78ec473c7ca2c0863a9abdf1da2edc15f7))
+
 ## 0.1.0 (2023-05-17)
 
 
