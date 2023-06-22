@@ -12,109 +12,220 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This defines the Google Workflow for the Analytics lakehouse Soultion: https://console.cloud.google.com/products/solutions/details/analytics-lakehouse
+# This Workflow executes through Terraform. For Google Workflows executed via Terraform, variables are defined such that:
+#
+#     - Terraform environment variables are denoted by $
+#     - Google Workflow variables are escaped via $$
+#
+# To modify this Workflow to stand alone (no Terraform):
+#
+#     - Replace vars in `main` -> `steps` -> `assign` with your own (or use https://cloud.google.com/workflows/docs/passing-runtime-arguments#gcloud)
+#     - Change all $$ to $
+
 main:
     params: []
     steps:
-        - sub_copy_objects:
+        - init:
+            # Define local variables from terraform env variables
+            assign:
+                - source_bucket_name: "data-analytics-demos-stage"
+                - dest_images_bucket_name: ${images_bucket}
+                - dest_tables_bucket_name: ${tables_bucket}
+                - temp_bucket_name: ${temp_bucket}
+                - dataproc_service_account_name: ${dataproc_service_account}
+                - provisioner_bucket_name: ${provisioner_bucket}
+        - sub_upgrade_assets:
+            call: upgrade_assets
+            result: upgrade_assets_output
+        - sub_copy_data:
+            parallel:
+              branches:
+                - copy_textocr_images:
+                        call: copy_objects
+                        args:
+                            source_bucket_name: $${source_bucket_name}
+                            prefix: "TextOCR"
+                            dest_bucket_name: $${dest_images_bucket_name}
+                        result: copy_textocr_images_output
+                - copy_ga4_images:
+                        call: copy_objects
+                        args:
+                            source_bucket_name: $${source_bucket_name}
+                            prefix: "ga4"
+                            dest_bucket_name: $${dest_images_bucket_name}
+                        result: copy_ga4_output
+                - copy_new_york_taxi_trips_tables:
+                        call: copy_objects
+                        args:
+                            source_bucket_name: $${source_bucket_name}
+                            prefix: "new-york"
+                            dest_bucket_name: $${dest_tables_bucket_name}
+                        result: copy_new_york_taxi_trips_tables_output
+                - copy_thelook_ecommerce_tables:
+                        call: copy_objects
+                        args:
+                            source_bucket_name: $${source_bucket_name}
+                            prefix: "thelook"
+                            dest_bucket_name: $${dest_tables_bucket_name}
+                        result: copy_thelook_ecommerce_tables_output
+        - sub_copy_tables:
             call: copy_objects
-            result: output
-        - sub_create_tables:
-            call: create_tables
-            result: output1
+            args:
+                source_bucket_name: $${source_bucket_name}
+                prefix: "tables"
+                dest_bucket_name: $${dest_tables_bucket_name}
+            result: copy_tables_output
+        # - sub_create_tables:
+        #     call: create_tables
+        #     result: create_tables_output
         - sub_create_iceberg:
             call: create_iceberg
-            result: output2
+            args:
+                temp_bucket_name: $${temp_bucket_name}
+                dataproc_service_account_name: $${dataproc_service_account_name}
+                provisioner_bucket_name: $${provisioner_bucket_name}
+            result: create_iceberg_output
         - sub_create_taxonomy:
             call: create_taxonomy
-            result: output3
+            result: create_taxonomy_output
 
-# Subworkflow to copy initial objects
-copy_objects:
+# Subworkflow to upgrade all Dataplex Assets to Managed
+# Subworkflow gets all lakes, then all zones within each lake, then all assets within each zone and upgrades
+upgrade_assets:
     steps:
         - init:
             assign:
-                - source_bucket: "data-analytics-demos"
-                - dest_bucket: ${raw_bucket}
-                - copied_objects: []
+                - project_id: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
+                - zones: []
+        - get_lakes:
+            call: http.get
+            args:
+                url: $${"https://dataplex.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/lakes"}
+                auth:
+                    type: OAuth2
+            result: Response
+        - assign_lakes:
+            assign:
+                - response_lakes: $${Response.body.lakes}
+        - get_zones:
+            for:
+                value: lake
+                index: i
+                in: $${response_lakes}
+                steps:
+                  - get_zones_in_lake:
+                      call: http.get
+                      args:
+                          url: $${"https://dataplex.googleapis.com/v1/"+lake.name+"/zones"}
+                          auth:
+                              type: OAuth2
+                      result: Response
+                  - assign_zones: 
+                      assign:
+                          - response_zones: $${Response.body.zones}
+                  
+                  - save_zones:
+                        for:
+                          value: zone
+                          index: j
+                          in: $${response_zones}
+                          steps:
+                              - save_to_list:
+                                  assign:
+                                    - zones: $${list.concat(zones, zone)}
+        - get_and_upgrade_all_assets:
+            for:
+                value: zone
+                index: i
+                in: $${zones}
+                steps:
+                  - get_assets_in_zone:
+                      call: http.get
+                      args:
+                          url: $${"https://dataplex.googleapis.com/v1/"+zone.name+"/assets"}
+                          auth:
+                              type: OAuth2
+                      result: Response
+                  - check_for_assets:
+                      switch:
+                        - condition: $${not("assets" in Response.body)}
+                          next: continue
+                  - assign_assets:
+                      assign:
+                          - response_assets: $${Response.body.assets}
+                  - upgrade_all_assets:
+                        for:
+                            value: asset
+                            index: j
+                            in: $${response_assets}
+                            steps:
+                              - upgrade_asset:
+                                  call: http.patch
+                                  args:
+                                      url: $${"https://dataplex.googleapis.com/v1/"+asset.name+"?updateMask=resourceSpec.readAccessMode"}
+                                      auth:
+                                          type: OAuth2
+                                      body:
+                                          resourceSpec:
+                                              readAccessMode: "MANAGED"
+    
+
+# Subworkflow to copy initial objects
+copy_objects:
+    params: [source_bucket_name, prefix, dest_bucket_name]
+    steps:
         - list_objects:
             call: googleapis.storage.v1.objects.list
             args:
-                bucket: $${source_bucket}
-                prefix: "thelook"
+                bucket: $${source_bucket_name}
+                prefix: $${prefix}
             result: list_result
         - start_counter:
             assign:
                 - copied_objects: 0
         - copy_objects:
-                for:
-                    value: object
-                    index: i
-                    in: $${list_result.items}
-                    steps:
-                      - step1:
-                            try:
-                                steps:
-                                  - copy_object:
-                                      call: googleapis.storage.v1.objects.copy
-                                      args:
-                                          sourceBucket: $${source_bucket}
-                                          sourceObject: $${text.url_encode(object.name)}
-                                          destinationBucket: $${dest_bucket}
-                                          destinationObject: $${text.url_encode(object.name)}
-                                      result: copy_result
-                                  - save_result:
-                                      assign:
-                                          - copied_objects: $${copied_objects + 1}
-                            except:
-                                as: e
-                                raise:
-                                    exception: $${e}
-                                    sourceBucket: $${source_bucket}
-                                    sourceObject: $${object.name}
-                                    destinationBucket: $${dest_bucket}
+                parallel:
+                    shared: [copied_objects]
+                    for:
+                        value: object
+                        index: i
+                        in: $${list_result.items}
+                        steps:
+                            - copy:
+                                try:
+                                    steps:
+                                        - copy_object:
+                                            call: googleapis.storage.v1.objects.copy
+                                            args:
+                                                sourceBucket: $${source_bucket_name}
+                                                sourceObject: $${text.url_encode(object.name)}
+                                                destinationBucket: $${dest_bucket_name}
+                                                destinationObject: $${text.url_encode(object.name)}
+                                            result: copy_result
+                                        - save_result:
+                                            assign:
+                                                - copied_objects: $${copied_objects + 1}
+                                except:
+                                    as: e
+                                    raise:
+                                        exception: $${e}
+                                        sourceBucket: $${source_bucket_name}
+                                        sourceObject: $${object.name}
+                                        destinationBucket: $${dest_bucket_name}
         - finish:
             return: $${copied_objects + " objects copied"}
 
 # Subworkflow to create BigLake tables
 create_tables:
     steps:
-        - assignStepTables:
-            assign:
-                - results: {}
-                - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
-                - bucket: ${raw_bucket}
-                - project_id: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                - map:
-                    gcp_tbl_order_items: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_order_items` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/order_items-0*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                    gcp_tbl_orders: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_orders` WITH CONNECTION `"+location+".gcp_lakehouse_connection`     OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/orders-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                    gcp_tbl_users: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_users` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/users-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                    gcp_tbl_distribution_centers: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_distribution_centers` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/distribution_centers-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                    gcp_tbl_inventory_items: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_inventory_items` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/inventory_items-*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-                    gcp_tbl_products: $${"CREATE OR REPLACE EXTERNAL TABLE `gcp_lakehouse_ds.gcp_tbl_products` WITH CONNECTION `"+location+".gcp_lakehouse_connection` OPTIONS(format ='Parquet', uris = ['gs://" + bucket + "/thelook_ecommerce/products-0*.Parquet'], max_staleness = INTERVAL 30 MINUTE, metadata_cache_mode = 'AUTOMATIC');"}
-        - loopStepTables:
-            for:
-                value: key
-                in: $${keys(map)}
-                steps:
-                    - runQuery:
-                        call: googleapis.bigquery.v2.jobs.query
-                        args:
-                            projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                            body:
-                                useLegacySql: false
-                                useQueryCache: false
-                                location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
-                                timeoutMs: 600000
-                                query: $${map[key]}
-                        result: queryResult
-                    - sumStep:
-                        assign:
-                            - results[key]: $${queryResult}
         # Create and Assign Views
         - assignStepPolicies:
             assign:
-                - marketing_user: ${marketing_user}
-                - data_analyst_user: ${data_analyst_user}
+                - results: {}
+                # - marketing_user: ${marketing_user}
+                # - data_analyst_user: ${data_analyst_user}
                 - policy_map:
                     # row_policy_usa_filter: $${"CREATE OR REPLACE ROW ACCESS POLICY usa_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_users` GRANT TO ('serviceAccount:" + data_analyst_user + "')  FILTER USING (Country = 'United States')"}
                     # row_policy_product_category_filter: $${"CREATE OR REPLACE ROW ACCESS POLICY product_category_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_products` GRANT TO ('serviceAccount:" + marketing_user + "') FILTER USING (Category = 'Swim' or Category = 'Active' or Category = 'Fashion Hoodies & Sweatshirts')"}
@@ -143,6 +254,7 @@ create_tables:
 
 # Subworkflow to create BLMS and Iceberg tables
 create_iceberg:
+    params: [temp_bucket_name, provisioner_bucket_name, dataproc_service_account_name]
     steps:
     - assign_values:
         assign:
@@ -150,10 +262,7 @@ create_iceberg:
             - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
             - connection_name: bq_spark_connection
             - batch_name: $${"initial-setup-"+text.substring(sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID"),0,7)}
-            - dataproc_service_account: ${dataproc_service_account}
-            - provisioner_bucket_name: ${provisioner_bucket}
             - warehouse_bucket_name: "gs://${warehouse_bucket}/warehouse"
-            - temp_bucket_name: ${temp_bucket}
             - lakehouse_catalog: lakehouse_catalog
             - lakehouse_database: lakehouse_database
             - bq_dataset: gcp_lakehouse_ds
@@ -188,7 +297,7 @@ create_iceberg:
 
                 environmentConfig:
                     executionConfig:
-                        serviceAccount: $${dataproc_service_account}
+                        serviceAccount: $${dataproc_service_account_name}
                         subnetworkUri: "dataproc-subnet"
             query:
                 batchId: $${batch_name}

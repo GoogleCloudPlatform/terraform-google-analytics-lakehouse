@@ -120,6 +120,21 @@ resource "google_storage_bucket" "provisioning_bucket" {
 
 }
 
+resource "google_storage_bucket" "images_bucket" {
+  name                        = "gcp-${var.use_case_short}-images-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+resource "google_storage_bucket" "tables_bucket" {
+  name                        = "gcp-${var.use_case_short}-tables-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
 
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
@@ -132,9 +147,8 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
 }
 
-#we will use this as a wait and to make sure every other resource in this project has completed.
-#we will then make the last four workflow steps dependent on this
-resource "time_sleep" "wait_after_all_resources" {
+# Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
+resource "time_sleep" "wait_after_resources_stage_1" {
   create_duration = "120s"
   depends_on = [
     module.project-services,
@@ -148,7 +162,16 @@ resource "time_sleep" "wait_after_all_resources" {
   ]
 }
 
-#execute workflows
+# Next round of resources. Dataplex relies on the storage buckets being set up.
+resource "time_sleep" "wait_after_resources_stage_2" {
+  create_duration = "120s"
+  depends_on = [
+    google_dataplex_asset.gcp_primary_raw_asset,
+    google_dataplex_asset.gcp_primary_staging_asset,
+  ]
+}
+
+#execute workflows after all resources are created
 data "google_client_config" "current" {
 }
 
@@ -159,7 +182,7 @@ data "http" "call_workflows_initial_project_setup" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    time_sleep.wait_after_all_resources
+      time_sleep.wait_after_resources_stage_2
   ]
 }
 
