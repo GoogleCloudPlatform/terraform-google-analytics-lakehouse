@@ -44,6 +44,6 @@ terraform {
   required_version = ">= 0.13"
 
   provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-analytics-lakehouse/v0.2.0"
+    module_name = "blueprints/terraform/terraform-google-analytics-lakehouse/v0.2.1"
   }
 }
