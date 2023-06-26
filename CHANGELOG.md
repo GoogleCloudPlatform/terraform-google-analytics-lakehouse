@@ -8,6 +8,13 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This changelog is generated automatically based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [0.2.1](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.2.0...v0.2.1) (2023-06-22)
+
+
+### Bug Fixes
+
+* update neos toc url ([#47](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/47)) ([629f00b](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/629f00b679faf1f29c676514f0ef7869c7b9ee8a))
+
 ## [0.2.0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.1.0...v0.2.0) (2023-06-14)
 
 
