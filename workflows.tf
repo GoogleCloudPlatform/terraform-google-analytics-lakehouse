@@ -65,6 +65,9 @@ resource "google_workflows_workflow" "project_setup" {
   source_contents = templatefile("${path.module}/src/yaml/initial-workflow-project-setup.yaml", {
     images_bucket            = google_storage_bucket.images_bucket.name,
     tables_bucket            = google_storage_bucket.tables_bucket.name,
+    images_zone_name         = google_dataplex_zone.gcp_primary_raw_zone.name,
+    tables_zone_name         = google_dataplex_zone.gcp_primary_staging_zone.name,
+    lake_name                = google_dataplex_lake.gcp_primary.name
     data_analyst_user        = google_service_account.data_analyst_user.email,
     marketing_user           = google_service_account.marketing_user.email,
     dataproc_service_account = google_service_account.dataproc_service_account.email,

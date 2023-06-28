@@ -148,7 +148,7 @@ resource "google_storage_bucket_object" "pyspark_file" {
 }
 
 # Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
-resource "time_sleep" "wait_after_resources_stage_1" {
+resource "time_sleep" "wait_after_all_resources" {
   create_duration = "120s"
   depends_on = [
     module.project-services,
@@ -158,16 +158,10 @@ resource "time_sleep" "wait_after_resources_stage_1" {
     google_bigquery_connection.gcp_lakehouse_connection,
     google_project_iam_member.connectionPermissionGrant,
     google_workflows_workflow.project_setup,
+    google_dataplex_zone.gcp_primary_raw_zone,
+    google_dataplex_zone.gcp_primary_staging_zone,
+    google_dataplex_zone.gcp_primary_curated_bi_zone,
     data.google_storage_project_service_account.gcs_account
-  ]
-}
-
-# Next round of resources. Dataplex relies on the storage buckets being set up.
-resource "time_sleep" "wait_after_resources_stage_2" {
-  create_duration = "120s"
-  depends_on = [
-    google_dataplex_asset.gcp_primary_raw_asset,
-    google_dataplex_asset.gcp_primary_staging_asset,
   ]
 }
 
@@ -182,7 +176,7 @@ data "http" "call_workflows_initial_project_setup" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-      time_sleep.wait_after_resources_stage_2
+    time_sleep.wait_after_all_resources
   ]
 }
 
