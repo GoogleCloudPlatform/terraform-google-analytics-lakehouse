@@ -171,7 +171,7 @@ data "http" "call_workflows_copy_data" {
 
 # Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
 resource "time_sleep" "wait_after_all_resources" {
-  create_duration = "300s"
+  create_duration = "420s"
   depends_on = [
     module.project-services,
     google_storage_bucket.provisioning_bucket,
