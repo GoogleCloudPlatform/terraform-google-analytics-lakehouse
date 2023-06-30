@@ -121,7 +121,7 @@ resource "google_storage_bucket" "provisioning_bucket" {
 }
 
 resource "google_storage_bucket" "ga4_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-images-${random_id.id.hex}"
+  name                        = "gcp-${var.use_case_short}-ga4-images-${random_id.id.hex}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
@@ -129,7 +129,7 @@ resource "google_storage_bucket" "ga4_images_bucket" {
 }
 
 resource "google_storage_bucket" "textocr_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-images-${random_id.id.hex}"
+  name                        = "gcp-${var.use_case_short}-textocr-images-${random_id.id.hex}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
@@ -155,9 +155,23 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
 }
 
+data "http" "call_workflows_copy_data" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
+  depends_on = [
+    google_workflows_workflow.copy_data,
+    google_storage_bucket.textocr_images_bucket,
+    google_storage_bucket.ga4_images_bucket,
+    google_storage_bucket.tables_bucket
+  ]
+}
+
 # Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
 resource "time_sleep" "wait_after_all_resources" {
-  create_duration = "120s"
+  create_duration = "300s"
   depends_on = [
     module.project-services,
     google_storage_bucket.provisioning_bucket,
@@ -170,6 +184,7 @@ resource "time_sleep" "wait_after_all_resources" {
     google_dataplex_zone.gcp_primary_staging,
     google_dataplex_zone.gcp_primary_curated_bi,
     data.google_storage_project_service_account.gcs_account
+    data.http.call_workflows_copy_data
   ]
 }
 
@@ -177,14 +192,17 @@ resource "time_sleep" "wait_after_all_resources" {
 data "google_client_config" "current" {
 }
 
-data "http" "call_workflows_initial_project_setup" {
+# Wait for Dataplex asset creation
+data "http" "call_workflows_project_setup" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
   method = "POST"
   request_headers = {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    time_sleep.wait_after_all_resources
+    google_dataplex_asset.gcp-primary-textocr,
+    google_dataplex_asset.gcp-primary-ga4-obfuscated-sample-ecommerce,
+    google_dataplex_asset.gcp-primary-tables
   ]
 }
 

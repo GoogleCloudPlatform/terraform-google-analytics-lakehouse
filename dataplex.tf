@@ -53,6 +53,8 @@ resource "google_dataplex_zone" "gcp_primary_raw" {
   display_name = "images"
   labels       = {}
   project      = module.project-services.project_id
+
+
 }
 
 #zone - curated, for staging the data
@@ -74,6 +76,8 @@ resource "google_dataplex_zone" "gcp_primary_staging" {
   display_name = "staging"
   labels       = {}
   project      = module.project-services.project_id
+
+  provisioner
 }
 
 #zone - curated, for BI
@@ -96,6 +100,75 @@ resource "google_dataplex_zone" "gcp_primary_curated_bi" {
   labels       = {}
   project      = module.project-services.project_id
 }
+
+# Assets are listed below. Assets need to wait for data to be copied to be created.
+
+#asset
+resource "google_dataplex_asset" "gcp_primary_textocr_images" {
+  name     = "gcp-primary-textocr"
+  location = var.region
+
+  lake          = google_dataplex_lake.gcp_primary.name
+  dataplex_zone = google_dataplex_zone.gcp_primary_images.name
+
+  discovery_spec {
+    enabled = true
+  }
+
+  resource_spec {
+    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_images_bucket.name}"
+    type = "STORAGE_BUCKET"
+  }
+
+  project    = module.project-services.project_id
+  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+
+}
+
+#asset
+resource "google_dataplex_asset" "gcp_primary_ga4_obfuscated_sample_ecommerce" {
+  name     = "gcp-primary-ga4-obfuscated-sample-ecommerce"
+  location = var.region
+
+  lake          = google_dataplex_lake.gcp_primary.name
+  dataplex_zone = google_dataplex_zone.gcp_primary_images.name
+
+  discovery_spec {
+    enabled = true
+  }
+
+  resource_spec {
+    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_images_bucket.name}"
+    type = "STORAGE_BUCKET"
+  }
+
+  project    = module.project-services.project_id
+  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+
+}
+
+#asset
+resource "google_dataplex_asset" "gcp_primary_tables" {
+  name     = "gcp-primary-tables"
+  location = var.region
+
+  lake          = google_dataplex_lake.gcp_primary.name
+  dataplex_zone = google_dataplex_zone.gcp_primary_staging.name
+
+  discovery_spec {
+    enabled = true
+  }
+
+    resource_spec {
+    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.tables_bucket.name}"
+    type = "STORAGE_BUCKET"
+  }
+
+  project    = module.project-services.project_id
+  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+
+}
+
 
 #give dataplex access to biglake bucket
 resource "google_project_iam_member" "dataplex_bucket_access" {

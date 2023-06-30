@@ -56,19 +56,36 @@ resource "google_project_iam_member" "workflows_sa_roles" {
   ]
 }
 
-resource "google_workflows_workflow" "project_setup" {
-  name            = "initial-workflow-project-setup"
+
+resource "google_workflows_workflow" "copy_data" {
+  name            = "copy_data"
   project         = module.project-services.project_id
   region          = var.region
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/src/yaml/initial-workflow-project-setup.yaml", {
-    textocr_images_bucket    = google_storage_bucket.textocr_images_bucket.name,
-    ga4_images_bucket        = google_storage_bucket.ga4_images_bucket.name,
-    tables_bucket            = google_storage_bucket.tables_bucket.name,
-    images_zone_name         = google_dataplex_zone.gcp_primary_raw.name,
-    tables_zone_name         = google_dataplex_zone.gcp_primary_staging.name,
-    lake_name                = google_dataplex_lake.gcp_primary.name
+  source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
+    textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
+    ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
+    tables_bucket         = google_storage_bucket.tables_bucket.name,
+    images_zone_name      = google_dataplex_zone.gcp_primary_raw.name,
+    tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
+    lake_name             = google_dataplex_lake.gcp_primary.name
+  })
+
+  depends_on = [
+    google_project_iam_member.workflows_sa_roles,
+    google_project_iam_member.dataproc_sa_roles
+  ]
+
+}
+
+resource "google_workflows_workflow" "project_setup" {
+  name            = "project-setup"
+  project         = module.project-services.project_id
+  region          = var.region
+  description     = "Copies data and performs project setup"
+  service_account = google_service_account.workflows_sa.email
+  source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
     data_analyst_user        = google_service_account.data_analyst_user.email,
     marketing_user           = google_service_account.marketing_user.email,
     dataproc_service_account = google_service_account.dataproc_service_account.email,
@@ -83,3 +100,4 @@ resource "google_workflows_workflow" "project_setup" {
   ]
 
 }
+

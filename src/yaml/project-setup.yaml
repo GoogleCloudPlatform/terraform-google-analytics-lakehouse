@@ -29,88 +29,13 @@ main:
         - init:
             # Define local variables from terraform env variables
             assign:
-                - source_bucket_name: "data-analytics-demos"
-                - dest_ga4_images_bucket_name: ${ga4_images_bucket}
-                - dest_textocr_images_bucket_name: ${textocr_images_bucket}
-                - dest_tables_bucket_name: ${tables_bucket}
-                - images_zone_name: ${images_zone_name}
-                - tables_zone_name: ${tables_zone_name}
-                - lake_name: ${lake_name}
                 - temp_bucket_name: ${temp_bucket}
                 - dataproc_service_account_name: ${dataproc_service_account}
                 - provisioner_bucket_name: ${provisioner_bucket}
-        - sub_copy_data:
-            parallel:
-              branches:
-                - copy_textocr_images:
-                    steps:
-                      - copy_text_ocr_images_call:
-                          call: copy_objects
-                          args:
-                              source_bucket_name: $${source_bucket_name}
-                              prefix: "TextOCR"
-                              dest_bucket_name: $${dest_images_bucket_name}
-                          result: copy_textocr_images_output
-                - copy_ga4_images:
-                    steps:
-                      -  copy_ga4_images_call:
-                          call: copy_objects
-                          args:
-                              source_bucket_name: $${source_bucket_name}
-                              prefix: "ga4"
-                              dest_bucket_name: $${dest_images_bucket_name}
-                          result: copy_ga4_output
-                - copy_new_york_taxi_trips_tables:
-                    steps:
-                      - copy_new_york_taxi_trips_tables_call:
-                          call: copy_objects
-                          args:
-                              source_bucket_name: $${source_bucket_name}
-                              prefix: "new-york"
-                              dest_bucket_name: $${dest_tables_bucket_name}
-                          result: copy_new_york_taxi_trips_tables_output
-                - copy_thelook_ecommerce_tables:
-                    steps:
-                      - copy_thelook_ecommerce_tables_call:
-                          call: copy_objects
-                          args:
-                              source_bucket_name: $${source_bucket_name}
-                              prefix: "stage/thelook"
-                              dest_bucket_name: $${dest_tables_bucket_name}
-                          result: copy_thelook_ecommerce_tables_output
-        - sub_create_dataplex_assets:
-            parallel:
-              branches:
-                - create_textocr_images_asset:
-                    steps:
-                      - create_textocr_images_asset_call:
-                          call: create_dataplex_asset
-                          args:
-                              name: "gcp-primary-textocr_images"
-                              lake: $${lake_name}
-                              zone: $${images_zone_name}
-                              bucket: $${dest_textocr_images_bucket_name}
-                          result: create_textocr_images_asset_call_output
-                - create_ga4_images_asset:
-                    steps:
-                      - create_ga4_images_asset_call:
-                          call: create_dataplex_asset
-                          args:
-                              name: "gcp-primary-ga4-images"
-                              lake: $${lake_name}
-                              zone: $${images_zone_name}
-                              bucket: $${dest_ga4_images_bucket_name}
-                          result: create_ga4_images_asset_call_output
-                - create_tables_asset:
-                    steps:
-                      - create_tables_asset_call:
-                          call: create_dataplex_asset
-                          args:
-                              name: "gcp-primary-tables"
-                              lake: $${lake_name}
-                              zone: $${tables_zone_name}
-                              bucket: $${dest_tables_bucket_name}
-                          result: create_tables_asset_call_output
+                - warehouse_bucket_name: ${warehouse_bucket}
+        - sub_upgrade_dataplex_assets:
+            call: upgrade_dataplex_assets
+            result: upgrade_dataplex_assets_output
         # TODO: change this to poll for BigQuery table creation
         - sub_wait_for_dataplex_discovery:
             call: sys.sleep
@@ -125,79 +50,92 @@ main:
                 temp_bucket_name: $${temp_bucket_name}
                 dataproc_service_account_name: $${dataproc_service_account_name}
                 provisioner_bucket_name: $${provisioner_bucket_name}
+                warehouse_bucket_name: $${warehouse_bucket_name}
             result: create_iceberg_output
         - sub_create_taxonomy:
             call: create_taxonomy
             result: create_taxonomy_output
 
-# Subworkflow to copy initial objects
-copy_objects:
-    params: [source_bucket_name, prefix, dest_bucket_name]
-    steps:
-        - list_objects:
-            call: googleapis.storage.v1.objects.list
-            args:
-                bucket: $${source_bucket_name}
-                prefix: $${prefix}
-            result: list_result
-        - start_counter:
-            assign:
-                - copied_objects: 0
-        - copy_objects:
-                parallel:
-                    shared: [copied_objects]
-                    for:
-                        value: object
-                        index: i
-                        in: $${list_result.items}
-                        steps:
-                            - copy:
-                                try:
-                                    steps:
-                                        - copy_object:
-                                            call: googleapis.storage.v1.objects.copy
-                                            args:
-                                                sourceBucket: $${source_bucket_name}
-                                                sourceObject: $${text.url_encode(object.name)}
-                                                destinationBucket: $${dest_bucket_name}
-                                                destinationObject: $${text.url_encode(object.name)}
-                                            result: copy_result
-                                        - save_result:
-                                            assign:
-                                                - copied_objects: $${copied_objects + 1}
-                                except:
-                                    as: e
-                                    raise:
-                                        exception: $${e}
-                                        sourceBucket: $${source_bucket_name}
-                                        sourceObject: $${object.name}
-                                        destinationBucket: $${dest_bucket_name}
-        - finish:
-            return: $${copied_objects + " objects copied"}
-
-# Create Dataplex assets after copying all files to GCS to trigger metadata discovery from the start.
-# Additionally, creating MANAGED Dataplex assets is currently not possible via Terraform.
-create_dataplex_asset:
-    params: [name, lake, zone, bucket]
+# Subworkflow to upgrade all Dataplex Assets to Managed
+# Subworkflow gets all lakes, then all zones within each lake, then all assets within each zone and upgrades
+upgrade_assets:
     steps:
         - init:
             assign:
                 - project_id: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
                 - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
-        - create_asset:
-            call: http.post
+                - zones: []
+        - get_lakes:
+            call: http.get
             args:
-                url: $${"https://dataplex.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/lakes/"+lake+"/zones/"+zone+"/assets?assetId="+name}
+                url: $${"https://dataplex.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/lakes"}
                 auth:
                     type: OAuth2
-                body:
-                    resourceSpec:
-                        name: $${"projects/"+project_id+"/buckets/"+bucket}
-                        type: "STORAGE_BUCKET"
-                        readAccessMode: "MANAGED"
-                    discoverySpec:
-                        enabled: true
             result: Response
+        - assign_lakes:
+            assign:
+                - response_lakes: $${Response.body.lakes}
+        - get_zones:
+            for:
+                value: lake
+                index: i
+                in: $${response_lakes}
+                steps:
+                  - get_zones_in_lake:
+                      call: http.get
+                      args:
+                          url: $${"https://dataplex.googleapis.com/v1/"+lake.name+"/zones"}
+                          auth:
+                              type: OAuth2
+                      result: Response
+                  - assign_zones: 
+                      assign:
+                          - response_zones: $${Response.body.zones}
+                  
+                  - save_zones:
+                        for:
+                          value: zone
+                          index: j
+                          in: $${response_zones}
+                          steps:
+                              - save_to_list:
+                                  assign:
+                                    - zones: $${list.concat(zones, zone)}
+        - get_and_upgrade_all_assets:
+            for:
+                value: zone
+                index: i
+                in: $${zones}
+                steps:
+                  - get_assets_in_zone:
+                      call: http.get
+                      args:
+                          url: $${"https://dataplex.googleapis.com/v1/"+zone.name+"/assets"}
+                          auth:
+                              type: OAuth2
+                      result: Response
+                  - check_for_assets:
+                      switch:
+                        - condition: $${not("assets" in Response.body)}
+                          next: continue
+                  - assign_assets:
+                      assign:
+                          - response_assets: $${Response.body.assets}
+                  - upgrade_all_assets:
+                        for:
+                            value: asset
+                            index: j
+                            in: $${response_assets}
+                            steps:
+                              - upgrade_asset:
+                                  call: http.patch
+                                  args:
+                                      url: $${"https://dataplex.googleapis.com/v1/"+asset.name+"?updateMask=resourceSpec.readAccessMode"}
+                                      auth:
+                                          type: OAuth2
+                                      body:
+                                          resourceSpec:
+                                              readAccessMode: "MANAGED"
 
 # Subworkflow to create BigQuery views
 create_tables:
@@ -237,7 +175,7 @@ create_tables:
 
 # Subworkflow to create BLMS and Iceberg tables
 create_iceberg:
-    params: [temp_bucket_name, provisioner_bucket_name, dataproc_service_account_name]
+    params: [temp_bucket_name, provisioner_bucket_name, dataproc_service_account_name, warehouse_bucket_name]
     steps:
     - assign_values:
         assign:
@@ -245,7 +183,6 @@ create_iceberg:
             - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
             - connection_name: bq_spark_connection
             - batch_name: $${"initial-setup-"+text.substring(sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID"),0,7)}
-            - warehouse_bucket_name: "gs://${warehouse_bucket}/warehouse"
             - lakehouse_catalog: lakehouse_catalog
             - lakehouse_database: lakehouse_database
             - bq_dataset: gcp_lakehouse_ds
@@ -270,7 +207,7 @@ create_iceberg:
                         "spark.sql.catalog.lakehouse_catalog.catalog-impl": "org.apache.iceberg.gcp.biglake.BigLakeCatalog"
                         "spark.sql.catalog.lakehouse_catalog.gcp_location": "$${location}"
                         "spark.sql.catalog.lakehouse_catalog.gcp_project": "$${project_id}"
-                        "spark.sql.catalog.lakehouse_catalog.warehouse": "$${warehouse_bucket_name}"
+                        "spark.sql.catalog.lakehouse_catalog.warehouse": $${warehouse_bucket_name+"/warehouse"}
                         "spark.jars.packages": "org.apache.iceberg:iceberg-spark-runtime-3.2_2.12:0.14.1"
                         "spark.dataproc.driverEnv.lakehouse_catalog": $${lakehouse_catalog}
                         "spark.dataproc.driverEnv.lakehouse_database": $${lakehouse_database}

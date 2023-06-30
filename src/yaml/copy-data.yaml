@@ -1,0 +1,66 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+main:
+    params: []
+    steps:
+        - init:
+            # Define local variables from terraform env variables
+            assign:
+                - source_bucket_name: "data-analytics-demos"
+                - dest_ga4_images_bucket_name: ${ga4_images_bucket}
+                - dest_textocr_images_bucket_name: ${textocr_images_bucket}
+                - dest_tables_bucket_name: ${tables_bucket}
+                - images_zone_name: ${images_zone_name}
+                - tables_zone_name: ${tables_zone_name}
+                - lake_name: ${lake_name}
+        - sub_copy_data:
+            parallel:
+              branches:
+                - copy_textocr_images:
+                    steps:
+                      - copy_text_ocr_images_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "TextOCR"
+                              dest_bucket_name: $${dest_images_bucket_name}
+                          result: copy_textocr_images_output
+                - copy_ga4_images:
+                    steps:
+                      -  copy_ga4_images_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "ga4"
+                              dest_bucket_name: $${dest_images_bucket_name}
+                          result: copy_ga4_output
+                - copy_new_york_taxi_trips_tables:
+                    steps:
+                      - copy_new_york_taxi_trips_tables_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "new-york"
+                              dest_bucket_name: $${dest_tables_bucket_name}
+                          result: copy_new_york_taxi_trips_tables_output
+                - copy_thelook_ecommerce_tables:
+                    steps:
+                      - copy_thelook_ecommerce_tables_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "stage/thelook"
+                              dest_bucket_name: $${dest_tables_bucket_name}
+                          result: copy_thelook_ecommerce_tables_output
