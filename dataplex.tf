@@ -35,7 +35,7 @@ resource "google_dataplex_lake" "gcp_primary" {
 }
 
 #zone - raw
-resource "google_dataplex_zone" "gcp_primary_images" {
+resource "google_dataplex_zone" "gcp_primary_raw" {
   discovery_spec {
     enabled = true
   }
