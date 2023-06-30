@@ -67,7 +67,7 @@ resource "google_workflows_workflow" "copy_data" {
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
     tables_bucket         = google_storage_bucket.tables_bucket.name,
-    images_zone_name      = google_dataplex_zone.gcp_primary_raw.name,
+    images_zone_name      = google_dataplex_zone.gcp_primary_images.name,
     tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
     lake_name             = google_dataplex_lake.gcp_primary.name
   })
