@@ -16,7 +16,7 @@
 
 output "workflow_return_project_setup" {
   description = "Output of the project setup workflow"
-  value       = data.http.call_workflows_initial_project_setup.response_body
+  value       = data.http.call_workflows_project_setup.response_body
 }
 
 output "lookerstudio_report_url" {

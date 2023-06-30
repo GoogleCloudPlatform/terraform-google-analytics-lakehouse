@@ -35,7 +35,7 @@ resource "google_dataplex_lake" "gcp_primary" {
 }
 
 #zone - raw
-resource "google_dataplex_zone" "gcp_primary_raw" {
+resource "google_dataplex_zone" "gcp_primary_images" {
   discovery_spec {
     enabled = true
   }
@@ -102,7 +102,7 @@ resource "google_dataplex_zone" "gcp_primary_curated_bi" {
 # Assets are listed below. Assets need to wait for data to be copied to be created.
 
 #asset
-resource "google_dataplex_asset" "gcp_primary_textocr_images" {
+resource "google_dataplex_asset" "gcp_primary_textocr" {
   name     = "gcp-primary-textocr"
   location = var.region
 

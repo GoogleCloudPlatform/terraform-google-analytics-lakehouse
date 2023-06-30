@@ -200,9 +200,9 @@ data "http" "call_workflows_project_setup" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    google_dataplex_asset.gcp-primary-textocr,
-    google_dataplex_asset.gcp-primary-ga4-obfuscated-sample-ecommerce,
-    google_dataplex_asset.gcp-primary-tables
+    google_dataplex_asset.gcp_primary_textocr,
+    google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
+    google_dataplex_asset.gcp_primary_tables
   ]
 }
 
@@ -210,6 +210,6 @@ resource "time_sleep" "wait_after_all_workflows" {
   create_duration = "180s"
 
   depends_on = [
-    data.http.call_workflows_initial_project_setup,
+    data.http.call_workflows_project_setup,
   ]
 }
