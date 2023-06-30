@@ -155,20 +155,6 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
 }
 
-resource "http" "call_workflows_copy_data" {
-  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-  depends_on = [
-    google_workflows_workflow.copy_data,
-    google_storage_bucket.textocr_images_bucket,
-    google_storage_bucket.ga4_images_bucket,
-    google_storage_bucket.tables_bucket
-  ]
-}
-
 # Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
 resource "time_sleep" "wait_after_all_resources" {
   create_duration = "420s"
@@ -184,31 +170,5 @@ resource "time_sleep" "wait_after_all_resources" {
     google_dataplex_zone.gcp_primary_curated_bi,
     data.google_storage_project_service_account.gcs_account,
     data.http.call_workflows_copy_data
-  ]
-}
-
-#execute workflows after all resources are created
-data "google_client_config" "current" {
-}
-
-# Wait for Dataplex asset creation
-resource "http" "call_workflows_project_setup" {
-  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-  depends_on = [
-    google_dataplex_asset.gcp_primary_textocr,
-    google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
-    google_dataplex_asset.gcp_primary_tables
-  ]
-}
-
-resource "time_sleep" "wait_after_all_workflows" {
-  create_duration = "180s"
-
-  depends_on = [
-    data.http.call_workflows_project_setup,
   ]
 }

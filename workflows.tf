@@ -57,7 +57,7 @@ resource "google_project_iam_member" "workflows_sa_roles" {
 }
 
 
-data "google_workflows_workflow" "copy_data" {
+resource "google_workflows_workflow" "copy_data" {
   name            = "copy_data"
   project         = module.project-services.project_id
   region          = var.region
@@ -79,7 +79,7 @@ data "google_workflows_workflow" "copy_data" {
 
 }
 
-data "google_workflows_workflow" "project_setup" {
+resource "google_workflows_workflow" "project_setup" {
   name            = "project-setup"
   project         = module.project-services.project_id
   region          = var.region
@@ -99,4 +99,48 @@ data "google_workflows_workflow" "project_setup" {
     google_project_iam_member.dataproc_sa_roles
   ]
 
+}
+
+# execute workflows after all resources are created
+# # get a token to execute the workflows
+data "google_client_config" "current" {
+}
+
+# # execute the copy data workflow
+data "http" "call_workflows_copy_data" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
+  depends_on = [
+    google_workflows_workflow.copy_data,
+    google_storage_bucket.textocr_images_bucket,
+    google_storage_bucket.ga4_images_bucket,
+    google_storage_bucket.tables_bucket
+  ]
+}
+
+# # execute the other project setup workflow
+data "http" "call_workflows_project_setup" {
+  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
+  depends_on = [
+    google_workflows_workflow.project_setup,
+    google_dataplex_asset.gcp_primary_textocr,
+    google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
+    google_dataplex_asset.gcp_primary_tables
+  ]
+}
+
+# # wait for completion
+resource "time_sleep" "wait_after_all_workflows" {
+  create_duration = "180s"
+
+  depends_on = [
+    data.http.call_workflows_project_setup,
+  ]
 }
