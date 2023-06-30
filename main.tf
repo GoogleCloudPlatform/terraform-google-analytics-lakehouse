@@ -155,7 +155,7 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
 }
 
-data "http" "call_workflows_copy_data" {
+resource "http" "call_workflows_copy_data" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
   method = "POST"
   request_headers = {
@@ -175,7 +175,6 @@ resource "time_sleep" "wait_after_all_resources" {
   depends_on = [
     module.project-services,
     google_storage_bucket.provisioning_bucket,
-    google_project_service_identity.workflows,
     google_bigquery_dataset.gcp_lakehouse_ds,
     google_bigquery_connection.gcp_lakehouse_connection,
     google_project_iam_member.connectionPermissionGrant,
@@ -193,7 +192,7 @@ data "google_client_config" "current" {
 }
 
 # Wait for Dataplex asset creation
-data "http" "call_workflows_project_setup" {
+resource "http" "call_workflows_project_setup" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
   method = "POST"
   request_headers = {
