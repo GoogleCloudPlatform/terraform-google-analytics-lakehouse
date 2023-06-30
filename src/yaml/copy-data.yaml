@@ -30,12 +30,12 @@ main:
               branches:
                 - copy_textocr_images:
                     steps:
-                      - copy_text_ocr_images_call:
+                      - copy_textocr_images_call:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
                               prefix: "TextOCR"
-                              dest_bucket_name: $${dest_images_bucket_name}
+                              dest_bucket_name: $${dest_textocr_images_bucket_name}
                           result: copy_textocr_images_output
                 - copy_ga4_images:
                     steps:
@@ -44,7 +44,7 @@ main:
                           args:
                               source_bucket_name: $${source_bucket_name}
                               prefix: "ga4"
-                              dest_bucket_name: $${dest_images_bucket_name}
+                              dest_bucket_name: $${dest_ga4_images_bucket_name}
                           result: copy_ga4_output
                 - copy_new_york_taxi_trips_tables:
                     steps:
