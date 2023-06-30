@@ -30,7 +30,8 @@ main:
             # Define local variables from terraform env variables
             assign:
                 - source_bucket_name: "data-analytics-demos"
-                - dest_images_bucket_name: ${images_bucket}
+                - dest_ga4_images_bucket_name: ${ga4_images_bucket}
+                - dest_textocr_images_bucket_name: ${textocr_images_bucket}
                 - dest_tables_bucket_name: ${tables_bucket}
                 - images_zone_name: ${images_zone_name}
                 - tables_zone_name: ${tables_zone_name}
@@ -80,16 +81,26 @@ main:
         - sub_create_dataplex_assets:
             parallel:
               branches:
-                - create_images_asset:
+                - create_textocr_images_asset:
                     steps:
-                      - create_images_asset_call:
+                      - create_textocr_images_asset_call:
                           call: create_dataplex_asset
                           args:
-                              name: "gcp-primary-images"
+                              name: "gcp-primary-textocr_images"
                               lake: $${lake_name}
                               zone: $${images_zone_name}
-                              bucket: $${dest_images_bucket_name}
-                          result: create_images_asset_call_output
+                              bucket: $${dest_textocr_images_bucket_name}
+                          result: create_textocr_images_asset_call_output
+                - create_ga4_images_asset:
+                    steps:
+                      - create_ga4_images_asset_call:
+                          call: create_dataplex_asset
+                          args:
+                              name: "gcp-primary-ga4-images"
+                              lake: $${lake_name}
+                              zone: $${images_zone_name}
+                              bucket: $${dest_ga4_images_bucket_name}
+                          result: create_ga4_images_asset_call_output
                 - create_tables_asset:
                     steps:
                       - create_tables_asset_call:
@@ -105,10 +116,9 @@ main:
             call: sys.sleep
             args:
                 seconds: 600
-        # TODO: currently broken since new tables are discovered through Dataplex
-        # - sub_create_tables:
-        #     call: create_tables
-        #     result: create_tables_output
+        - sub_create_tables:
+            call: create_tables
+            result: create_tables_output
         - sub_create_iceberg:
             call: create_iceberg
             args:

@@ -63,10 +63,10 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/initial-workflow-project-setup.yaml", {
-    images_bucket            = google_storage_bucket.images_bucket.name,
+    text_ocr_images_bucket   = google_storage_bucket.images_bucket.name,
     tables_bucket            = google_storage_bucket.tables_bucket.name,
-    images_zone_name         = google_dataplex_zone.gcp_primary_raw_zone.name,
-    tables_zone_name         = google_dataplex_zone.gcp_primary_staging_zone.name,
+    images_zone_name         = google_dataplex_zone.gcp_primary_raw.name,
+    tables_zone_name         = google_dataplex_zone.gcp_primary_staging.name,
     lake_name                = google_dataplex_lake.gcp_primary.name
     data_analyst_user        = google_service_account.data_analyst_user.email,
     marketing_user           = google_service_account.marketing_user.email,

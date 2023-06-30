@@ -51,21 +51,21 @@ SELECT
   u.longitude user_long,
   u.traffic_source user_traffic_source
 FROM
-  gcp_lakehouse_ds.gcp_tbl_orders o
+  gcp_primary_staging.stage_thelook_ecommerce_orders o
 INNER JOIN
-  gcp_lakehouse_ds.gcp_tbl_order_items i
+  gcp_primary_staging.stage_thelook_ecommerce_order_items i
 ON
   o.order_id = i.order_id
 INNER JOIN
-  `gcp_lakehouse_ds.gcp_tbl_products` p
+  `gcp_primary_staging.stage_thelook_ecommerce_products` p
 ON
   i.product_id = p.id
 INNER JOIN
-  `gcp_lakehouse_ds.gcp_tbl_distribution_centers` d
+  `gcp_primary_staging.stage_thelook_ecommerce_distribution_centers` d
 ON
   p.distribution_center_id = d.id
 INNER JOIN
-  `gcp_lakehouse_ds.gcp_tbl_users` u
+  `gcp_primary_staging.stage_thelook_ecommerce_users` u
 ON
   o.user_id = u.id
 ;

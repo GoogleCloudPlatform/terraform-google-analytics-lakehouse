@@ -120,7 +120,15 @@ resource "google_storage_bucket" "provisioning_bucket" {
 
 }
 
-resource "google_storage_bucket" "images_bucket" {
+resource "google_storage_bucket" "ga4_images_bucket" {
+  name                        = "gcp-${var.use_case_short}-images-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+resource "google_storage_bucket" "textocr_images_bucket" {
   name                        = "gcp-${var.use_case_short}-images-${random_id.id.hex}"
   project                     = module.project-services.project_id
   location                    = var.region
@@ -158,9 +166,9 @@ resource "time_sleep" "wait_after_all_resources" {
     google_bigquery_connection.gcp_lakehouse_connection,
     google_project_iam_member.connectionPermissionGrant,
     google_workflows_workflow.project_setup,
-    google_dataplex_zone.gcp_primary_raw_zone,
-    google_dataplex_zone.gcp_primary_staging_zone,
-    google_dataplex_zone.gcp_primary_curated_bi_zone,
+    google_dataplex_zone.gcp_primary_raw,
+    google_dataplex_zone.gcp_primary_staging,
+    google_dataplex_zone.gcp_primary_curated_bi,
     data.google_storage_project_service_account.gcs_account
   ]
 }

@@ -35,14 +35,14 @@ resource "google_dataplex_lake" "gcp_primary" {
 }
 
 #zone - raw
-resource "google_dataplex_zone" "gcp_primary_raw_zone" {
+resource "google_dataplex_zone" "gcp_primary_raw" {
   discovery_spec {
     enabled = true
   }
 
   lake     = google_dataplex_lake.gcp_primary.name
   location = var.region
-  name     = "gcp-primary-raw-zone"
+  name     = "gcp-primary-raw"
 
   resource_spec {
     location_type = "SINGLE_REGION"
@@ -56,14 +56,14 @@ resource "google_dataplex_zone" "gcp_primary_raw_zone" {
 }
 
 #zone - curated, for staging the data
-resource "google_dataplex_zone" "gcp_primary_staging_zone" {
+resource "google_dataplex_zone" "gcp_primary_staging" {
   discovery_spec {
     enabled = true
   }
 
   lake     = google_dataplex_lake.gcp_primary.name
   location = var.region
-  name     = "gcp-primary-staging-zone"
+  name     = "gcp-primary-staging"
 
   resource_spec {
     location_type = "SINGLE_REGION"
@@ -77,14 +77,14 @@ resource "google_dataplex_zone" "gcp_primary_staging_zone" {
 }
 
 #zone - curated, for BI
-resource "google_dataplex_zone" "gcp_primary_curated_bi_zone" {
+resource "google_dataplex_zone" "gcp_primary_curated_bi" {
   discovery_spec {
     enabled = true
   }
 
   lake     = google_dataplex_lake.gcp_primary.name
   location = var.region
-  name     = "gcp-primary-curated-zone"
+  name     = "gcp-primary-curated"
 
   resource_spec {
     location_type = "SINGLE_REGION"
@@ -103,47 +103,3 @@ resource "google_project_iam_member" "dataplex_bucket_access" {
   role    = "roles/dataplex.serviceAgent"
   member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
 }
-
-# #asset
-# resource "google_dataplex_asset" "gcp_primary_raw_asset" {
-#   name     = "gcp-primary-raw-asset"
-#   location = var.region
-
-#   lake          = google_dataplex_lake.gcp_primary.name
-#   dataplex_zone = google_dataplex_zone.gcp_primary_raw_zone.name
-
-#   discovery_spec {
-#     enabled = true
-#   }
-
-#   resource_spec {
-#     name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.images_bucket.name}"
-#     type = "STORAGE_BUCKET"
-#   }
-
-#   project    = module.project-services.project_id
-#   depends_on = [time_sleep.wait_after_resources_stage_1, google_project_iam_member.dataplex_bucket_access]
-
-# }
-
-# #asset
-# resource "google_dataplex_asset" "gcp_primary_staging_asset" {
-#   name     = "gcp-primary-staging-asset"
-#   location = var.region
-
-#   lake          = google_dataplex_lake.gcp_primary.name
-#   dataplex_zone = google_dataplex_zone.gcp_primary_staging_zone.name
-
-#   discovery_spec {
-#     enabled = true
-#   }
-
-#   resource_spec {
-#     name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.tables_bucket.name}"
-#     type = "STORAGE_BUCKET"
-#   }
-
-#   project    = module.project-services.project_id
-#   depends_on = [time_sleep.wait_after_resources_stage_1, google_project_iam_member.dataplex_bucket_access]
-
-# }
