@@ -57,7 +57,7 @@ resource "google_project_iam_member" "workflows_sa_roles" {
 }
 
 
-resource "google_workflows_workflow" "copy_data" {
+data "google_workflows_workflow" "copy_data" {
   name            = "copy_data"
   project         = module.project-services.project_id
   region          = var.region
@@ -79,7 +79,7 @@ resource "google_workflows_workflow" "copy_data" {
 
 }
 
-resource "google_workflows_workflow" "project_setup" {
+data "google_workflows_workflow" "project_setup" {
   name            = "project-setup"
   project         = module.project-services.project_id
   region          = var.region
@@ -100,4 +100,3 @@ resource "google_workflows_workflow" "project_setup" {
   ]
 
 }
-
