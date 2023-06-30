@@ -76,8 +76,6 @@ resource "google_dataplex_zone" "gcp_primary_staging" {
   display_name = "staging"
   labels       = {}
   project      = module.project-services.project_id
-
-  provisioner
 }
 
 #zone - curated, for BI
@@ -159,7 +157,7 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
     enabled = true
   }
 
-    resource_spec {
+  resource_spec {
     name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.tables_bucket.name}"
     type = "STORAGE_BUCKET"
   }

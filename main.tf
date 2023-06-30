@@ -183,7 +183,7 @@ resource "time_sleep" "wait_after_all_resources" {
     google_dataplex_zone.gcp_primary_raw,
     google_dataplex_zone.gcp_primary_staging,
     google_dataplex_zone.gcp_primary_curated_bi,
-    data.google_storage_project_service_account.gcs_account
+    data.google_storage_project_service_account.gcs_account,
     data.http.call_workflows_copy_data
   ]
 }
