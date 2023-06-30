@@ -107,7 +107,7 @@ resource "google_dataplex_asset" "gcp_primary_textocr" {
   location = var.region
 
   lake          = google_dataplex_lake.gcp_primary.name
-  dataplex_zone = google_dataplex_zone.gcp_primary_images.name
+  dataplex_zone = google_dataplex_zone.gcp_primary_raw.name
 
   discovery_spec {
     enabled = true
@@ -129,7 +129,7 @@ resource "google_dataplex_asset" "gcp_primary_ga4_obfuscated_sample_ecommerce" {
   location = var.region
 
   lake          = google_dataplex_lake.gcp_primary.name
-  dataplex_zone = google_dataplex_zone.gcp_primary_images.name
+  dataplex_zone = google_dataplex_zone.gcp_primary_raw.name
 
   discovery_spec {
     enabled = true
