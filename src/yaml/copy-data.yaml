@@ -67,47 +67,45 @@ main:
 
 # Subworkflow to copy initial objects
 copy_objects:
+    params: [source_bucket_name, prefix, dest_bucket_name]
     steps:
-        - init:
-            assign:
-                - source_bucket: "data-analytics-demos"
-                - dest_bucket: ${raw_bucket}
-                - copied_objects: []
         - list_objects:
             call: googleapis.storage.v1.objects.list
             args:
-                bucket: $${source_bucket}
-                prefix: "thelook"
+                bucket: $${source_bucket_name}
+                prefix: $${prefix}
             result: list_result
         - start_counter:
             assign:
                 - copied_objects: 0
         - copy_objects:
-                for:
-                    value: object
-                    index: i
-                    in: $${list_result.items}
-                    steps:
-                      - step1:
-                            try:
-                                steps:
-                                  - copy_object:
-                                      call: googleapis.storage.v1.objects.copy
-                                      args:
-                                          sourceBucket: $${source_bucket}
-                                          sourceObject: $${text.url_encode(object.name)}
-                                          destinationBucket: $${dest_bucket}
-                                          destinationObject: $${text.url_encode(object.name)}
-                                      result: copy_result
-                                  - save_result:
-                                      assign:
-                                          - copied_objects: $${copied_objects + 1}
-                            except:
-                                as: e
-                                raise:
-                                    exception: $${e}
-                                    sourceBucket: $${source_bucket}
-                                    sourceObject: $${object.name}
-                                    destinationBucket: $${dest_bucket}
+                parallel:
+                    shared: [copied_objects]
+                    for:
+                        value: object
+                        index: i
+                        in: $${list_result.items}
+                        steps:
+                            - copy:
+                                try:
+                                    steps:
+                                        - copy_object:
+                                            call: googleapis.storage.v1.objects.copy
+                                            args:
+                                                sourceBucket: $${source_bucket_name}
+                                                sourceObject: $${text.url_encode(object.name)}
+                                                destinationBucket: $${dest_bucket_name}
+                                                destinationObject: $${text.url_encode(object.name)}
+                                            result: copy_result
+                                        - save_result:
+                                            assign:
+                                                - copied_objects: $${copied_objects + 1}
+                                except:
+                                    as: e
+                                    raise:
+                                        exception: $${e}
+                                        sourceBucket: $${source_bucket_name}
+                                        sourceObject: $${object.name}
+                                        destinationBucket: $${dest_bucket_name}
         - finish:
             return: $${copied_objects + " objects copied"}
