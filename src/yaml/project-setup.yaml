@@ -58,7 +58,7 @@ main:
 
 # Subworkflow to upgrade all Dataplex Assets to Managed
 # Subworkflow gets all lakes, then all zones within each lake, then all assets within each zone and upgrades
-upgrade_assets:
+upgrade_dataplex_assets:
     steps:
         - init:
             assign:
