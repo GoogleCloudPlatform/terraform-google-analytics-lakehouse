@@ -17,7 +17,7 @@
 from pyspark.sql import SparkSession
 import os
 
-spark = SparkSession.builder.appName("spark-bigquery-demo").getOrCreate()
+spark = SparkSession.builder.appName("spark-bigquery-demo").enableHiveSupport().getOrCreate()
 
 catalog = os.getenv("lakehouse_catalog", "lakehouse_catalog")
 database = os.getenv("lakehouse_db", "lakehouse_db")

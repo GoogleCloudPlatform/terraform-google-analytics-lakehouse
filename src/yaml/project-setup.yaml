@@ -207,7 +207,7 @@ create_iceberg:
                         "spark.sql.catalog.lakehouse_catalog.catalog-impl": "org.apache.iceberg.gcp.biglake.BigLakeCatalog"
                         "spark.sql.catalog.lakehouse_catalog.gcp_location": "$${location}"
                         "spark.sql.catalog.lakehouse_catalog.gcp_project": "$${project_id}"
-                        "spark.sql.catalog.lakehouse_catalog.warehouse": $${warehouse_bucket_name+"/warehouse"}
+                        "spark.sql.catalog.lakehouse_catalog.warehouse": $${"gs://"+warehouse_bucket_name+"/warehouse"}
                         "spark.jars.packages": "org.apache.iceberg:iceberg-spark-runtime-3.2_2.12:0.14.1"
                         "spark.dataproc.driverEnv.lakehouse_catalog": $${lakehouse_catalog}
                         "spark.dataproc.driverEnv.lakehouse_database": $${lakehouse_database}
