@@ -56,7 +56,9 @@ resource "google_project_iam_member" "workflows_sa_roles" {
   ]
 }
 
-
+# Workflow to copy data from prod GCS bucket to private buckets
+# NOTE: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
+# You can use google_storage_bucket.<bucket>.url to include the prefix.
 resource "google_workflows_workflow" "copy_data" {
   name            = "copy_data"
   project         = module.project-services.project_id
@@ -79,6 +81,9 @@ resource "google_workflows_workflow" "copy_data" {
 
 }
 
+# Workflow to set up project resources
+# Note: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
+# You can use google_storage_bucket.<bucket>.url to include the prefix.
 resource "google_workflows_workflow" "project_setup" {
   name            = "project-setup"
   project         = module.project-services.project_id
@@ -133,14 +138,5 @@ data "http" "call_workflows_project_setup" {
     google_dataplex_asset.gcp_primary_textocr,
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
     google_dataplex_asset.gcp_primary_tables
-  ]
-}
-
-# # wait for completion
-resource "time_sleep" "wait_after_all_workflows" {
-  create_duration = "180s"
-
-  depends_on = [
-    data.http.call_workflows_project_setup,
   ]
 }
