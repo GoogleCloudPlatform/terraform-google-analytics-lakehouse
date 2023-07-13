@@ -140,3 +140,12 @@ data "http" "call_workflows_project_setup" {
     google_dataplex_asset.gcp_primary_tables
   ]
 }
+
+# Wait for the project setup workflow to finish
+resource "time_sleep" "wait_after_all_workflows" {
+  create_duration = "720s"
+
+  depends_on = [
+    data.http.call_workflows_project_setup,
+  ]
+}
