@@ -157,7 +157,7 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
 # Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
 resource "time_sleep" "wait_after_all_resources" {
-  create_duration = "420s"
+  create_duration = "120s"
   depends_on = [
     module.project-services,
     google_storage_bucket.provisioning_bucket,
