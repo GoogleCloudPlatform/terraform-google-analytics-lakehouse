@@ -34,6 +34,9 @@ bq_connection = os.getenv("bq_gcs_connection",
 # used by the connector.
 spark.conf.set("temporaryGcsBucket", bucket)
 
+# Delete the BigLake Catalog if it currently exists to ensure proper setup.
+spark.sql(f"DROP NAMESPACE IF EXISTS {catalog} CASCADE;")
+
 # Create BigLake Catalog and Database if they are not already created.
 spark.sql(f"CREATE NAMESPACE IF NOT EXISTS {catalog};")
 spark.sql(f"CREATE DATABASE IF NOT EXISTS {catalog}.{database};")
