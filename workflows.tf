@@ -141,9 +141,12 @@ data "http" "call_workflows_project_setup" {
   ]
 }
 
-# Wait for the project setup workflow to finish
+# Wait for the project setup workflow to finish. This step should take about
+# 12 minutes total. Completing this is not a blocker to begin exploring the
+# deployment, but we pause for five minutes to give some resources time to
+# spin up.
 resource "time_sleep" "wait_after_all_workflows" {
-  create_duration = "720s"
+  create_duration = "300s"
 
   depends_on = [
     data.http.call_workflows_project_setup,
