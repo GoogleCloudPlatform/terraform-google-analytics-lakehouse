@@ -17,7 +17,11 @@
 from pyspark.sql import SparkSession
 import os
 
-spark = SparkSession.builder.appName("spark-bigquery-demo").getOrCreate()
+spark = SparkSession \
+    .builder \
+    .appName("spark-bigquery-demo") \
+    .enableHiveSupport() \
+    .getOrCreate()
 
 catalog = os.getenv("lakehouse_catalog", "lakehouse_catalog")
 database = os.getenv("lakehouse_db", "lakehouse_db")
@@ -30,6 +34,9 @@ bq_connection = os.getenv("bq_gcs_connection",
 # used by the connector.
 spark.conf.set("temporaryGcsBucket", bucket)
 
+# Delete the BigLake Catalog if it currently exists to ensure proper setup.
+spark.sql(f"DROP NAMESPACE IF EXISTS {catalog} CASCADE;")
+
 # Create BigLake Catalog and Database if they are not already created.
 spark.sql(f"CREATE NAMESPACE IF NOT EXISTS {catalog};")
 spark.sql(f"CREATE DATABASE IF NOT EXISTS {catalog}.{database};")
@@ -38,7 +45,7 @@ spark.sql(f"DROP TABLE IF EXISTS {catalog}.{database}.agg_events_iceberg;")
 
 # Load data from BigQuery.
 events = spark.read.format("bigquery") \
-    .option("table", "gcp_lakehouse_ds.gcp_tbl_events") \
+    .option("table", "gcp_primary_staging.stage_thelook_ecommerce_events") \
     .load()
 events.createOrReplaceTempView("events")
 

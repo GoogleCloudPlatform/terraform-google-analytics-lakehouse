@@ -1,0 +1,111 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+main:
+    params: []
+    steps:
+        - init:
+            # Define local variables from terraform env variables
+            assign:
+                - source_bucket_name: "data-analytics-demos"
+                - dest_ga4_images_bucket_name: ${ga4_images_bucket}
+                - dest_textocr_images_bucket_name: ${textocr_images_bucket}
+                - dest_tables_bucket_name: ${tables_bucket}
+                - images_zone_name: ${images_zone_name}ga4
+                - tables_zone_name: ${tables_zone_name}
+                - lake_name: ${lake_name}
+        - sub_copy_data:
+            parallel:
+              branches:
+                - copy_textocr_images:
+                    steps:
+                      - copy_textocr_images_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "stage/TextOCR_images"
+                              dest_bucket_name: $${dest_textocr_images_bucket_name}
+                          result: copy_textocr_images_output
+                - copy_ga4_images:
+                    steps:
+                      -  copy_ga4_images_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "stage/ga4_obfuscated_sample_ecommerce_images"
+                              dest_bucket_name: $${dest_ga4_images_bucket_name}
+                          result: copy_ga4_output
+                - copy_new_york_taxi_trips_tables:
+                    steps:
+                      - copy_new_york_taxi_trips_tables_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "new-york-taxi-trips"
+                              dest_bucket_name: $${dest_tables_bucket_name}
+                          result: copy_new_york_taxi_trips_tables_output
+                - copy_thelook_ecommerce_tables:
+                    steps:
+                      - copy_thelook_ecommerce_tables_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "stage/thelook_ecommerce"
+                              dest_bucket_name: $${dest_tables_bucket_name}
+                          result: copy_thelook_ecommerce_tables_output
+
+# Subworkflow to copy initial objects
+copy_objects:
+    params: [source_bucket_name, prefix, dest_bucket_name]
+    steps:
+        - list_objects:
+            call: googleapis.storage.v1.objects.list
+            args:
+                bucket: $${source_bucket_name}
+                prefix: $${prefix}
+            result: list_result
+        - start_counter:
+            assign:
+                - copied_objects: 0
+        - copy_objects:
+                parallel:
+                    shared: [copied_objects]
+                    for:
+                        value: object
+                        index: i
+                        in: $${list_result.items}
+                        steps:
+                            - copy:
+                                try:
+                                    steps:
+                                        - copy_object:
+                                            call: googleapis.storage.v1.objects.copy
+                                            args:
+                                                sourceBucket: $${source_bucket_name}
+                                                sourceObject: $${text.url_encode(object.name)}
+                                                destinationBucket: $${dest_bucket_name}
+                                                destinationObject: $${text.url_encode(object.name)}
+                                            result: copy_result
+                                        - save_result:
+                                            assign:
+                                                - copied_objects: $${copied_objects + 1}
+                                except:
+                                    as: e
+                                    raise:
+                                        exception: $${e}
+                                        sourceBucket: $${source_bucket_name}
+                                        sourceObject: $${object.name}
+                                        destinationBucket: $${dest_bucket_name}
+        - finish:
+            return: $${copied_objects + " objects copied"}
