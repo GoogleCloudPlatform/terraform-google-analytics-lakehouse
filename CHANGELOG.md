@@ -8,6 +8,18 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This changelog is generated automatically based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [0.3.0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.2.1...v0.3.0) (2023-07-18)
+
+
+### Bug Fixes
+
+* **deps:** update terraform google-beta to v4.70.0 ([6460f59](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/6460f59c1bd6464dbb46b5561ee4ffa0109f75ff))
+* **deps:** update terraform google-beta to v4.71.0 ([c64944b](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/c64944b1a7e3c73c87bb0bcb49696cc9b8693084))
+* **deps:** update terraform google-beta to v4.73.1 ([47c1b4f](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/47c1b4f60367404c303c945d3b5dd46a0a378815))
+* **deps:** update terraform google-beta to v4.73.2 ([f6f8cb8](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/f6f8cb836f6d2d67ba775b795778b754893bcca0))
+* **deps:** update terraform terraform-google-modules/project-factory/google to v14.2.1 ([a6ca8a1](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/a6ca8a13dc0dbfc79683c5e43b43593957407064))
+* upgrade dataplex tables to managed, create new zone, remove manual table creation ([52a45f2](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/52a45f2aee107dfd6fde04ce92e77cf7b61c4e5c))
+
 ## [0.2.1](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.2.0...v0.2.1) (2023-06-22)
 
 
