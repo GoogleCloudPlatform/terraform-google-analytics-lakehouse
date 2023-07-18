@@ -22,7 +22,7 @@ terraform {
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = "4.73.1"
+      version = "4.73.2"
     }
     random = {
       source  = "hashicorp/random"
