@@ -34,7 +34,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "stage/TextOCR_images"
+                              prefix: "TextOCR_images"
                               dest_bucket_name: $${dest_textocr_images_bucket_name}
                           result: copy_textocr_images_output
                 - copy_ga4_images:
@@ -43,7 +43,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "stage/ga4_obfuscated_sample_ecommerce_images"
+                              prefix: "ga4_obfuscated_sample_ecommerce_images"
                               dest_bucket_name: $${dest_ga4_images_bucket_name}
                           result: copy_ga4_output
                 - copy_new_york_taxi_trips_tables:
@@ -61,7 +61,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "stage/thelook_ecommerce"
+                              prefix: "thelook_ecommerce"
                               dest_bucket_name: $${dest_tables_bucket_name}
                           result: copy_thelook_ecommerce_tables_output
 
