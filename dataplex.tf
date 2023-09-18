@@ -20,6 +20,13 @@ resource "google_project_service_identity" "dataplex_sa" {
   service  = "dataplex.googleapis.com"
 }
 
+#give dataplex access to biglake bucket
+resource "google_project_iam_member" "dataplex_bucket_access" {
+  project = module.project-services.project_id
+  role    = "roles/dataplex.serviceAgent"
+  member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
+}
+
 resource "google_dataplex_lake" "gcp_primary" {
   location     = var.region
   name         = "gcp-primary-lake"
@@ -167,12 +174,4 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
 
   project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
-}
-
-
-#give dataplex access to biglake bucket
-resource "google_project_iam_member" "dataplex_bucket_access" {
-  project = module.project-services.project_id
-  role    = "roles/dataplex.serviceAgent"
-  member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
 }
