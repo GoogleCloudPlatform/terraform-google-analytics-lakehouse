@@ -44,9 +44,14 @@ spark.sql(f"DROP TABLE IF EXISTS {catalog}.{database}.agg_events_iceberg;")
 
 
 # Load data from BigQuery.
-events = spark.read.format("bigquery") \
-    .option("table", "gcp_primary_staging.stage_thelook_ecommerce_events") \
-    .load()
+try:
+    events = spark.read.format("bigquery") \
+        .option("table", "gcp_primary_staging.thelook_ecommerce_events") \
+        .load()
+except:
+    events = spark.read.format("bigquery") \
+        .option("table", "gcp_primary_staging.stage_thelook_ecommerce_events") \
+        .load()
 events.createOrReplaceTempView("events")
 
 # Create Iceberg Table if not exists
