@@ -31,10 +31,6 @@ resource "google_compute_subnetwork" "subnet" {
   region                   = var.region
   network                  = google_compute_network.default_network.id
   private_ip_google_access = true
-
-  depends_on = [
-    google_compute_network.default_network,
-  ]
 }
 
 # Firewall rule for dataproc cluster
@@ -83,10 +79,6 @@ resource "google_project_iam_member" "dataproc_sa_roles" {
   project = module.project-services.project_id
   role    = each.key
   member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
 }
 
 # # Create a BigQuery connection
@@ -103,10 +95,6 @@ resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
   project = module.project-services.project_id
   role    = "roles/storage.objectViewer"
   member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
-
-  depends_on = [
-    google_bigquery_connection.ds_connection
-  ]
 }
 
 # # Grant IAM access to the BigQuery Connection account for BigLake Metastore
@@ -114,10 +102,6 @@ resource "google_project_iam_member" "bq_connection_iam_biglake" {
   project = module.project-services.project_id
   role    = "roles/biglake.admin"
   member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
-
-  depends_on = [
-    google_bigquery_connection.ds_connection
-  ]
 }
 
 # # Create a BigQuery external table.

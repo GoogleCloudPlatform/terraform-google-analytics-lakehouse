@@ -120,7 +120,6 @@ data "http" "call_workflows_copy_data" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    google_workflows_workflow.copy_data,
     google_storage_bucket.textocr_images_bucket,
     google_storage_bucket.ga4_images_bucket,
     google_storage_bucket.tables_bucket
@@ -135,7 +134,6 @@ data "http" "call_workflows_project_setup" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    google_workflows_workflow.project_setup,
     google_dataplex_asset.gcp_primary_textocr,
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
     google_dataplex_asset.gcp_primary_tables

@@ -160,13 +160,13 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
   }
 
   resource_spec {
-    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.tables_bucket.name}"
-    type = "STORAGE_BUCKET"
+    name             = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.tables_bucket.name}"
+    type             = "STORAGE_BUCKET"
+    read_access_mode = "MANAGED"
   }
 
   project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
-
 }
 
 
