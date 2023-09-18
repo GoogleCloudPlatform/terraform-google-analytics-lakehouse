@@ -114,8 +114,9 @@ resource "google_dataplex_asset" "gcp_primary_textocr" {
   }
 
   resource_spec {
-    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_images_bucket.name}"
-    type = "STORAGE_BUCKET"
+    name             = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_images_bucket.name}"
+    type             = "STORAGE_BUCKET"
+    read_access_mode = "MANAGED"
   }
 
   project    = module.project-services.project_id
@@ -136,8 +137,9 @@ resource "google_dataplex_asset" "gcp_primary_ga4_obfuscated_sample_ecommerce" {
   }
 
   resource_spec {
-    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_images_bucket.name}"
-    type = "STORAGE_BUCKET"
+    name             = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_images_bucket.name}"
+    type             = "STORAGE_BUCKET"
+    read_access_mode = "MANAGED"
   }
 
   project    = module.project-services.project_id
