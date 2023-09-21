@@ -25,7 +25,7 @@ resource "google_project_service_identity" "workflows" {
 
 resource "google_service_account" "workflows_sa" {
   project      = module.project-services.project_id
-  account_id   = "workflows-sa"
+  account_id   = "workflows-sa-${random_id.id.hex}"
   display_name = "Workflows Service Account"
 
   depends_on = [google_project_service_identity.workflows]
