@@ -126,7 +126,15 @@ data "http" "call_workflows_copy_data" {
   ]
 }
 
-# # execute the other project setup workflow
+resource "time_sleep" "wait_after_copy_data" {
+  create_duration = "30s"
+  depends_on = [
+    data.google_storage_project_service_account.gcs_account,
+    data.http.call_workflows_copy_data
+  ]
+}
+
+# execute the other project setup workflow
 data "http" "call_workflows_project_setup" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
   method = "POST"
@@ -134,9 +142,20 @@ data "http" "call_workflows_project_setup" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
+    google_storage_bucket.temp_bucket,
+    google_storage_bucket.provisioning_bucket,
+    google_storage_bucket.warehouse_bucket,
+    google_storage_bucket.dataproc_service_account,
+    google_bigquery_dataset.gcp_lakehouse_ds,
+    google_bigquery_connection.gcp_lakehouse_connection,
     google_dataplex_asset.gcp_primary_textocr,
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
-    google_dataplex_asset.gcp_primary_tables
+    google_dataplex_asset.gcp_primary_tables,
+    google_project_iam_member.connectionPermissionGrant,
+    google_project_iam_member.dataproc_sa_roles,
+
+    google_project_iam_member.connectionPermissionGrant,
+    time_sleep.wait_after_copy_data
   ]
 }
 

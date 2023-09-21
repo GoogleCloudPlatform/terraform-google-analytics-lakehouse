@@ -127,7 +127,7 @@ resource "google_dataplex_asset" "gcp_primary_textocr" {
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
 
 }
 
@@ -150,7 +150,7 @@ resource "google_dataplex_asset" "gcp_primary_ga4_obfuscated_sample_ecommerce" {
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
 
 }
 
@@ -173,5 +173,5 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
 }
