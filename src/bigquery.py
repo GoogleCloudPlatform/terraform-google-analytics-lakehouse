@@ -14,6 +14,8 @@
 # limitations under the License.
 
 """BigQuery I/O with BigLake Iceberg PySpark example."""
+from py4j.protocol import Py4JJavaError
+
 from pyspark.sql import SparkSession
 import os
 
@@ -48,7 +50,7 @@ try:
     events = spark.read.format("bigquery") \
         .option("table", "gcp_primary_staging.thelook_ecommerce_events") \
         .load()
-except:
+except Py4JJavaError:
     events = spark.read.format("bigquery") \
         .option("table", "gcp_primary_staging.stage_thelook_ecommerce_events") \
         .load()
