@@ -217,3 +217,31 @@ EOF
     google_storage_bucket.raw_bucket
   ]
 }
+
+resource "google_storage_bucket" "spark-log-directory" {
+  name = "gcp-${var.use_case_short}-spark-log-directory-${random_id.id.hex}"
+  project = module.project-services.project_id
+  location = var.region
+  uniform_bucket_level_access = true
+  force_destroy = var.force_destroy
+}
+
+resource "google_dataproc_cluster" "phs" {
+  name = "gcp-${var.use_case_short}-phs-${random_id.id.hex}"
+  project = module.project-services.project_id
+  region = var.region
+  cluster_config {
+    master_config {
+        num_instances = 1
+    }
+    software_config {
+      override_properties = {
+        "dataproc:dataproc.allow.zero.workers" = "true"
+        "spark:spark.history.fs.logDirectory" = "gs://${google_storage_bucket.spark-log-directory.name}/phs/*/spark-job-history"
+      }
+    }
+    endpoint_config {
+      enable_http_port_access = "true"
+    }
+  }
+}
