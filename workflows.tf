@@ -150,10 +150,10 @@ data "http" "call_workflows_project_setup" {
     google_project_iam_member.connectionPermissionGrant,
     google_project_iam_member.connectionPermissionGrant,
     google_project_iam_member.dataproc_sa_roles,
+    google_service_account.dataproc_service_account,
     # google_storage_bucket.temp_bucket,
     google_storage_bucket.provisioning_bucket,
     google_storage_bucket.warehouse_bucket,
-    google_storage_bucket.dataproc_service_account,
     time_sleep.wait_after_copy_data
   ]
 }
