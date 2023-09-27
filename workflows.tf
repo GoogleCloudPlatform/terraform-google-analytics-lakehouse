@@ -98,6 +98,7 @@ resource "google_workflows_workflow" "project_setup" {
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
     temp_bucket              = google_storage_bucket.warehouse_bucket.name,
+    public_data_bucket       = var.public_data_bucket
   })
 
   depends_on = [
