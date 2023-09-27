@@ -231,9 +231,6 @@ resource "google_dataproc_cluster" "phs" {
   project = module.project-services.project_id
   region = var.region
   cluster_config {
-    master_config {
-        num_instances = 1
-    }
     software_config {
       override_properties = {
         "dataproc:dataproc.allow.zero.workers" = "true"
