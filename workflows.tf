@@ -66,6 +66,7 @@ resource "google_workflows_workflow" "copy_data" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
+    public_data_bucket    = var.public_data_bucket,
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
     tables_bucket         = google_storage_bucket.tables_bucket.name,
@@ -97,8 +98,7 @@ resource "google_workflows_workflow" "project_setup" {
     dataproc_service_account = google_service_account.dataproc_service_account.email,
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
-    temp_bucket              = google_storage_bucket.warehouse_bucket.name,
-    public_data_bucket       = var.public_data_bucket
+    temp_bucket              = google_storage_bucket.warehouse_bucket.name
   })
 
   depends_on = [
