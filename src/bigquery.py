@@ -14,8 +14,6 @@
 # limitations under the License.
 
 """BigQuery I/O with BigLake Iceberg PySpark example."""
-from py4j.protocol import Py4JJavaError
-
 from pyspark.sql import SparkSession
 import os
 
@@ -46,15 +44,9 @@ spark.sql(f"DROP TABLE IF EXISTS {catalog}.{database}.agg_events_iceberg;")
 
 
 # Load data from BigQuery.
-try:
-    events = spark.read.format("bigquery") \
-        .option("table", "gcp_primary_staging.thelook_ecommerce_events") \
-        .load()
-except Py4JJavaError:
-    events = spark.read.format("bigquery") \
-        .option("table",
-                "gcp_primary_staging.stage_thelook_ecommerce_events") \
-        .load()
+events = spark.read.format("bigquery") \
+    .option("table", "gcp_primary_staging.thelook_ecommerce_events") \
+    .load()
 events.createOrReplaceTempView("events")
 
 # Create Iceberg Table if not exists
