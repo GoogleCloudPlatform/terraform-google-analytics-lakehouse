@@ -71,7 +71,8 @@ resource "google_workflows_workflow" "copy_data" {
     tables_bucket         = google_storage_bucket.tables_bucket.name,
     images_zone_name      = google_dataplex_zone.gcp_primary_raw.name,
     tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
-    lake_name             = google_dataplex_lake.gcp_primary.name
+    lake_name             = google_dataplex_lake.gcp_primary.name,
+    dataplex_bucket       = google_storage_bucket.dataplex_bucket.name
   })
 
   depends_on = [

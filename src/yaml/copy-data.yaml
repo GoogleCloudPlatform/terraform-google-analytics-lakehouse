@@ -25,6 +25,7 @@ main:
                 - images_zone_name: ${images_zone_name}ga4
                 - tables_zone_name: ${tables_zone_name}
                 - lake_name: ${lake_name}
+                - dataplex_bucket: ${dataplex_bucket}
         - sub_copy_data:
             parallel:
               branches:
@@ -64,6 +65,15 @@ main:
                               prefix: "thelook_ecommerce"
                               dest_bucket_name: $${dest_tables_bucket_name}
                           result: copy_thelook_ecommerce_tables_output
+                - copy_dataplex_names_counts:
+                    steps:
+                      - copy_dataplex_names_counts_call:
+                          call: copy_objects
+                          args:
+                              source_bucket_name: $${source_bucket_name}
+                              prefix: "stage/views"
+                              dest_bucket_name: $${dataplex_bucket}
+                          result: copy_dataplex_names_counts_output
 
 # Subworkflow to copy initial objects
 copy_objects:

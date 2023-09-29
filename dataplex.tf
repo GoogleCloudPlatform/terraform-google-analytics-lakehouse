@@ -174,3 +174,11 @@ resource "google_project_iam_member" "dataplex_bucket_access" {
   role    = "roles/dataplex.serviceAgent"
   member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
 }
+
+resource "google_storage_bucket" "dataplex_bucket" {
+  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
