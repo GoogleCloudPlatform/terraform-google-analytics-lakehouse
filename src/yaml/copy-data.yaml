@@ -71,7 +71,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "stage/views"
+                              prefix: "views"
                               dest_bucket_name: $${dataplex_bucket}
                           result: copy_dataplex_names_counts_output
 
