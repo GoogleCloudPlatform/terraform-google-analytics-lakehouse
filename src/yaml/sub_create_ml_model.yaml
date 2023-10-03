@@ -19,3 +19,4 @@ sub_create_ml_model:
                     result: queryResult
     - returnResults:
         return: $${queryResult}
+

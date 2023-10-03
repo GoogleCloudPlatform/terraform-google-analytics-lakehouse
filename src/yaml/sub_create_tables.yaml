@@ -33,3 +33,4 @@ sub_create_tables:
                             - results[key]: $${queryResult}
         - returnStep:
             return: $${results}
+

@@ -109,3 +109,4 @@ copy_objects:
                                         destinationBucket: $${dest_bucket_name}
         - finish:
             return: $${copied_objects + " objects copied"}
+
