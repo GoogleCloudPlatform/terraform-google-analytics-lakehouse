@@ -90,20 +90,30 @@ resource "google_workflows_workflow" "project_setup" {
   region          = var.region
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    data_analyst_user        = google_service_account.data_analyst_user.email,
-    marketing_user           = google_service_account.marketing_user.email,
-    dataproc_service_account = google_service_account.dataproc_service_account.email,
-    provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
-    warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
-    temp_bucket              = google_storage_bucket.warehouse_bucket.name,
-  })
+
+  source_contents = join("", [
+    for yaml_file in [
+      "project-setup.yaml",
+      "sub_upgrade_dataplex_assets.yaml",
+      "sub_create_tables.yaml",
+      "sub_create_iceberg.yaml",
+      "sub_create_taxonomy.yaml",
+    ] :
+    templatefile(
+        "${path.module}/src/yaml/${yaml_file}", {
+        data_analyst_user        = google_service_account.data_analyst_user.email,
+        marketing_user           = google_service_account.marketing_user.email,
+        dataproc_service_account = google_service_account.dataproc_service_account.email,
+        provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
+        warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
+        temp_bucket              = google_storage_bucket.warehouse_bucket.name,
+        }
+    )])
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
     google_project_iam_member.dataproc_sa_roles
   ]
-
 }
 
 # execute workflows after all resources are created
