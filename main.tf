@@ -152,7 +152,14 @@ resource "google_storage_bucket_object" "pyspark_file" {
   depends_on = [
     google_storage_bucket.provisioning_bucket
   ]
+}
 
+resource "google_storage_bucket" "dataplex_bucket" {
+  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
 }
 
 # Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
