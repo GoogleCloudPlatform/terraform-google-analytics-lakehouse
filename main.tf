@@ -144,6 +144,15 @@ resource "google_storage_bucket" "tables_bucket" {
   force_destroy               = var.force_destroy
 }
 
+# Bucket used to store BI data in Dataplex
+resource "google_storage_bucket" "dataplex_bucket" {
+  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "bigquery.py"
@@ -152,12 +161,4 @@ resource "google_storage_bucket_object" "pyspark_file" {
   depends_on = [
     google_storage_bucket.provisioning_bucket
   ]
-}
-
-resource "google_storage_bucket" "dataplex_bucket" {
-  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
 }
