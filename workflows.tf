@@ -66,6 +66,7 @@ resource "google_workflows_workflow" "copy_data" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
+    public_data_bucket    = var.public_data_bucket,
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
     tables_bucket         = google_storage_bucket.tables_bucket.name,
@@ -97,7 +98,7 @@ resource "google_workflows_workflow" "project_setup" {
     dataproc_service_account = google_service_account.dataproc_service_account.email,
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
-    temp_bucket              = google_storage_bucket.warehouse_bucket.name,
+    temp_bucket              = google_storage_bucket.warehouse_bucket.name
   })
 
   depends_on = [
@@ -120,14 +121,21 @@ data "http" "call_workflows_copy_data" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    google_workflows_workflow.copy_data,
     google_storage_bucket.textocr_images_bucket,
     google_storage_bucket.ga4_images_bucket,
     google_storage_bucket.tables_bucket
   ]
 }
 
-# # execute the other project setup workflow
+resource "time_sleep" "wait_after_copy_data" {
+  create_duration = "30s"
+  depends_on = [
+    data.google_storage_project_service_account.gcs_account,
+    data.http.call_workflows_copy_data
+  ]
+}
+
+# execute the other project setup workflow
 data "http" "call_workflows_project_setup" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
   method = "POST"
@@ -135,10 +143,19 @@ data "http" "call_workflows_project_setup" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
-    google_workflows_workflow.project_setup,
-    google_dataplex_asset.gcp_primary_textocr,
+    google_bigquery_dataset.gcp_lakehouse_ds,
+    google_bigquery_connection.gcp_lakehouse_connection,
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
-    google_dataplex_asset.gcp_primary_tables
+    google_dataplex_asset.gcp_primary_tables,
+    google_dataplex_asset.gcp_primary_textocr,
+    google_project_iam_member.connectionPermissionGrant,
+    google_project_iam_member.connectionPermissionGrant,
+    google_project_iam_member.dataproc_sa_roles,
+    google_service_account.dataproc_service_account,
+    # google_storage_bucket.temp_bucket,
+    google_storage_bucket.provisioning_bucket,
+    google_storage_bucket.warehouse_bucket,
+    time_sleep.wait_after_copy_data
   ]
 }
 

@@ -18,7 +18,7 @@ main:
         - init:
             # Define local variables from terraform env variables
             assign:
-                - source_bucket_name: "data-analytics-demos"
+                - source_bucket_name: ${public_data_bucket}
                 - dest_ga4_images_bucket_name: ${ga4_images_bucket}
                 - dest_textocr_images_bucket_name: ${textocr_images_bucket}
                 - dest_tables_bucket_name: ${tables_bucket}

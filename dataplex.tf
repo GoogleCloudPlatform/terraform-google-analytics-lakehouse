@@ -20,6 +20,13 @@ resource "google_project_service_identity" "dataplex_sa" {
   service  = "dataplex.googleapis.com"
 }
 
+#give dataplex access to biglake bucket
+resource "google_project_iam_member" "dataplex_bucket_access" {
+  project = module.project-services.project_id
+  role    = "roles/dataplex.serviceAgent"
+  member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
+}
+
 resource "google_dataplex_lake" "gcp_primary" {
   location     = var.region
   name         = "gcp-primary-lake"
@@ -114,12 +121,13 @@ resource "google_dataplex_asset" "gcp_primary_textocr" {
   }
 
   resource_spec {
-    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_images_bucket.name}"
-    type = "STORAGE_BUCKET"
+    name             = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_images_bucket.name}"
+    type             = "STORAGE_BUCKET"
+    read_access_mode = "MANAGED"
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
 
 }
 
@@ -136,12 +144,13 @@ resource "google_dataplex_asset" "gcp_primary_ga4_obfuscated_sample_ecommerce" {
   }
 
   resource_spec {
-    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_images_bucket.name}"
-    type = "STORAGE_BUCKET"
+    name             = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_images_bucket.name}"
+    type             = "STORAGE_BUCKET"
+    read_access_mode = "MANAGED"
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
 
 }
 
@@ -158,19 +167,11 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
   }
 
   resource_spec {
-    name = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.tables_bucket.name}"
-    type = "STORAGE_BUCKET"
+    name             = "projects/${module.project-services.project_id}/buckets/${google_storage_bucket.tables_bucket.name}"
+    type             = "STORAGE_BUCKET"
+    read_access_mode = "MANAGED"
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_all_resources, google_project_iam_member.dataplex_bucket_access]
-
-}
-
-
-#give dataplex access to biglake bucket
-resource "google_project_iam_member" "dataplex_bucket_access" {
-  project = module.project-services.project_id
-  role    = "roles/dataplex.serviceAgent"
-  member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
+  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
 }

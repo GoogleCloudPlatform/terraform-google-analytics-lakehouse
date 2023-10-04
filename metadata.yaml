@@ -24,74 +24,71 @@ spec:
     source:
       repo: https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse.git
       sourceType: git
-    version: 0.1.0
+    version: 0.3.0
     actuationTool:
       flavor: Terraform
-      version: '>= 0.13'
+      version: ">= 0.13"
     description: {}
   content:
     documentation:
-    - title: Create an Analytics Lakehouse
-      url: https://cloud.google.com/architecture/big-data-analytics/analytics-lakehouse
+      - title: Create an Analytics Lakehouse
+        url: https://cloud.google.com/architecture/big-data-analytics/analytics-lakehouse
     examples:
-    - name: analytics_lakehouse
-      location: examples/analytics_lakehouse
+      - name: analytics_lakehouse
+        location: examples/analytics_lakehouse
   interfaces:
     variables:
-    - name: deletion_protection
-      description: Whether or not to protect GCS resources from deletion when solution is modified or changed.
-      varType: string
-      defaultValue: true
-    - name: enable_apis
-      description: Whether or not to enable underlying apis in this solution. .
-      varType: string
-      defaultValue: true
-    - name: force_destroy
-      description: Whether or not to protect BigQuery resources from deletion when solution is modified or changed.
-      varType: string
-      defaultValue: false
-    - name: labels
-      description: A map of labels to apply to contained resources.
-      varType: map(string)
-      defaultValue:
-        analytics-lakehouse: true
-    - name: project_id
-      description: Google Cloud Project ID
-      varType: string
-      required: true
-    - name: public_data_bucket
-      description: Public Data bucket for access
-      varType: string
-      defaultValue: data-analytics-demos
-    - name: region
-      description: Google Cloud Region
-      varType: string
-      defaultValue: us-central1
-    - name: use_case_short
-      description: Short name for use case
-      varType: string
-      defaultValue: lakehouse
+      - name: enable_apis
+        description: Whether or not to enable underlying apis in this solution. .
+        varType: string
+        defaultValue: true
+      - name: force_destroy
+        description: Whether or not to protect GCS resources from deletion when solution is modified or changed.
+        varType: string
+        defaultValue: false
+      - name: labels
+        description: A map of labels to apply to contained resources.
+        varType: map(string)
+        defaultValue:
+          analytics-lakehouse: true
+      - name: project_id
+        description: Google Cloud Project ID
+        varType: string
+        defaultValue: null
+        required: true
+      - name: public_data_bucket
+        description: Public Data bucket for access
+        varType: string
+        defaultValue: data-analytics-demos
+      - name: region
+        description: Google Cloud Region
+        varType: string
+        defaultValue: us-central1
+      - name: use_case_short
+        description: Short name for use case
+        varType: string
+        defaultValue: lakehouse
     outputs:
-    - name: bigquery_editor_url
-      description: The URL to launch the BigQuery editor
-    - name: lakehouse_colab_url
-      description: The URL to launch the in-console tutorial for the Analytics Lakehouse solution
-    - name: lookerstudio_report_url
-      description: The URL to create a new Looker Studio report displays a sample dashboard for data analysis
-    - name: neos_tutorial_url
-      description: The URL to launch the in-console tutorial for the Analytics Lakehouse solution
-    - name: workflow_return_project_setup
-      description: Output of the project setup workflow
+      - name: bigquery_editor_url
+        description: The URL to launch the BigQuery editor
+      - name: lakehouse_colab_url
+        description: The URL to launch the in-console tutorial for the Analytics Lakehouse solution
+      - name: lookerstudio_report_url
+        description: The URL to create a new Looker Studio report displays a sample dashboard for data analysis
+      - name: neos_tutorial_url
+        description: The URL to launch the in-console tutorial for the Analytics Lakehouse solution
+      - name: workflow_return_project_setup
+        description: Output of the project setup workflow
   requirements:
     roles:
-    - level: Project
-      roles:
-      - roles/owner
+      - level: Project
+        roles:
+          - roles/owner
     services:
-    - cloudkms.googleapis.com
-    - cloudresourcemanager.googleapis.com
-    - bigquery.googleapis.com
-    - bigquerystorage.googleapis.com
-    - bigqueryconnection.googleapis.com
-    - serviceusage.googleapis.com
-    - iam.googleapis.com
+      - cloudkms.googleapis.com
+      - cloudresourcemanager.googleapis.com
+      - bigquery.googleapis.com
+      - bigquerystorage.googleapis.com
+      - bigqueryconnection.googleapis.com
+      - serviceusage.googleapis.com
+      - iam.googleapis.com

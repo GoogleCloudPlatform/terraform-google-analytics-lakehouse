@@ -31,10 +31,6 @@ resource "google_compute_subnetwork" "subnet" {
   region                   = var.region
   network                  = google_compute_network.default_network.id
   private_ip_google_access = true
-
-  depends_on = [
-    google_compute_network.default_network,
-  ]
 }
 
 # Firewall rule for dataproc cluster
@@ -83,10 +79,6 @@ resource "google_project_iam_member" "dataproc_sa_roles" {
   project = module.project-services.project_id
   role    = each.key
   member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-
-  depends_on = [
-    google_service_account.dataproc_service_account
-  ]
 }
 
 # # Create a BigQuery connection
@@ -103,10 +95,6 @@ resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
   project = module.project-services.project_id
   role    = "roles/storage.objectViewer"
   member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
-
-  depends_on = [
-    google_bigquery_connection.ds_connection
-  ]
 }
 
 # # Grant IAM access to the BigQuery Connection account for BigLake Metastore
@@ -114,106 +102,4 @@ resource "google_project_iam_member" "bq_connection_iam_biglake" {
   project = module.project-services.project_id
   role    = "roles/biglake.admin"
   member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
-
-  depends_on = [
-    google_bigquery_connection.ds_connection
-  ]
-}
-
-# # Create a BigQuery external table.
-resource "google_bigquery_table" "tbl_thelook_events" {
-  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  table_id            = "gcp_tbl_events"
-  project             = module.project-services.project_id
-  deletion_protection = var.deletion_protection
-
-  external_data_configuration {
-    autodetect    = true
-    connection_id = google_bigquery_connection.ds_connection.name #TODO: Change other solutions to remove hardcoded reference
-    source_format = "PARQUET"
-    source_uris   = ["gs://${var.public_data_bucket}/thelook_ecommerce/events-*.Parquet"]
-
-  }
-
-  schema = <<EOF
-[
-  {
-    "name": "id",
-    "type": "INTEGER",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "user_id",
-    "type": "INTEGER",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "sequence_number",
-    "type": "INTEGER",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "session_id",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "created_at",
-    "type": "TIMESTAMP",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "ip_address",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "city",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "postal_code",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "browser",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "traffic_source",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "uri",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  },
-  {
-    "name": "event_type",
-    "type": "STRING",
-    "mode": "NULLABLE",
-    "description": ""
-  }
-]
-EOF
-
-  depends_on = [
-    google_bigquery_connection.ds_connection,
-    google_storage_bucket.raw_bucket
-  ]
 }
