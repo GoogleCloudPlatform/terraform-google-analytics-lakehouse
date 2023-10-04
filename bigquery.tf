@@ -26,8 +26,6 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   delete_contents_on_destroy = var.force_destroy
 }
 
-
-
 # # Create a BigQuery connection
 resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   project       = module.project-services.project_id

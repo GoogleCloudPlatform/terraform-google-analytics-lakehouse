@@ -144,6 +144,15 @@ resource "google_storage_bucket" "tables_bucket" {
   force_destroy               = var.force_destroy
 }
 
+# Bucket used to store BI data in Dataplex
+resource "google_storage_bucket" "dataplex_bucket" {
+  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
 resource "google_storage_bucket_object" "pyspark_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "bigquery.py"
@@ -151,24 +160,5 @@ resource "google_storage_bucket_object" "pyspark_file" {
 
   depends_on = [
     google_storage_bucket.provisioning_bucket
-  ]
-
-}
-
-# Resources are dependent on one another. We will ensure the following set of resources are created before proceeding.
-resource "time_sleep" "wait_after_all_resources" {
-  create_duration = "120s"
-  depends_on = [
-    module.project-services,
-    google_storage_bucket.provisioning_bucket,
-    google_bigquery_dataset.gcp_lakehouse_ds,
-    google_bigquery_connection.gcp_lakehouse_connection,
-    google_project_iam_member.connectionPermissionGrant,
-    google_workflows_workflow.project_setup,
-    google_dataplex_zone.gcp_primary_raw,
-    google_dataplex_zone.gcp_primary_staging,
-    google_dataplex_zone.gcp_primary_curated_bi,
-    data.google_storage_project_service_account.gcs_account,
-    data.http.call_workflows_copy_data
   ]
 }
