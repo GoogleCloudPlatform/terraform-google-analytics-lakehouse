@@ -52,7 +52,8 @@ try:
         .load()
 except Py4JJavaError:
     events = spark.read.format("bigquery") \
-        .option("table", "gcp_primary_staging.stage_thelook_ecommerce_events") \
+        .option("table",
+                "gcp_primary_staging.stage_thelook_ecommerce_events") \
         .load()
 events.createOrReplaceTempView("events")
 

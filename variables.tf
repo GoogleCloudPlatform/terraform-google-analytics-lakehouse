@@ -48,6 +48,12 @@ variable "force_destroy" {
   default     = false
 }
 
+variable "deletion_protection" {
+  type        = string
+  description = "Whether or not to protect GCS resources from deletion when solution is modified or changed."
+  default     = true
+}
+
 variable "use_case_short" {
   type        = string
   description = "Short name for use case"
