@@ -19,6 +19,11 @@ output "workflow_return_project_setup" {
   value       = data.http.call_workflows_project_setup.response_body
 }
 
+output "workflow_return_stop_cluster" {
+  description = "Output of stopping the PHS cluster"
+  value       = data.http.call_stop_cluster.response_body
+}
+
 output "lookerstudio_report_url" {
   value       = "https://lookerstudio.google.com/reporting/create?c.reportId=79675b4f-9ed8-4ee4-bb35-709b8fd5306a&ds.ds0.datasourceName=vw_ecommerce&ds.ds0.projectId=${var.project_id}&ds.ds0.type=TABLE&ds.ds0.datasetId=gcp_lakehouse_ds&ds.ds0.tableId=view_ecommerce"
   description = "The URL to create a new Looker Studio report displays a sample dashboard for data analysis"
