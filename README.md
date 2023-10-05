@@ -58,6 +58,7 @@ Functional examples are included in the
 | lookerstudio\_report\_url | The URL to create a new Looker Studio report displays a sample dashboard for data analysis |
 | neos\_tutorial\_url | The URL to launch the in-console tutorial for the Analytics Lakehouse solution |
 | workflow\_return\_project\_setup | Output of the project setup workflow |
+| workflow\_return\_stop\_cluster | Output of stopping the PHS cluster |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
