@@ -104,14 +104,6 @@ resource "google_project_iam_member" "bq_connection_iam_biglake" {
   member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
 }
 
-resource "google_storage_bucket" "spark-log-directory" {
-  name                        = "gcp-${var.use_case_short}-spark-log-directory-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
 resource "google_dataproc_cluster" "phs" {
   name    = "gcp-${var.use_case_short}-phs-${random_id.id.hex}"
   project = module.project-services.project_id

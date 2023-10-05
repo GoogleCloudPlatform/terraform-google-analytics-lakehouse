@@ -170,3 +170,12 @@ resource "time_sleep" "wait_after_all_workflows" {
     data.http.call_workflows_project_setup,
   ]
 }
+
+# Stop the PHS cluster after creation since it costs too much.
+data "http" "call_stop_cluster" {
+  url    = "https://dataproc.googleapis.com/v1/projects/${module.project-services.project_id}/regions/${var.region}/clusters/${google_dataproc_cluster.phs.name}:stop"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
+}
