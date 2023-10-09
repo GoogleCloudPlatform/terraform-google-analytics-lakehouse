@@ -110,7 +110,7 @@ resource "google_dataproc_cluster" "phs" {
   region  = var.region
   cluster_config {
     gce_cluster_config {
-      network = google_compute_network.default_network.name
+      network    = google_compute_network.default_network.name
       subnetwork = google_compute_network.subnet.name
     }
     software_config {
