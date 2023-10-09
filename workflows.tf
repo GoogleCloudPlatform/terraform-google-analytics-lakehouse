@@ -172,6 +172,7 @@ resource "time_sleep" "wait_after_all_workflows" {
 }
 
 # Stop the PHS cluster after creation since it costs too much.
+# tflint-ignore: terraform_unused_declarations
 data "http" "call_stop_cluster" {
   url    = "https://dataproc.googleapis.com/v1/projects/${module.project-services.project_id}/regions/${var.region}/clusters/${google_dataproc_cluster.phs.name}:stop"
   method = "POST"
