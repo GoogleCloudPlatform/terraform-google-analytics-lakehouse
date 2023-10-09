@@ -79,8 +79,6 @@ spec:
         description: The URL to launch the in-console tutorial for the Analytics Lakehouse solution
       - name: workflow_return_project_setup
         description: Output of the project setup workflow
-      - name: workflow_return_stop_cluster
-        description: Output of stopping the PHS cluster
   requirements:
     roles:
       - level: Project
