@@ -161,4 +161,13 @@ resource "google_storage_bucket_object" "pyspark_file" {
   depends_on = [
     google_storage_bucket.provisioning_bucket
   ]
+
+}
+
+resource "google_storage_bucket" "spark-log-directory" {
+  name                        = "gcp-${var.use_case_short}-spark-log-directory-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
 }
