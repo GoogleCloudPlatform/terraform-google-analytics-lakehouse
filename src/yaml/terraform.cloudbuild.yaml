@@ -1,0 +1,28 @@
+steps:
+# Initialize Terraform
+  - id: 'tf init'
+    name: 'hashicorp/terraform:1.0.0'
+    env:
+      - 'GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$_TF_SERVICE_ACCT'
+      - '_STATE_GCS_BUCKET_NAME=$_STATE_GCS_BUCKET_NAME'
+    script: |
+      #!/bin/sh
+      terraform init -backend-config="bucket=${_STATE_GCS_BUCKET_NAME}"
+
+# Generate speculative Terraform plan
+  - id: 'tf plan'
+    name: 'hashicorp/terraform:1.0.0'
+    env:
+      - 'GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$_TF_SERVICE_ACCT'
+    script: |
+      #!/bin/sh
+      terraform plan
+
+# Apply Terraform configuration
+  - id: 'tf apply'
+    name: 'hashicorp/terraform:1.0.0'
+    env:
+      - 'GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$_TF_SERVICE_ACCT'
+    script: |
+      #!/bin/sh
+      terraform apply -auto-approve
