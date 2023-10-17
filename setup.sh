@@ -11,7 +11,7 @@ trap '_error_report $LINENO' ERR
 
 # Set variables
 TF_PROJECT=$(gcloud config get-value project)
-TF_PROJECT_NUMBER=$(gcloud projects list --format='value(TF_PROJECT_NUMBER)' --filter=PROJECT_ID=$TF_PROJECT)
+TF_PROJECT_NUMBER=$(gcloud projects list --format='value(PROJECT_NUMBER)' --filter=PROJECT_ID=$TF_PROJECT)
 CLOUDBUILD_SERVICE_ACCOUNT=${TF_PROJECT_NUMBER}@cloudbuild.gserviceaccount.com
 
 # The service account that will impersonate in the Terraform
@@ -64,13 +64,26 @@ TF_IAM="bindings:
 
 # Services needed for Terraform to manage resources via service account 
 echo -e "\n\xe2\x88\xb4 Enabling initial required services... "
-gcloud services enable --project $TF_PROJECT --async \
+gcloud services enable --project $TF_PROJECT \
     iamcredentials.googleapis.com \
     cloudresourcemanager.googleapis.com \
     compute.googleapis.com \
     serviceusage.googleapis.com \
     appengine.googleapis.com \
     cloudbuild.googleapis.com > /dev/null
+
+# Create Cloud build service account
+if gcloud iam service-accounts desctibe \
+    $CLOUDBUILD_SERVICE_ACCOUNT \
+    --project $TF_PROJECT &> /dev/null ; then
+        echo -e "\n\xe2\x88\xb4 Using existing Cloud build service account:  $CLOUDBUILD_SERVICE_ACCOUNT "
+else
+    echo -e "\n\xe2\x88\xb4 Creating a new Terraform service account: $CLOUDBUILD_SERVICE_ACCOUNT "
+    gcloud iam service-accounts create ${TF_PROJECT_NUMBER}@cloudbuild.gserviceaccount.com \
+        --project="$TF_PROJECT" \
+        --description="Service account for deploying resources via Terraform" \
+        --display-name="Terraformer"
+fi
 
 # Create terraform service account
 if gcloud iam service-accounts describe \
