@@ -9,14 +9,17 @@ _error_report() {
 }
 trap '_error_report $LINENO' ERR
 
-# temporarily hardcoded 
-# TODO: must be removed when submitted
-TF_PROJECT="hyunuk-jss-test"
+# Set variables
+TF_PROJECT=$(gcloud config get-value project)
+TF_PROJECT_NUMBER=$(gcloud projects list --format='value(TF_PROJECT_NUMBER)' --filter=PROJECT_ID=$TF_PROJECT)
+CLOUDBUILD_SERVICE_ACCOUNT=${TF_PROJECT_NUMBER}@cloudbuild.gserviceaccount.com
 
+# The service account that will impersonate in the Terraform
 export TF_SERVICE_ACCOUNT=terraformer@${TF_PROJECT}.iam.gserviceaccount.com
+# GCS bucket to store Terraform states
 export STATE_GCS_BUCKET_NAME="$TF_PROJECT-tf-states"
-PROJECT_NUMBER=$(gcloud projects list --format='value(PROJECT_NUMBER)' --filter=PROJECT_ID=$TF_PROJECT)
-BUILD_SERVICE_ACCOUNT=${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com
+
+# IAM permissions that are needed for Terraform SA
 TF_IAM="bindings:
 - members:
   - serviceAccount:${TF_SERVICE_ACCOUNT}
@@ -68,7 +71,7 @@ gcloud services enable --project $TF_PROJECT --async \
     serviceusage.googleapis.com \
     appengine.googleapis.com \
     cloudbuild.googleapis.com > /dev/null
-    
+
 # Create terraform service account
 if gcloud iam service-accounts describe \
     $TF_SERVICE_ACCOUNT \
@@ -86,14 +89,12 @@ fi
 echo -e "\n\xe2\x88\xb4 Updating Terraform service account IAM policy... "
 gcloud iam service-accounts add-iam-policy-binding --project=$TF_PROJECT \
     $TF_SERVICE_ACCOUNT \
-    --member="serviceAccount:${BUILD_SERVICE_ACCOUNT}" \
+    --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
     --role="roles/iam.serviceAccountTokenCreator" &> /dev/null
 
-# Ops permissions
+# Give permissions
 echo -e "\n\xe2\x88\xb4 Updating Terraform project IAM policy... "
-
 CURRENT_IAM=$(gcloud projects get-iam-policy $TF_PROJECT --format=yaml | tail -n +2)
-
 echo -e "${TF_IAM}\n${CURRENT_IAM}" | \
     gcloud projects set-iam-policy $TF_PROJECT /dev/stdin > /dev/null
 
@@ -117,4 +118,4 @@ gcloud builds submit ./ --project=$TF_PROJECT \
     --config=./src/yaml/terraform.cloudbuild.yaml \
     --substitutions=_STATE_GCS_BUCKET_NAME=$STATE_GCS_BUCKET_NAME,_TF_SERVICE_ACCT=$TF_SERVICE_ACCOUNT
 
-# how to delete TF using the backend bucket?
+# how to delete?
