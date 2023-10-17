@@ -72,19 +72,6 @@ gcloud services enable --project $TF_PROJECT \
     appengine.googleapis.com \
     cloudbuild.googleapis.com > /dev/null
 
-# Create Cloud build service account
-if gcloud iam service-accounts desctibe \
-    $CLOUDBUILD_SERVICE_ACCOUNT \
-    --project $TF_PROJECT &> /dev/null ; then
-        echo -e "\n\xe2\x88\xb4 Using existing Cloud build service account:  $CLOUDBUILD_SERVICE_ACCOUNT "
-else
-    echo -e "\n\xe2\x88\xb4 Creating a new Terraform service account: $CLOUDBUILD_SERVICE_ACCOUNT "
-    gcloud iam service-accounts create ${TF_PROJECT_NUMBER}@cloudbuild.gserviceaccount.com \
-        --project="$TF_PROJECT" \
-        --description="Service account for deploying resources via Terraform" \
-        --display-name="Terraformer"
-fi
-
 # Create terraform service account
 if gcloud iam service-accounts describe \
     $TF_SERVICE_ACCOUNT \
