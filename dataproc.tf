@@ -111,7 +111,7 @@ resource "google_dataproc_cluster" "phs" {
   cluster_config {
     gce_cluster_config {
       service_account = google_service_account.dataproc_service_account.email
-      subnetwork = google_compute_subnetwork.subnet.name
+      subnetwork      = google_compute_subnetwork.subnet.name
     }
     software_config {
       override_properties = {
