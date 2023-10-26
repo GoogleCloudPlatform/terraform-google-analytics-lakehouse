@@ -8,16 +8,9 @@ steps:
       #!/bin/sh
       terraform init -backend-config="bucket=${_STATE_GCS_BUCKET_NAME}"
 
-# Generate speculative Terraform plan
-  - id: 'tf plan'
+# Destroy Terraform configuration
+  - id: 'tf destroy'
     name: 'hashicorp/terraform:1.0.0'
     script: |
       #!/bin/sh
-      terraform plan
-
-# Apply Terraform configuration
-  - id: 'tf apply'
-    name: 'hashicorp/terraform:1.0.0'
-    script: |
-      #!/bin/sh
-      terraform apply -auto-approve
+      terraform destroy -auto-approve
