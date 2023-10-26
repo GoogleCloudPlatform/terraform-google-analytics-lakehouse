@@ -1,11 +1,25 @@
 #!/bin/bash
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 set -eu
 
 # Should this script error, print out the line that was responsible
 _error_report() {
   echo >&2 "Exited [$?] at line $(caller):"
-  cat -n $0 | tail -n+$(($1 - 3)) | head -n7 | sed "4s/^\s*/>>> /"
+  cat -n "$0" | tail -n+$(($1 - 3)) | head -n7 | sed "4s/^\s*/>>> /"
 }
 trap '_error_report $LINENO' ERR
 
@@ -21,16 +35,24 @@ else
     echo "Usage: $0 project_id=string region=string enable_apis=boolean force_destroy=boolean deletion_protection=boolean"
     exit 1
   fi
-  
+
   # Define an array of expected keys
   EXPECTED_KEYS=("project_id" "region" "enable_apis" "force_destroy" "deletion_protection")
 
   # Check if arguments have the correct format and keys
   for arg in "$@"; do
-    IFS="=" read -r key value <<< "$arg"    
-    
-    if [[ ! " ${EXPECTED_KEYS[@]} " =~ " $key " || ! "$arg" =~ ^[a-zA-Z_][a-zA-Z0-9_]*=.*$ ]]; then
-      echo "Arguments must be in the format: key=value and the key must be either of 'project_id', 'region', 'enable_apis', 'force_destroy', 'deletion_protection'"
+    IFS="=" read -r key value <<< "$arg"
+
+    found=false
+    for expected_key in "${EXPECTED_KEYS[@]}"; do
+      if [ "$key" = "$expected_key" ]; then
+        found=true
+        break
+      fi
+    done
+
+    if [ "$found" = false ] || ! [[ "$arg" =~ ^[a-zA-Z_][a-zA-Z0-9_]*=.*$ ]]; then
+      echo "Arguments must be in the format: key=value, and the key must be one of 'project_id', 'region', 'enable_apis', 'force_destroy', 'deletion_protection'."
       exit 1
     fi
   done
@@ -97,7 +119,7 @@ EOL
 fi
 
 # Set variables
-CLOUDBUILD_SERVICE_ACCOUNT=$(gcloud projects list --format='value(PROJECT_NUMBER)' --filter=PROJECT_ID=${TF_PROJECT})@cloudbuild.gserviceaccount.com
+CLOUDBUILD_SERVICE_ACCOUNT=$(gcloud projects list --format='value(PROJECT_NUMBER)' --filter=PROJECT_ID="${TF_PROJECT}")@cloudbuild.gserviceaccount.com
 STATE_GCS_BUCKET_NAME="${TF_PROJECT}-tf-states"
 
 # Define the list of roles to grant for the service account
@@ -116,9 +138,9 @@ ROLES=(
   "roles/storage.admin"
 )
 
-# Services needed for Terraform to manage resources via service account 
+# Services needed for Terraform to manage resources via service account
 echo -e "\n\xe2\x88\xb4 Enabling initial required services... "
-gcloud services enable --project $TF_PROJECT \
+gcloud services enable --project "$TF_PROJECT" \
     iamcredentials.googleapis.com \
     cloudresourcemanager.googleapis.com \
     compute.googleapis.com \
@@ -128,23 +150,23 @@ gcloud services enable --project $TF_PROJECT \
 
 # Grant each role to the service account
 for ROLE in "${ROLES[@]}"; do
-  gcloud projects add-iam-policy-binding ${TF_PROJECT} \
+  gcloud projects add-iam-policy-binding "${TF_PROJECT}" \
     --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
-    --role=${ROLE} > /dev/null 2>&1
+    --role="${ROLE}" > /dev/null 2>&1
 done
 
 # Setup Terraform state bucket
-if gcloud storage buckets list gs://${STATE_GCS_BUCKET_NAME} --project ${TF_PROJECT} &> /dev/null ; then
+if gcloud storage buckets list gs://"${STATE_GCS_BUCKET_NAME}" --project "${TF_PROJECT}" &> /dev/null ; then
   echo -e "\n\xe2\x88\xb4 Using existing Terraform remote state bucket: gs://${STATE_GCS_BUCKET_NAME} "
 else
   echo -e "\n\xe2\x88\xb4 Creating Terraform remote state bucket: gs://${STATE_GCS_BUCKET_NAME} "
-  gcloud storage buckets create gs://${STATE_GCS_BUCKET_NAME} --project=${TF_PROJECT} --location=${REGION} > /dev/null
+  gcloud storage buckets create gs://"${STATE_GCS_BUCKET_NAME}" --project="${TF_PROJECT}" --location="${REGION}" > /dev/null
 fi
 
 echo -e "\n\xe2\x88\xb4 Enabling versioning... "
-gcloud storage buckets update gs://${STATE_GCS_BUCKET_NAME} --versioning --project ${TF_PROJECT} > /dev/null
+gcloud storage buckets update gs://"${STATE_GCS_BUCKET_NAME}" --versioning --project "${TF_PROJECT}" > /dev/null
 
 # Run cloud build
-gcloud builds submit ./ --project=${TF_PROJECT} \
+gcloud builds submit ./ --project="${TF_PROJECT}" \
     --config=./src/yaml/terraform.cloudbuild.yaml \
-    --substitutions=_STATE_GCS_BUCKET_NAME=$STATE_GCS_BUCKET_NAME
+    --substitutions=_STATE_GCS_BUCKET_NAME="$STATE_GCS_BUCKET_NAME"
