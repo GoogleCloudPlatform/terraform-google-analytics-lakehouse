@@ -109,8 +109,6 @@ resource "google_dataproc_cluster" "phs" {
   project = module.project-services.project_id
   region  = var.region
   cluster_config {
-    staging_bucket = google_storage_bucket.phs-staging-bucket.name
-    temp_bucket    = google_storage_bucket.phs-temp-bucket.name
     gce_cluster_config {
       service_account = google_service_account.dataproc_service_account.email
       subnetwork      = google_compute_subnetwork.subnet.name

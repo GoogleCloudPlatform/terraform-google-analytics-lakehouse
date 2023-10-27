@@ -31,17 +31,18 @@ if [ -f terraform.tfvars ]; then
   REGION=$(grep -Po '(?<=region = ")[^"]*' terraform.tfvars)
 else
   # Check if there are arguments and they have the correct format
-  if [ $# -ne 5 ]; then
-    echo "Usage: $0 project_id=string region=string enable_apis=boolean force_destroy=boolean deletion_protection=boolean"
+  if [ $# -ne 4 ]; then
+    echo "Usage: $0 project_id=string region=string enable_apis=boolean force_destroy=boolean"
     exit 1
   fi
 
   # Define an array of expected keys
-  EXPECTED_KEYS=("project_id" "region" "enable_apis" "force_destroy" "deletion_protection")
+  EXPECTED_KEYS=("project_id" "region" "enable_apis" "force_destroy")
 
   # Check if arguments have the correct format and keys
   for arg in "$@"; do
     IFS="=" read -r key value <<< "$arg"
+    KEYS_STR=$(IFS=", "; echo "${EXPECTED_KEYS[*]}")
 
     found=false
     for expected_key in "${EXPECTED_KEYS[@]}"; do
@@ -52,7 +53,7 @@ else
     done
 
     if [ "$found" = false ] || ! [[ "$arg" =~ ^[a-zA-Z_][a-zA-Z0-9_]*=.*$ ]]; then
-      echo "Arguments must be in the format: key=value, and the key must be one of 'project_id', 'region', 'enable_apis', 'force_destroy', 'deletion_protection'."
+      echo "Arguments must be in the format: key=value, and the key must be one of: $KEYS_STR."
       exit 1
     fi
   done
@@ -85,10 +86,7 @@ EOL
         comment="Whether or not to enable underlying APIs in this solution"$'\n'"# Example: true"
         ;;
       "force_destroy")
-        comment="Whether or not to protect BigQuery resources from deletion when the solution is modified or changed"$'\n'"# Example: false"
-        ;;
-      "deletion_protection")
-        comment="Whether or not to protect Cloud Storage resources from deletion when the solution is modified or changed"$'\n'"# Example: true"
+        comment="Whether or not to protect GCS resources from deletion when the solution is modified or changed"$'\n'"# Example: false"
         ;;
       *)
         comment=""

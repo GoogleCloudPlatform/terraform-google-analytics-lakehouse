@@ -56,3 +56,15 @@ for ROLE in "${ROLES_TO_REVOKE[@]}"; do
     --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
     --role="${ROLE}" > /dev/null 2>&1
 done
+
+# Check if backend.tf exists and remove it if it exists.
+if [ -f backend.tf ]; then
+  rm backend.tf
+  echo -e "\n\xe2\x88\xb4 backend.tf has been removed. "
+fi
+
+# Check if terraform.tfvars exists and remove it if it exists.
+if [ -f terraform.tfvars ]; then
+  rm terraform.tfvars
+  echo -e "\n\xe2\x88\xb4 terraform.tfvars has been removed. "
+fi
