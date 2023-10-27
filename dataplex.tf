@@ -39,6 +39,10 @@ resource "google_dataplex_lake" "gcp_primary" {
 
   project = module.project-services.project_id
 
+  depends_on = [
+    google_project_iam_member.dataplex_bucket_access
+  ]
+
 }
 
 #zone - raw
@@ -127,7 +131,7 @@ resource "google_dataplex_asset" "gcp_primary_textocr" {
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data]
 
 }
 
@@ -150,7 +154,7 @@ resource "google_dataplex_asset" "gcp_primary_ga4_obfuscated_sample_ecommerce" {
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data]
 
 }
 
@@ -173,5 +177,5 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
   }
 
   project    = module.project-services.project_id
-  depends_on = [time_sleep.wait_after_copy_data, google_project_iam_member.dataplex_bucket_access]
+  depends_on = [time_sleep.wait_after_copy_data]
 }
