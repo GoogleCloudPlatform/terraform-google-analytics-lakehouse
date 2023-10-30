@@ -171,3 +171,19 @@ resource "google_storage_bucket" "spark-log-directory" {
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
 }
+
+resource "google_storage_bucket" "phs-staging-bucket" {
+  name                        = "gcp-${var.use_case_short}-phs-staging-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+resource "google_storage_bucket" "phs-temp-bucket" {
+  name                        = "gcp-${var.use_case_short}-phs-temp-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
