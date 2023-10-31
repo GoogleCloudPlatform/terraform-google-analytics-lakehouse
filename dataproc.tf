@@ -125,4 +125,8 @@ resource "google_dataproc_cluster" "phs" {
       enable_http_port_access = "true"
     }
   }
+
+  depends_on = [
+    google_project_iam_member.dataproc_sa_roles
+  ]
 }
