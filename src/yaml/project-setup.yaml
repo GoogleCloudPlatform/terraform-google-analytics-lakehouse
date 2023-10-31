@@ -33,6 +33,25 @@ main:
                 - dataproc_service_account_name: ${dataproc_service_account}
                 - provisioner_bucket_name: ${provisioner_bucket}
                 - warehouse_bucket_name: ${warehouse_bucket}
+        # If this workflow has been run before, do not run again
+        - sub_check_if_run:
+            steps:
+                - assign_values:
+                    assign:
+                        - project_id: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                        - location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
+                        - workflow_id: $${sys.get_env("GOOGLE_CLOUD_WORKFLOW_ID")}
+                - get_executions:
+                    call: http.get
+                    args:
+                        url: ${"https://workflowexecutions.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/workflows/"+workflow_id+"/executions"}
+                        auth:
+                            type: OAuth2
+                    result: Operation
+                - check_if_run:
+                    switch:
+                        - condition: ${len(Operation.body) > 0}
+                          next: end
         # TODO: change this to poll for BigQuery table creation
         - sub_wait_for_dataplex_discovery:
             call: sys.sleep

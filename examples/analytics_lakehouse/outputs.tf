@@ -28,3 +28,8 @@ output "lakehouse_colab_url" {
   value       = module.analytics_lakehouse.lakehouse_colab_url
   description = "The URL to launch the Colab instance"
 }
+
+output "region" {
+  value       = "us-central"
+  description = "The Compute region where resources are created"
+}

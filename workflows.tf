@@ -60,7 +60,7 @@ resource "google_project_iam_member" "workflows_sa_roles" {
 # NOTE: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
 # You can use google_storage_bucket.<bucket>.url to include the prefix.
 resource "google_workflows_workflow" "copy_data" {
-  name            = "copy_data"
+  name            = "copy-data"
   project         = module.project-services.project_id
   region          = var.region
   description     = "Copies data and performs project setup"
