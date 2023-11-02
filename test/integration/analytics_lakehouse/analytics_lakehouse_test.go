@@ -20,11 +20,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/bq"
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/gcloud"
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/tft"
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAnalyticsLakehouse(t *testing.T) {
@@ -32,14 +32,14 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 	dwh.DefineVerify(func(assert *assert.Assertions) {
 		dwh.DefaultVerify(assert)
-        
+
 		projectID := dwh.GetTFSetupStringOutput("project_id")
 
 		region := dwh.GetTFSetupStringOutput("region")
-        
-        // Assert all Workflows ran successfully
+
+		// Assert all Workflows ran successfully
 		verifyWorkflows := func() (bool, error) {
-			workflows := []string {
+			workflows := []string{
 				"copy-data",
 				"project-setup",
 			}
@@ -50,16 +50,17 @@ func TestAnalyticsLakehouse(t *testing.T) {
 					state = Get("state").String()
 					assert.NotEqual(t, state, "FAILED")
 					if state == "SUCCEEDED" {
-				        return true, nil
-					} else
+						return true, nil
+					} else {
 						return false, nil
-				    }
+					}
+				}
 			}
 		}
 		utils.Poll(t, verifyWorkflows, 600, 30*time.Second)
 
 		// Assert BigQuery tables are not empty
-		tables := []string { 
+		tables := []string{
 			"gcp_lakehouse_ds.agg_events",
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
 			"gcp_primary_raw.textocr_images",
@@ -73,27 +74,27 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			"gcp_primary_staging.thelook_ecommerce_users",
 		}
 
-		for _, table := range tables { 
-			op := bq.Runf(t, "query --nouse_legacy_sql 
-			`select 
+		for _, table := range tables {
+			op := bq.Runf(t, `query --nouse_legacy_sql 
+			'select 
 				count(*) as count
 			from 
-				%s.%s`;", projectID, table) 
-			
+				%s.%s';`, projectID, table)
+
 			count := op.Get("count")
 			count_int, err := strconv.Atoi(count)
 
 			assert.Greater(t, count_int, 0, fmt.Sprintf("Table `%s` is empty.", table))
-		} 
+		}
 
 		// Assert only one Dataproc cluster is available
 		op := gcloud.Runf(t, "dataproc clusters list --project=%s --region=%s", projectID, region)
-        currentComputeInstances = op.Array()
-        assert.Equal(t, len(op), 1, "More than one Dataproc cluster is available.")
-		
+		currentComputeInstances = op.Array()
+		assert.Equal(t, len(op), 1, "More than one Dataproc cluster is available.")
+
 		// Assert Dataproc cluster is stopped
-	    phsName := currentComputeInstances[0].get("clusterName")
-        op := gcloud.Runf(t, "dataproc clusters describe %s --project=%s", phsName, projectID)
+		phsName := currentComputeInstances[0].get("clusterName")
+		op := gcloud.Runf(t, "dataproc clusters describe %s --project=%s", phsName, projectID)
 		state := op.Get("status").Get("state")
 		assert.Equal(t, state, "TERMINATED", "PHS is not in a stopped state")
 
