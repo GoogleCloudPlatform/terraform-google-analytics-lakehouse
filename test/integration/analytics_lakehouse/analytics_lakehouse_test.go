@@ -75,10 +75,10 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		}
 
 		for _, table := range tables {
-			op := bq.Runf(t, `query --nouse_legacy_sql 
-			'select 
+			op := bq.Runf(t, `query --nouse_legacy_sql
+			'select
 				count(*) as count
-			from 
+			from
 				%s.%s';`, projectID, table)
 
 			count := op.Get("count")
