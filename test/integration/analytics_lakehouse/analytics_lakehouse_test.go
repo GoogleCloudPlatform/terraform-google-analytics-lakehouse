@@ -16,7 +16,6 @@ package multiple_buckets
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
