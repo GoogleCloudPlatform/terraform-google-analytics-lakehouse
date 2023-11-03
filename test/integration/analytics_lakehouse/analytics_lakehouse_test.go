@@ -27,6 +27,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Retry if these errors are encountered.
+var retryErrors = map[string]string{
+	".*does not have enough resources available to fulfill the request.  Try a different zone,.*": "Compute zone resources currently unavailable.",
+	".*Error 400: The subnetwork resource*":                                                       "Subnet is eventually drained",
+}
+
 func TestAnalyticsLakehouse(t *testing.T) {
 	dwh := tft.NewTFBlueprintTest(t, tft.WithRetryableTerraformErrors(retryErrors, 60, time.Minute))
 
@@ -45,17 +51,16 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			}
 
 			for _, workflow := range workflows {
-				executions := gcloud.Runf(t, "workflows executions list %s --project %s", workflow, projectID).Array()
-				for _, execution := range executions {
-					state = Get("state").String()
-					assert.NotEqual(t, state, "FAILED")
-					if state == "SUCCEEDED" {
-						return true, nil
-					} else {
-						return false, nil
-					}
+				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=~endTime", workflow, projectID).Array()
+				state := executions[0].Get("state").String()
+				assert.NotEqual(t, state, "FAILED")
+				if state == "SUCCEEDED" {
+					continue
+				} else {
+					return false, nil
 				}
 			}
+			return true, nil
 		}
 		utils.Poll(t, verifyWorkflows, 600, 30*time.Second)
 
@@ -81,21 +86,18 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			from
 				%s.%s';`, projectID, table)
 
-			count := op.Get("count")
-			count_int, err := strconv.Atoi(count)
-
-			assert.Greater(t, count_int, 0, fmt.Sprintf("Table `%s` is empty.", table))
+			count := op.Get("count").Int()
+			assert.Greater(t, count, 0, fmt.Sprintf("Table `%s` is empty.", table))
 		}
 
 		// Assert only one Dataproc cluster is available
-		op := gcloud.Runf(t, "dataproc clusters list --project=%s --region=%s", projectID, region)
-		currentComputeInstances = op.Array()
-		assert.Equal(t, len(op), 1, "More than one Dataproc cluster is available.")
+		currentComputeInstances := gcloud.Runf(t, "dataproc clusters list --project=%s --region=%s", projectID, region).Array()
+		assert.Equal(t, len(currentComputeInstances), 1, "More than one Dataproc cluster is available.")
 
 		// Assert Dataproc cluster is stopped
-		phsName := currentComputeInstances[0].get("clusterName")
-		op := gcloud.Runf(t, "dataproc clusters describe %s --project=%s", phsName, projectID)
-		state := op.Get("status").Get("state")
+		phsName := currentComputeInstances[0].Get("clusterName")
+		cluster := gcloud.Runf(t, "dataproc clusters describe %s --project=%s", phsName, projectID)
+		state := cluster.Get("status").Get("state").String()
 		assert.Equal(t, state, "TERMINATED", "PHS is not in a stopped state")
 
 	})
