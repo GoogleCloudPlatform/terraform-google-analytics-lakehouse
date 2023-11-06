@@ -26,3 +26,7 @@ output "sa_key" {
 output "kms_keys" {
   value = module.kms_keyring.keys
 }
+
+output "region" {
+  value = var.region
+}

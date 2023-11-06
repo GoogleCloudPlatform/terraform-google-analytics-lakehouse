@@ -38,8 +38,3 @@ output "lakehouse_colab_url" {
   value       = "https://colab.research.google.com/github/GoogleCloudPlatform/terraform-google-analytics-lakehouse/blob/main/src/ipynb/exploratory-analysis.ipynb"
   description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
 }
-
-output "region" {
-  value       = var.region
-  description = "The Compute region your resources are available in"
-}
