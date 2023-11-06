@@ -30,5 +30,5 @@ output "lakehouse_colab_url" {
 }
 
 output "region" {
-  value = var.region
+  value = "us-central"
 }
