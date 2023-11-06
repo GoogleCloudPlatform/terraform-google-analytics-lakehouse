@@ -24,3 +24,9 @@ variable "folder_id" {
 variable "billing_account" {
   description = "The billing account id associated with the project, e.g. XXXXXX-YYYYYY-ZZZZZZ"
 }
+
+variable "region" {
+  type        = string
+  description = "Google Cloud Region"
+  default     = "us-central1"
+}
