@@ -1,6 +1,6 @@
 module github.com/terraform-google-modules/terraform-google-analytics-lakehouse/test/integration
 
-go 1.20
+go 1.20.10
 
 require (
 	github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test v0.9.2
