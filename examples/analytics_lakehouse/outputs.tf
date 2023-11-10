@@ -31,5 +31,5 @@ output "lakehouse_colab_url" {
 
 output "region" {
   value       = "us-central"
-  description = "The Compute region where resources are created." 
+  description = "The Compute region where resources are created"
 }
