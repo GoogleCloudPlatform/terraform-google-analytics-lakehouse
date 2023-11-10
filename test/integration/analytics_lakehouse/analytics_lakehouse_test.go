@@ -79,11 +79,11 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		}
 
 		for _, table := range tables {
-			op := bq.Runf(t, `query --nouse_legacy_sql
+			op := bq.Runf(t, `--project_id=%[1]s query --nouse_legacy_sql 
 			'select
 				count(*) as count
 			from
-				%s.%s';`, projectID, table)
+			` +	"`" + "%[1]s" + "`" + ".%[2]s';", projectID, table)
 
 			count := op.Get("count").Int()
 			assert.Greater(t, count, 0, fmt.Sprintf("Table `%s` is empty.", table))
