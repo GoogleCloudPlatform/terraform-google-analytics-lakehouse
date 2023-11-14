@@ -77,9 +77,11 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			"gcp_primary_staging.thelook_ecommerce_products",
 			"gcp_primary_staging.thelook_ecommerce_users",
 		}
-        cmd := "--project_id=%[1]s query --nouse_legacy_sql 'SELECT count(*) AS count FROM %[1]s.%[2]s;'"
+
+		query_template := "SELECT count(*) AS count FROM %[1]s.%[2]s;"
 		for _, table := range tables {
-			op := bq.Runf(t, cmd, projectID, table)
+			query := fmt.Sprintf(query_template, projectID, table)
+			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
 
 			count := op.Get("count").Int()
 			assert.Greater(t, count, 0, fmt.Sprintf("Table `%s` is empty.", table))
