@@ -65,7 +65,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		// Assert BigQuery tables are not empty
 		tables := []string{
-			"gcp_lakehouse_ds.agg_events",
+			"gcp_lakehouse_ds.agg_events_iceberg",
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
 			"gcp_primary_raw.textocr_images",
 			"gcp_primary_staging.new_york_taxi_trips_tlc_yellow_trips_2022",
