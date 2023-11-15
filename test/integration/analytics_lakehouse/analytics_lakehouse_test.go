@@ -45,10 +45,9 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		// Assert all Workflows ran successfully
 		verifyWorkflows := func() (bool, error) {
 			workflows := []string{
-				"copy-data",
 				"project-setup",
+				"copy-data",
 			}
-
 			for _, workflow := range workflows {
 				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=~endTime", workflow, projectID).Array()
 				state := executions[0].Get("state").String()
@@ -83,8 +82,8 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			query := fmt.Sprintf(query_template, projectID, table)
 			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
 
-			count := op.Get("count").Int()
-			assert.Greater(t, count, 0, fmt.Sprintf("Table `%s` is empty.", table))
+			count := op.Get("0.count").Int()
+			assert.Greater(t, int(count), 0, fmt.Sprintf("Table `%s` is empty.", table))
 		}
 
 		// Assert only one Dataproc cluster is available
