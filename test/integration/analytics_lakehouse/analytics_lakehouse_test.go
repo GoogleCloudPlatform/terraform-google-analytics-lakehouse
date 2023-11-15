@@ -45,8 +45,8 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		// Assert all Workflows ran successfully
 		verifyWorkflows := func() (bool, error) {
 			workflows := []string{
+                "copy-data",
 				"project-setup",
-				"copy-data",
 			}
 			for _, workflow := range workflows {
 				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=~endTime", workflow, projectID).Array()
@@ -55,11 +55,13 @@ func TestAnalyticsLakehouse(t *testing.T) {
 				if state == "SUCCEEDED" {
 					continue
 				} else {
-					return false, nil
+					return true, nil
 				}
 			}
-			return true, nil
+			return false, nil
 		}
+
+		// Polls while verifyWorkflows returns true. Breaks on false.
 		utils.Poll(t, verifyWorkflows, 600, 30*time.Second)
 
 		// Assert BigQuery tables are not empty
