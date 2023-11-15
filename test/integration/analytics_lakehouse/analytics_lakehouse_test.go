@@ -78,7 +78,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			"gcp_primary_staging.thelook_ecommerce_users",
 		}
 
-		query_template := "SELECT count(*) AS count FROM %[1]s.%[2]s;"
+		query_template := "SELECT count(*) AS count FROM `%[1]s.%[2]s`;"
 		for _, table := range tables {
 			query := fmt.Sprintf(query_template, projectID, table)
 			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
