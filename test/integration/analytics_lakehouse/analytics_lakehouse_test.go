@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/tft"
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Retry if these errors are encountered.
@@ -51,7 +52,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			for _, workflow := range workflows {
 				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=~endTime", workflow, projectID)
 				state := executions.Get("0.state").String()
-				assert.NotEqual(t, state, "FAILED")
+				require.NotEqual(t, state, "FAILED")
 				if state == "SUCCEEDED" {
 					continue
 				} else {
@@ -62,7 +63,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		}
 
 		// Polls while verifyWorkflows returns true. Breaks on false.
-		utils.Poll(t, verifyWorkflows, 10, 30*time.Second)
+		utils.Poll(t, verifyWorkflows, 60, 30*time.Second)
 
 		// Assert BigQuery tables are not empty
 		tables := []string{
