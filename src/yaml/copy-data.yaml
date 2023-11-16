@@ -43,7 +43,7 @@ main:
                     result: Operation
                 - check_if_run:
                     switch:
-                      - condition: ${len(Operation.body) > 0}
+                      - condition: $${len(Operation.body) > 0}
                         next: end
         - sub_copy_data:
             parallel:

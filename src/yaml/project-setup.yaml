@@ -50,7 +50,7 @@ main:
                     result: Operation
                 - check_if_run:
                     switch:
-                        - condition: ${len(Operation.body) > 0}
+                        - condition: $${len(Operation.body) > 0}
                           next: end
         # TODO: change this to poll for BigQuery table creation
         - sub_wait_for_dataplex_discovery:
