@@ -46,7 +46,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		// Assert all Workflows ran successfully
 		verifyWorkflows := func() (bool, error) {
 			workflows := []string{
-                "copy-data",
+				"copy-data",
 				"project-setup",
 			}
 			for _, workflow := range workflows {
@@ -71,7 +71,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		// Assert BigQuery tables are not empty
 		tables := []string{
-			"gcp_lakehouse_ds.agg_events_iceberg",
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
 			"gcp_primary_raw.textocr_images",
 			"gcp_primary_staging.new_york_taxi_trips_tlc_yellow_trips_2022",
@@ -82,6 +81,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			"gcp_primary_staging.thelook_ecommerce_orders",
 			"gcp_primary_staging.thelook_ecommerce_products",
 			"gcp_primary_staging.thelook_ecommerce_users",
+			"gcp_lakehouse_ds.agg_events_iceberg",
 		}
 
 		query_template := "SELECT count(*) AS count FROM `%[1]s.%[2]s`;"
