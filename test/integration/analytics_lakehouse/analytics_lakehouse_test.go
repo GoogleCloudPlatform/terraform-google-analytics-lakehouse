@@ -16,6 +16,9 @@ package multiple_buckets
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -46,11 +49,11 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		// Assert all Workflows ran successfully
 		verifyWorkflows := func() (bool, error) {
 			workflows := []string{
-                "copy-data",
+				"copy-data",
 				"project-setup",
 			}
 			for _, workflow := range workflows {
-				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=~endTime", workflow, projectID)
+				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=startTime", workflow, projectID)
 				state := executions.Get("0.state").String()
 				if state == "FAILED" {
 					id := executions.Get("0.name")
@@ -70,8 +73,17 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		utils.Poll(t, verifyWorkflows, 60, 30*time.Second)
 
 		// Assert BigQuery tables are not empty
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal(err)
+		}
+		file, err := os.Create(homeDir + "/.bigqueryrc")
+		if err != nil {
+			log.Fatal(err)
+		}
+		file.Close()
+
 		tables := []string{
-			"gcp_lakehouse_ds.agg_events_iceberg",
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
 			"gcp_primary_raw.textocr_images",
 			"gcp_primary_staging.new_york_taxi_trips_tlc_yellow_trips_2022",
@@ -82,6 +94,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			"gcp_primary_staging.thelook_ecommerce_orders",
 			"gcp_primary_staging.thelook_ecommerce_products",
 			"gcp_primary_staging.thelook_ecommerce_users",
+			"gcp_lakehouse_ds.agg_events_iceberg",
 		}
 
 		query_template := "SELECT count(*) AS count FROM `%[1]s.%[2]s`;"
@@ -90,18 +103,24 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
 
 			count := op.Get("0.count").Int()
-			assert.Greater(t, int(count), 0, fmt.Sprintf("Table `%s` is empty.", table))
+			fmt.Println("TYPE OF COUNT:")
+			fmt.Println(reflect.TypeOf(count))
+			fmt.Println("COUNT IS")
+			fmt.Println(count)
+			fmt.Println("RUNNING ASSERT ON TABLE COUNT")
+			assert.Greater(count, int64(0), table)
+			fmt.Println("ASSERT RAN SUCCESSFULLY")
 		}
 
 		// Assert only one Dataproc cluster is available
 		currentComputeInstances := gcloud.Runf(t, "dataproc clusters list --project=%s --region=%s", projectID, region).Array()
-		assert.Equal(t, len(currentComputeInstances), 1, "More than one Dataproc cluster is available.")
+		assert.Equal(len(currentComputeInstances), 1, "More than one Dataproc cluster is available.")
 
 		// Assert Dataproc cluster is stopped
 		phsName := currentComputeInstances[0].Get("clusterName")
 		cluster := gcloud.Runf(t, "dataproc clusters describe %s --project=%s", phsName, projectID)
 		state := cluster.Get("status").Get("state").String()
-		assert.Equal(t, state, "TERMINATED", "PHS is not in a stopped state")
+		assert.Equal(state, "TERMINATED", "PHS is not in a stopped state")
 
 	})
 
