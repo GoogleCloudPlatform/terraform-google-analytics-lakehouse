@@ -43,7 +43,7 @@ main:
                     result: Operation
                 - check_if_run:
                     switch:
-                      - condition: $${"executions" in Operation.body and len(Operation.body.executions) > 0}
+                      - condition: $${len(Operation.body.executions) > 1}
                         next: end
         - sub_copy_data:
             parallel:
