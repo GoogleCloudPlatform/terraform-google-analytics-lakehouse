@@ -44,7 +44,7 @@ main:
                 - get_executions:
                     call: http.get
                     args:
-                        url: ${"https://workflowexecutions.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/workflows/"+workflow_id+"/executions"}
+                        url: $${"https://workflowexecutions.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/workflows/"+workflow_id+"/executions"}
                         auth:
                             type: OAuth2
                     result: Operation
