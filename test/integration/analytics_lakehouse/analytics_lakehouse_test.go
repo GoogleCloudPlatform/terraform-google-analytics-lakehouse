@@ -50,7 +50,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 				"project-setup",
 			}
 			for _, workflow := range workflows {
-				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=~endTime", workflow, projectID)
+				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=startTime", workflow, projectID)
 				state := executions.Get("0.state").String()
 				if state == "FAILED" {
 					id := executions.Get("0.name")
