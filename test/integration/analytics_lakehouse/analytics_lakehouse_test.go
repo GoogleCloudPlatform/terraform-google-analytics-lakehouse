@@ -73,7 +73,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		// Assert BigQuery tables are not empty
 		_, err := exec.Command("touch", "~/.bigqueryrc").Output()
 	    if err != nil {
-		    t.Fatalf("could not create bigqueryrc file")
+		    t.Fatalf(err)
 	    }
 
 		tables := []string{
