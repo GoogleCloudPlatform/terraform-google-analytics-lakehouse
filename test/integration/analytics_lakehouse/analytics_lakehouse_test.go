@@ -16,6 +16,7 @@ package multiple_buckets
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
 	"testing"
 	"time"
@@ -73,7 +74,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		// Assert BigQuery tables are not empty
 		_, err := exec.Command("touch", "~/.bigqueryrc").Output()
 	    if err != nil {
-		    t.Fatal(err)
+		    log.Fatal(err)
 	    }
 
 		tables := []string{
