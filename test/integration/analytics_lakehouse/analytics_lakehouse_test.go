@@ -72,7 +72,14 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		utils.Poll(t, verifyWorkflows, 60, 30*time.Second)
 
 		// Assert BigQuery tables are not empty
-		_, err := exec.Command("touch", "~/.bigqueryrc").Output()
+	    cmd := exec.Command("touch", "~/.bigqueryrc")
+
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+
+		_, err = cmd.CombinedOutput()
 	    if err != nil {
 		    log.Fatal(err)
 	    }
