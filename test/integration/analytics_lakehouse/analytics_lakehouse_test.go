@@ -15,6 +15,7 @@
 package multiple_buckets
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os/exec"
@@ -79,7 +80,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		cmd.Stdout = &out
 		cmd.Stderr = &stderr
 
-		_, err = cmd.CombinedOutput()
+		_, err := cmd.CombinedOutput()
 	    if err != nil {
 		    log.Fatal(err)
 	    }
