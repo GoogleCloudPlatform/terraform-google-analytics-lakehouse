@@ -16,6 +16,7 @@ package multiple_buckets
 
 import (
 	"fmt"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -70,6 +71,11 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		utils.Poll(t, verifyWorkflows, 60, 30*time.Second)
 
 		// Assert BigQuery tables are not empty
+		_, err := exec.Command("touch", "~/.bigqueryrc").Output()
+	    if err != nil {
+		    t.Fatalf("could not create bigqueryrc file")
+	    }
+
 		tables := []string{
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
 			"gcp_primary_raw.textocr_images",
