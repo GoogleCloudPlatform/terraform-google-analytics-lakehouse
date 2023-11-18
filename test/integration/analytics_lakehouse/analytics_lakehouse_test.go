@@ -15,10 +15,9 @@
 package multiple_buckets
 
 import (
-	"bytes"
 	"fmt"
 	"log"
-	"os/exec"
+	"os"
 	"testing"
 	"time"
 
