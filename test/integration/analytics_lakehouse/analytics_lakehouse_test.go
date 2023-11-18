@@ -73,17 +73,15 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		utils.Poll(t, verifyWorkflows, 60, 30*time.Second)
 
 		// Assert BigQuery tables are not empty
-	    cmd := exec.Command("touch", "~/.bigqueryrc")
-
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-
-		_, err := cmd.CombinedOutput()
-	    if err != nil {
-		    log.Fatal(err)
-	    }
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal(err)
+		}
+		file, err := os.Create(homeDir + "/.bigqueryrc")
+		if err != nil {
+			log.Fatal(err)
+		}
+		file.Close()
 
 		tables := []string{
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
