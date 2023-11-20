@@ -70,7 +70,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		}
 
 		// Polls while verifyWorkflows returns true. Breaks on false.
-		utils.Poll(t, verifyWorkflows, 60, 30*time.Second)
+		utils.Poll(t, verifyWorkflows, 150, 5*time.Second)
 
 		// Assert BigQuery tables are not empty
 		homeDir, err := os.UserHomeDir()
@@ -103,13 +103,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
 
 			count := op.Get("0.count").Int()
-			fmt.Println("TYPE OF COUNT:")
-			fmt.Println(reflect.TypeOf(count))
-			fmt.Println("COUNT IS")
-			fmt.Println(count)
-			fmt.Println("RUNNING ASSERT ON TABLE COUNT")
 			assert.Greater(count, int64(0), table)
-			fmt.Println("ASSERT RAN SUCCESSFULLY")
 		}
 
 		// Assert only one Dataproc cluster is available

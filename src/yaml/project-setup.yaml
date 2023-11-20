@@ -166,19 +166,25 @@ create_iceberg:
             url: $${"https://dataproc.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/batches/"+batch_name}
             auth:
                 type: OAuth2
-        result: Operation
-
+        result: Batch
     - check_if_done:
         switch:
-          - condition: $${Operation.body.state == "SUCCEEDED" or Operation.body.state == "FAILED"}
-            return: Operation
-
+          - condition: $${Batch.body.state == "SUCCEEDED" or Batch.body.state == "FAILED"}
+            next: done
+    - not_done:
+        call: sys.log
+        args:
+          data: "Job not done yet".
     - wait:
         call: sys.sleep
         args:
             seconds: 15
         next: get_batch
-
+    - done:
+        call: sys.log
+        args:
+          data: "Job done."
+        return: Batch
 # Subworkflow to Dataplex taxonomy
 create_taxonomy:
     steps:
