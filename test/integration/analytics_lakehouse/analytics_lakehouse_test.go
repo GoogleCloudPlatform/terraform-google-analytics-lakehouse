@@ -102,7 +102,8 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
 
 			count := op.Get("0.count").Int()
-			assert.Greater(t, int(count), 0, fmt.Sprintf("Table `%s` is empty.", table))
+			var thrshld int64 = 0
+			assert.Greater(t, count, thrshld, fmt.Sprintf("Table `%s` is empty.", table))
 		}
 
 		// Assert only one Dataproc cluster is available
