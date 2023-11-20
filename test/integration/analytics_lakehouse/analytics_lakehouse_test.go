@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -102,8 +103,12 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
 
 			count := op.Get("0.count").Int()
+			fmt.Println("TYPE OF COUNT:")
+			fmt.Println(result.TypeOf(count))
 			var thrshld int64 = 0
+			fmt.Println("RUNNING ASSERT ON TABLE COUNT")
 			assert.Greater(t, count, thrshld, fmt.Sprintf("Table `%s` is empty.", table))
+			fmt.Println("ASSERT RAN SUCCESSFULLY")
 		}
 
 		// Assert only one Dataproc cluster is available
