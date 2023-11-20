@@ -105,9 +105,10 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			count := op.Get("0.count").Int()
 			fmt.Println("TYPE OF COUNT:")
 			fmt.Println(reflect.TypeOf(count))
-			var thrshld int64 = 0
+			fmt.Println ("COUNT IS")
+			fmt.Println(count)
 			fmt.Println("RUNNING ASSERT ON TABLE COUNT")
-			assert.Greater(t, count, thrshld, fmt.Sprintf("Table `%s` is empty.", table))
+			assert.Greater(t, count, int64(0), table)
 			fmt.Println("ASSERT RAN SUCCESSFULLY")
 		}
 
