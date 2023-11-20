@@ -98,7 +98,8 @@ resource "google_workflows_workflow" "project_setup" {
     dataproc_service_account = google_service_account.dataproc_service_account.email,
     provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
-    temp_bucket              = google_storage_bucket.warehouse_bucket.name
+    temp_bucket              = google_storage_bucket.warehouse_bucket.name,
+
   })
 
   depends_on = [
