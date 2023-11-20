@@ -171,7 +171,7 @@ create_iceberg:
 
     - check_if_done:
         switch:
-          - condition: $${Operation.body.status == "SUCCEEDED" or Operation.body.status == "FAILED"}
+          - condition: $${Operation.body.state == "SUCCEEDED" or Operation.body.state == "FAILED"}
             return: Operation
 
     - wait:
