@@ -158,10 +158,9 @@ create_iceberg:
                 batchId: $${batch_name}
             timeout: 300
         result: Operation
-        next: check_if_done
 
     # Poll job until completed
-    - get_operation:
+    - get_batch:
         call: http.get
         args:
             url: $${"https://dataproc.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/batches/"+batch_name}
@@ -178,7 +177,7 @@ create_iceberg:
         call: sys.sleep
         args:
             seconds: 15
-        next: get_operation
+        next: get_batch
 
 # Subworkflow to Dataplex taxonomy
 create_taxonomy:
