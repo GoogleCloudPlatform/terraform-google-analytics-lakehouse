@@ -174,7 +174,7 @@ create_iceberg:
     - not_done:
         call: sys.log
         args:
-          data: "Job not done yet".
+          data: Job not done yet.
     - wait:
         call: sys.sleep
         args:
@@ -183,7 +183,7 @@ create_iceberg:
     - done:
         call: sys.log
         args:
-          data: "Job done."
+          data: Job done.
         return: Batch
 # Subworkflow to Dataplex taxonomy
 create_taxonomy:
