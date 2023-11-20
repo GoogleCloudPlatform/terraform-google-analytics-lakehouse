@@ -171,7 +171,7 @@ create_iceberg:
 
     - check_if_done:
         switch:
-          - condition: $${Operation.body.done == true}
+          - condition: $${"done" in Operation.body and Operation.body.done == true}
             return: Operation
 
     - wait:
