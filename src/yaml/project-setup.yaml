@@ -171,17 +171,14 @@ create_iceberg:
 
     - check_if_done:
         switch:
-          - condition: $${"done" in Operation.body and Operation.body.done}
-            next: returnOutput
+          - condition: $${Operation.body.done == true}
+            return: Operation
 
     - wait:
         call: sys.sleep
         args:
-            seconds: 10
+            seconds: 15
         next: get_operation
-
-    - returnOutput:
-            return: Operation
 
 # Subworkflow to Dataplex taxonomy
 create_taxonomy:
