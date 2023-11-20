@@ -164,14 +164,14 @@ create_iceberg:
     - get_operation:
         call: http.get
         args:
-            url: $${"https://dataproc.googleapis.com/v1/"+Operation.body.name}
+            url: $${"https://dataproc.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/batches/"+batch_name}
             auth:
                 type: OAuth2
         result: Operation
 
     - check_if_done:
         switch:
-          - condition: $${"done" in Operation.body and Operation.body.done == true}
+          - condition: $${Operation.body.status == "SUCCEEDED" or Operation.body.status == "FAILED"}
             return: Operation
 
     - wait:
