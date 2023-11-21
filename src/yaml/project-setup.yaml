@@ -170,20 +170,12 @@ create_iceberg:
     - check_if_done:
         switch:
           - condition: $${Batch.body.state == "SUCCEEDED" or Batch.body.state == "FAILED"}
-            next: done
-    - not_done:
-        call: sys.log
-        args:
-          data: Job not done yet.
+            return: Batch
     - wait:
         call: sys.sleep
         args:
             seconds: 15
         next: get_batch
-    - done:
-        call: sys.log
-        args:
-          data: Job done.
 # Subworkflow to Dataplex taxonomy
 create_taxonomy:
     steps:
