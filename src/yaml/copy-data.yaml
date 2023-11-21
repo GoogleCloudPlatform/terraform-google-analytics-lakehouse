@@ -54,7 +54,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "TextOCR_images"
+                              prefix: TextOCR_images
                               dest_bucket_name: $${dest_textocr_images_bucket_name}
                           result: copy_textocr_images_output
                 - copy_ga4_images:
@@ -63,7 +63,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "ga4_obfuscated_sample_ecommerce_images"
+                              prefix: ga4_obfuscated_sample_ecommerce_images
                               dest_bucket_name: $${dest_ga4_images_bucket_name}
                           result: copy_ga4_output
                 - copy_new_york_taxi_trips_tables:
@@ -72,7 +72,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "new-york-taxi-trips"
+                              prefix: new-york-taxi-trips
                               dest_bucket_name: $${dest_tables_bucket_name}
                           result: copy_new_york_taxi_trips_tables_output
                 - copy_thelook_ecommerce_tables:
@@ -81,7 +81,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "thelook_ecommerce"
+                              prefix: thelook_ecommerce
                               dest_bucket_name: $${dest_tables_bucket_name}
                           result: copy_thelook_ecommerce_tables_output
                 - copy_dataplex_names_counts:
@@ -90,7 +90,7 @@ main:
                           call: copy_objects
                           args:
                               source_bucket_name: $${source_bucket_name}
-                              prefix: "views"
+                              prefix: views
                               dest_bucket_name: $${dataplex_bucket}
                           result: copy_dataplex_names_counts_output
 

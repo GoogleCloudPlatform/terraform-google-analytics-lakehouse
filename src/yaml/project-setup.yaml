@@ -52,11 +52,26 @@ main:
                     switch:
                         - condition: $${len(Operation.body.executions) > 1}
                           next: end
-        # TODO: change this to poll for BigQuery table creation
         - sub_wait_for_dataplex_discovery:
-            call: sys.sleep
-            args:
-                seconds: 480
+            steps:
+                - assign_values:
+                    assign:
+                        - asset_ids:
+                            - ${dataplex_asset_tables_id}
+                            - ${dataplex_asset_textocr_id}
+                            - ${dataplex_asset_ga4_id}
+                            # ADD NEW ASSETS HERE
+                - run_checks:
+                    parallel:
+                      for:
+                        value: asset_id
+                        in: $${asset_ids}
+                        steps:
+                          - run_check:
+                              call: check_discovery_status
+                              args:
+                                  asset: $${asset_id}
+                              result: result
         - sub_create_tables:
             call: create_tables
             result: create_tables_output
@@ -71,6 +86,27 @@ main:
         - sub_create_taxonomy:
             call: create_taxonomy
             result: create_taxonomy_output
+
+# Subworkflow to check if Dataplex Discovery is complete
+check_discovery_status:
+    params: [asset_id]
+    steps:
+        - check_status:
+            call: http.get
+            args:
+                url: $${"https://dataplex.googleapis.com/v1/"+asset_id}
+                auth:
+                    type: OAuth2
+            result: Asset
+        - check_if_done:
+            switch:
+            - condition: $${Asset.body.state == "ACTIVE" and Asset.body.discoveryStatus.state == "SCHEDULED"}
+              return: Asset
+        - wait:
+            call: sys.sleep
+            args:
+                seconds: 15
+            next: check_status
 
 # Subworkflow to create BigQuery views
 create_tables:
@@ -132,18 +168,18 @@ create_iceberg:
                 pysparkBatch:
                     mainPythonFileUri: $${"gs://"+provisioner_bucket_name+"/bigquery.py"}
                     jarFileUris:
-                        - "gs://spark-lib/bigquery/spark-bigquery-with-dependencies_2.12-0.29.0.jar"
-                        - "gs://spark-lib/biglake/iceberg-biglake-catalog-0.0.1-with-dependencies.jar"
+                        - gs://spark-lib/bigquery/spark-bigquery-with-dependencies_2.12-0.29.0.jar
+                        - gs://spark-lib/biglake/iceberg-biglake-catalog-0.0.1-with-dependencies.jar
                 runtimeConfig:
                     version: "1.1"
                     properties:
-                        "spark.sql.catalog.lakehouse_catalog": "org.apache.iceberg.spark.SparkCatalog"
-                        "spark.sql.catalog.lakehouse_catalog.blms_catalog": "$${lakehouse_catalog}"
-                        "spark.sql.catalog.lakehouse_catalog.catalog-impl": "org.apache.iceberg.gcp.biglake.BigLakeCatalog"
-                        "spark.sql.catalog.lakehouse_catalog.gcp_location": "$${location}"
-                        "spark.sql.catalog.lakehouse_catalog.gcp_project": "$${project_id}"
+                        "spark.sql.catalog.lakehouse_catalog": org.apache.iceberg.spark.SparkCatalog
+                        "spark.sql.catalog.lakehouse_catalog.blms_catalog": $${lakehouse_catalog}
+                        "spark.sql.catalog.lakehouse_catalog.catalog-impl": org.apache.iceberg.gcp.biglake.BigLakeCatalog
+                        "spark.sql.catalog.lakehouse_catalog.gcp_location": $${location}
+                        "spark.sql.catalog.lakehouse_catalog.gcp_project": $${project_id}
                         "spark.sql.catalog.lakehouse_catalog.warehouse": $${"gs://"+warehouse_bucket_name+"/warehouse"}
-                        "spark.jars.packages": "org.apache.iceberg:iceberg-spark-runtime-3.3_2.13:1.2.1"
+                        "spark.jars.packages": org.apache.iceberg:iceberg-spark-runtime-3.3_2.13:1.2.1
                         "spark.dataproc.driverEnv.lakehouse_catalog": $${lakehouse_catalog}
                         "spark.dataproc.driverEnv.lakehouse_database": $${lakehouse_database}
                         "spark.dataproc.driverEnv.temp_bucket": $${temp_bucket_name}
@@ -153,7 +189,7 @@ create_iceberg:
                 environmentConfig:
                     executionConfig:
                         serviceAccount: $${dataproc_service_account_name}
-                        subnetworkUri: "dataproc-subnet"
+                        subnetworkUri: dataproc-subnet
             query:
                 batchId: $${batch_name}
             timeout: 300
@@ -190,8 +226,8 @@ create_taxonomy:
             auth:
                 type: OAuth2
             body:
-              description: "Sample Taxonomy Description"
-              displayName: "Sample Taxonomy Display Name"
+              description: Sample Taxonomy Description
+              displayName: Sample Taxonomy Display Name
         result: Operation
     - returnResult:
         return: $${Operation}
@@ -211,7 +247,7 @@ create_ml_model:
                         body:
                             useLegacySql: false
                             useQueryCache: false
-                            location: 'us'
+                            location: us
                             timeoutMs: 600000
                             query: "" #${"CREATE OR REPLACE MODEL `gcp_lakehouse_us_ds.census_model` OPTIONS ( model_type='LOGISTIC_REG', auto_class_weights=TRUE, input_label_cols=['income_bracket'] ) AS SELECT age, workclass, marital_status, education_num, occupation, hours_per_week, income_bracket FROM `bigquery-public-data.ml_datasets.census_adult_income`"}
                     result: queryResult
