@@ -54,7 +54,7 @@ main:
                           next: end
         - sub_wait_for_dataplex_discovery:
             steps:
-                - assign_values:
+                - assign_asset_ids:
                     assign:
                         - asset_ids:
                             - ${dataplex_asset_tables_id}
@@ -63,15 +63,15 @@ main:
                             # ADD NEW ASSETS HERE
                 - run_checks:
                     parallel:
-                      for:
-                        value: asset_id
-                        in: $${asset_ids}
-                        steps:
-                          - run_check:
-                              call: check_discovery_status
-                              args:
-                                  asset: $${asset_id}
-                              result: result
+                        for:
+                          value: asset_id
+                          in: $${asset_ids}
+                          steps:
+                              - run_check:
+                                  call: check_discovery_status
+                                  args:
+                                      asset_id: $${asset_id}
+                                  result: result
         - sub_create_tables:
             call: create_tables
             result: create_tables_output
@@ -100,8 +100,8 @@ check_discovery_status:
             result: Asset
         - check_if_done:
             switch:
-            - condition: $${Asset.body.state == "ACTIVE" and Asset.body.discoveryStatus.state == "SCHEDULED"}
-              return: Asset
+              - condition: $${Asset.body.state == "ACTIVE" and Asset.body.discoveryStatus.state == "SCHEDULED"}
+                return: Asset
         - wait:
             call: sys.sleep
             args:
@@ -146,8 +146,14 @@ create_tables:
 
 # Subworkflow to create BLMS and Iceberg tables
 create_iceberg:
-    params: [temp_bucket_name, provisioner_bucket_name, dataproc_service_account_name, warehouse_bucket_name]
-    steps:
+  params:
+    [
+      temp_bucket_name,
+      provisioner_bucket_name,
+      dataproc_service_account_name,
+      warehouse_bucket_name,
+    ]
+  steps:
     - assign_values:
         assign:
             - project_id: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
@@ -226,8 +232,8 @@ create_taxonomy:
             auth:
                 type: OAuth2
             body:
-              description: Sample Taxonomy Description
-              displayName: Sample Taxonomy Display Name
+                description: Sample Taxonomy Description
+                displayName: Sample Taxonomy Display Name
         result: Operation
     - returnResult:
         return: $${Operation}
