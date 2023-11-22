@@ -16,8 +16,6 @@ package multiple_buckets
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"testing"
 	"time"
 
@@ -26,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/tft"
 	"github.com/GoogleCloudPlatform/cloud-foundation-toolkit/infra/blueprint-test/pkg/utils"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Retry if these errors are encountered.
@@ -45,42 +42,31 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		region := dwh.GetTFSetupStringOutput("region")
 
-		// Assert all Workflows ran successfully
-		verifyWorkflows := func() (bool, error) {
-			workflows := []string{
-				"copy-data",
-				"project-setup",
+		verifyWorkflow := func(workflow string) (bool, error) {
+			executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=startTime", workflow, projectID)
+			state := executions.Get("0.state").String()
+			if state == "FAILED" {
+				id := executions.Get("0.name")
+				gcloud.Runf(t, "workflows executions describe %s", id)
+				t.FailNow()
 			}
-			for _, workflow := range workflows {
-				executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=startTime", workflow, projectID)
-				state := executions.Get("0.state").String()
-				if state == "FAILED" {
-					id := executions.Get("0.name")
-					gcloud.Runf(t, "workflows executions describe %s", id)
-				}
-				require.NotEqual(t, state, "FAILED")
-				if state == "SUCCEEDED" {
-					continue
-				} else {
-					return true, nil
-				}
+			if state == "SUCCEEDED" {
+				return false, nil
 			}
-			return false, nil
+			return true, nil
 		}
 
-		// Polls while verifyWorkflows returns true. Breaks on false.
-		utils.Poll(t, verifyWorkflows, 150, 5*time.Second)
+		// Assert copy-data workflow ran successfully
+		verifyCopyDataWorkflow := func() (bool, error) {
+			return verifyWorkflow("copy-data")
+		}
+		utils.Poll(t, verifyCopyDataWorkflow, 150, 5*time.Second)
 
-		// Assert BigQuery tables are not empty
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			log.Fatal(err)
+		// Assert project-setup workflow ran successfully
+		verifyProjectSetupWorkflow := func() (bool, error) {
+			return verifyWorkflow("project-setup")
 		}
-		file, err := os.Create(homeDir + "/.bigqueryrc")
-		if err != nil {
-			log.Fatal(err)
-		}
-		file.Close()
+		utils.Poll(t, verifyProjectSetupWorkflow, 150, 5*time.Second)
 
 		tables := []string{
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
