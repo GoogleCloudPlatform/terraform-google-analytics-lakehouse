@@ -46,4 +46,37 @@ jobs:
       - run: docker run --rm -e ENABLE_BPMETADATA -v ${{ github.workspace }}:/workspace ${{ steps.variables.outputs.dev-tools }} /usr/local/bin/test_lint.sh
         env:
           ENABLE_BPMETADATA: 1
+  notebook_format_and_lint:
+    name: 'notebook format and lint'
+    runs-on: 'ubuntu-latest'
+    steps:
+    - name: Check for .ipynb files
+    run: |
+      if [ -z "$(find . -name '*.ipynb' -print -quit)" ]; then
+        echo "No .ipynb files found. Skipping notebook format and lint job."
+        exit 0
+      fi
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Install requirements
+      run: python3 -m pip install -U -r .github/workflows/requirements.txt
+    - name: Format and lint notebooks
+      run: |
+        set +e
 
+        .github/workflows/run_linter.sh -t
+        RTN=$?
+
+        if [ "$RTN" != "0" ]; then
+          echo "There were problems formatting/linting the notebooks."
+          echo "Please run the following commands locally from the root directory to attempt to autofix the issues:"
+          echo ""
+          echo "python3 -m pip install -U -r .github/workflows/linter/requirements.txt"
+          echo ".github/workflows/linter/run_linter.sh"
+          echo ""
+          echo "If it can't be autofixed, please fix them manually."
+          echo "Then, commit the fixes and push again."
+          exit 1
+        fi
