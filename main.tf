@@ -187,3 +187,11 @@ resource "google_storage_bucket" "phs-temp-bucket" {
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
 }
+
+resource "google_storage_bucket" "sparkml-model-bucket" {
+  name                        = "gcp-${var.use_case_short}-model-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
