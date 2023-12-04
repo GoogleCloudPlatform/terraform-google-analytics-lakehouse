@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2021 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -80,9 +80,9 @@ if [ ${#notebooks[@]} -gt 0 ]; then
                 echo "Running nbfmt..."
                 python3 -m tensorflow_docs.tools.nbfmt --test "$notebook"
                 NBFMT_RTN=$?
-                # echo "Running black..."
-                # python3 -m nbqa black "$notebook" --check
-                # BLACK_RTN=$?
+                echo "Running black..."
+                python3 -m nbqa black "$notebook" --check
+                BLACK_RTN=$?
                 echo "Running pyupgrade..."
                 python3 -m nbqa pyupgrade --exit-zero-even-if-changed "$notebook"
                 PYUPGRADE_RTN=$?
