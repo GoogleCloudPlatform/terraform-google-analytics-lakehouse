@@ -72,6 +72,11 @@ main:
                                   args:
                                       asset_id: $${asset_id}
                                   result: result
+        # Extra wait after discovery for table publishing
+        - sub_extra_dataplex_wait:
+            call: sys.sleep
+            args:
+                seconds: 120
         - sub_create_tables:
             call: create_tables
             result: create_tables_output
@@ -211,8 +216,10 @@ create_iceberg:
         result: Batch
     - check_if_done:
         switch:
-          - condition: $${Batch.body.state == "SUCCEEDED" or Batch.body.state == "FAILED"}
+          - condition: $${Batch.body.state == "SUCCEEDED"}
             return: Batch
+          - condition: $${Batch.body.state == "FAILED"}
+            raise: "FAILED BATCH JOB: $${batch_name}"
     - wait:
         call: sys.sleep
         args:
