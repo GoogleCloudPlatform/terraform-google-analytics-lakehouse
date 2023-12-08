@@ -184,8 +184,13 @@ create_iceberg:
                     serviceAccount: $${dataproc_service_account_name}
                   masterConfig:
                     machineTypeUri: n1-standard-2
+                    diskConfig:
+                      bootDiskSizeGb: 250
                   workerConfig:
+                    numInstances: 2
                     machineTypeUri: n1-standard-2
+                    diskConfig:
+                      bootDiskSizeGb: 250
                   softwareConfig:
                     imageVersion: "2.1"
             jobs:
@@ -224,7 +229,7 @@ create_iceberg:
           - condition: $${"response" in Operation.body}
             return: Operation
           - condition: $${"error" in Operation.body}
-            raise: '$${"iceberg job failed: "+Operation.body.error}'
+            raise: '$${"iceberg job failed: "+Operation.body.error.message}'
     - wait:
         call: sys.sleep
         args:

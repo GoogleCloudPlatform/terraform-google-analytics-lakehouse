@@ -60,13 +60,13 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		verifyCopyDataWorkflow := func() (bool, error) {
 			return verifyWorkflow("copy-data")
 		}
-		utils.Poll(t, verifyCopyDataWorkflow, 150, 5*time.Second)
+		utils.Poll(t, verifyCopyDataWorkflow, 50, 15*time.Second)
 
 		// Assert project-setup workflow ran successfully
 		verifyProjectSetupWorkflow := func() (bool, error) {
 			return verifyWorkflow("project-setup")
 		}
-		utils.Poll(t, verifyProjectSetupWorkflow, 150, 5*time.Second)
+		utils.Poll(t, verifyProjectSetupWorkflow, 100, 15*time.Second)
 
 		tables := []string{
 			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
@@ -97,9 +97,9 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		// Assert Dataproc cluster is stopped
 		phsName := currentComputeInstances[0].Get("clusterName")
-		cluster := gcloud.Runf(t, "dataproc clusters describe %s --project=%s", phsName, projectID)
-		state := cluster.Get("status").Get("state").String()
-		assert.Equal(state, "TERMINATED", "PHS is not in a stopped state")
+		cluster := gcloud.Runf(t, "dataproc clusters describe %s --project=%s --region=%s", phsName, projectID, region)
+		state := cluster.Get("status.state").String()
+		assert.Equal(state, "STOPPED", "PHS is not in a stopped state")
 
 	})
 
