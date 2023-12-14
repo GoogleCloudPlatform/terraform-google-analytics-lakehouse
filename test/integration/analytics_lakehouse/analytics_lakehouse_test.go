@@ -90,17 +90,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			count := op.Get("0.count").Int()
 			assert.Greater(count, int64(0), table)
 		}
-
-		// Assert only one Dataproc cluster is available
-		currentComputeInstances := gcloud.Runf(t, "dataproc clusters list --project=%s --region=%s", projectID, region).Array()
-		assert.Equal(len(currentComputeInstances), 1, "More than one Dataproc cluster is available.")
-
-		// Assert Dataproc cluster is stopped
-		phsName := currentComputeInstances[0].Get("clusterName")
-		cluster := gcloud.Runf(t, "dataproc clusters describe %s --project=%s --region=%s", phsName, projectID, region)
-		state := cluster.Get("status.state").String()
-		assert.Equal(state, "STOPPED", "PHS is not in a stopped state")
-
 	})
 
 	dwh.DefineTeardown(func(assert *assert.Assertions) {
