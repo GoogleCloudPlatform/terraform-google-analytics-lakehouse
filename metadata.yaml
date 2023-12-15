@@ -84,6 +84,7 @@ spec:
       - level: Project
         roles:
           - roles/owner
+          - roles/bigquery.dataViewer
     services:
       - cloudkms.googleapis.com
       - cloudresourcemanager.googleapis.com

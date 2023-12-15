@@ -16,7 +16,6 @@ This example illustrates how to use the `analytics_lakehouse` module.
 | bigquery\_editor\_url | The URL to launch the BigQuery editor |
 | lakehouse\_colab\_url | The URL to launch the Colab instance |
 | lookerstudio\_report\_url | The URL to create a new Looker Studio report |
-| region | The Compute region where resources are created |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
