@@ -103,30 +103,3 @@ resource "google_project_iam_member" "bq_connection_iam_biglake" {
   role    = "roles/biglake.admin"
   member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
 }
-
-resource "google_dataproc_cluster" "phs" {
-  name    = "gcp-${var.use_case_short}-phs-${random_id.id.hex}"
-  project = module.project-services.project_id
-  region  = var.region
-  cluster_config {
-    staging_bucket = google_storage_bucket.phs-staging-bucket.name
-    temp_bucket    = google_storage_bucket.phs-temp-bucket.name
-    gce_cluster_config {
-      service_account = google_service_account.dataproc_service_account.email
-      subnetwork      = google_compute_subnetwork.subnet.name
-    }
-    software_config {
-      override_properties = {
-        "dataproc:dataproc.allow.zero.workers" = "true"
-        "spark:spark.history.fs.logDirectory"  = "gs://${google_storage_bucket.spark-log-directory.name}/phs/*/spark-job-history"
-      }
-    }
-    endpoint_config {
-      enable_http_port_access = "true"
-    }
-  }
-
-  depends_on = [
-    google_project_iam_member.dataproc_sa_roles
-  ]
-}

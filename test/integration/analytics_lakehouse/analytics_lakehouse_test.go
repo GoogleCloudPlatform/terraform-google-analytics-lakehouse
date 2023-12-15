@@ -47,8 +47,8 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		verifyNoVMs := func() (bool, error) {
 			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
-			// There should only be 1 compute instance (Dataproc PHS). Wait to destroy if other instances exist.
-			if len(currentComputeInstances) > 1 {
+			// If compute instances is greater than 0, wait and check again until 0 to complete destroy
+			if len(currentComputeInstances) > 0 {
 				return true, nil
 			}
 			return false, nil
