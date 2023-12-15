@@ -1,4 +1,18 @@
 #!/bin/bash
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 # Get the active project id
 PROJECT_ID=$(gcloud config get-value project)
@@ -27,7 +41,7 @@ echo "BUCKET_REGION: $BUCKET_REGION"
 YAML_FILE="/home/jupyter/test.yaml"
 
 # Define the content for the YAML configuration for dataproc session
-echo "$(cat <<EOF
+cat <<EOF > "$YAML_FILE"
 environmentConfig:
   executionConfig:
     subnetworkUri: dataproc-subnet
@@ -40,7 +54,6 @@ labels:
 runtimeConfig:
   version: '2.1'
 EOF
-)" > $YAML_FILE
 
 # Specify the GitHub repository URL and the file path
 REPO_URL="https://raw.githubusercontent.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/main/src/ipynb/spark_ml.ipynb"
