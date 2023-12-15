@@ -161,7 +161,16 @@ resource "google_storage_bucket_object" "pyspark_file" {
   depends_on = [
     google_storage_bucket.provisioning_bucket
   ]
+}
 
+resource "google_storage_bucket_object" "post_startup_script" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "post-startup.sh"
+  source = "${path.module}/src/post-startup.sh"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
 }
 
 resource "google_storage_bucket" "spark-log-directory" {
