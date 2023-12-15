@@ -40,8 +40,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		projectID := dwh.GetTFSetupStringOutput("project_id")
 
-		region := dwh.GetTFSetupStringOutput("region")
-
 		verifyWorkflow := func(workflow string) (bool, error) {
 			executions := gcloud.Runf(t, "workflows executions list %s --project %s --sort-by=startTime", workflow, projectID)
 			state := executions.Get("0.state").String()
