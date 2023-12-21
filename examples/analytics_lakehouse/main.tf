@@ -16,7 +16,7 @@
 
 module "analytics_lakehouse" {
   source  = "GoogleCloudPlatform/analytics-lakehouse/google"
-  version = "~> REPLACE-AFTER-RELEASE"
+  version = "~> 0.3"
 
   project_id    = var.project_id
   region        = "us-central1"
