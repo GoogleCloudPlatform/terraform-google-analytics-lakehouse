@@ -230,6 +230,7 @@ resource "google_project_iam_member" "workbench_sa_roles" {
 # Provisions a new Workbench instance.
 resource "google_workbench_instance" "workbench_instance" {
   name     = "gcp-${var.use_case_short}-workbench-instance-${random_id.id.hex}"
+  project  = module.project-services.project_id
   location = "${var.region}-a"
 
   gce_setup {
