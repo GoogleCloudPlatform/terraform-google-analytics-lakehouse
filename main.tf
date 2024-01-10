@@ -262,4 +262,8 @@ resource "google_workbench_instance" "workbench_instance" {
   depends_on = [
     google_project_iam_member.workbench_sa_roles
   ]
+
+  timeouts {
+    create = "20m"
+  }
 }
