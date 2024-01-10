@@ -264,6 +264,6 @@ resource "google_workbench_instance" "workbench_instance" {
   ]
 
   timeouts {
-    create = "20m"
+    create = "50m"
   }
 }
