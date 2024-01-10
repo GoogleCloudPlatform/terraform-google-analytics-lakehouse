@@ -233,6 +233,12 @@ resource "google_workbench_instance" "workbench_instance" {
   project  = module.project-services.project_id
   location = "${var.region}-a"
 
+  network_interfaces {
+    network  = google_compute_network.default_network.id
+    subnet   = google_compute_subnetwork.subnet.id
+    nic_type = "GVNIC"
+  }
+
   gce_setup {
     machine_type = "e2-standard-4"
 
