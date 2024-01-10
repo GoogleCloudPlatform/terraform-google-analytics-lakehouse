@@ -240,7 +240,7 @@ resource "google_workbench_instance" "workbench_instance" {
       project = "cloud-notebooks-managed"
       name    = "workbench-instances-v20231108-py310"
     }
-    
+
     network_interfaces {
       network  = google_compute_network.default_network.id
       subnet   = google_compute_subnetwork.subnet.id
