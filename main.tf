@@ -233,18 +233,18 @@ resource "google_workbench_instance" "workbench_instance" {
   project  = module.project-services.project_id
   location = "${var.region}-a"
 
-  network_interfaces {
-    network  = google_compute_network.default_network.id
-    subnet   = google_compute_subnetwork.subnet.id
-    nic_type = "GVNIC"
-  }
-
   gce_setup {
     machine_type = "e2-standard-4"
 
     vm_image {
       project = "cloud-notebooks-managed"
       name    = "workbench-instances-v20231108-py310"
+    }
+    
+    network_interfaces {
+      network  = google_compute_network.default_network.id
+      subnet   = google_compute_subnetwork.subnet.id
+      nic_type = "GVNIC"
     }
 
     disable_public_ip = false
@@ -268,8 +268,4 @@ resource "google_workbench_instance" "workbench_instance" {
   depends_on = [
     google_project_iam_member.workbench_sa_roles
   ]
-
-  timeouts {
-    create = "50m"
-  }
 }
