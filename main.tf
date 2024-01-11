@@ -266,6 +266,7 @@ resource "google_workbench_instance" "workbench_instance" {
   }
 
   depends_on = [
-    google_project_iam_member.workbench_sa_roles
+    google_project_iam_member.workbench_sa_roles,
+    google_compute_subnetwork.subnet
   ]
 }
