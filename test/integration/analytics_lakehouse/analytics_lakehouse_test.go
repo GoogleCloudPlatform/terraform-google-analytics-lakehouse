@@ -99,7 +99,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
 			// Search for an instance with name starting with "initial-setup-"
 			for _, instance := range currentComputeInstances {
-				if strings.HasPrefix(instance, "initial-setup-") {
+				if strings.HasPrefix(instance.String(), "initial-setup-") {
 					return true, nil  // Instance exists
 				}
 			}
