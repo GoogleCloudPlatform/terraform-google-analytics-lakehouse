@@ -91,19 +91,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 	})
 
 	dwh.DefineTeardown(func(assert *assert.Assertions) {
-
-		projectID := dwh.GetTFSetupStringOutput("project_id")
-
-		verifyNoVMs := func() (bool, error) {
-			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
-			// If compute instances is greater than 0, wait and check again until 0 to complete destroy
-			if len(currentComputeInstances) > 0 {
-				return true, nil
-			}
-			return false, nil
-		}
-		utils.Poll(t, verifyNoVMs, 120, 30*time.Second)
-
 		dwh.DefaultTeardown(assert)
 
 	})
