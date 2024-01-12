@@ -47,7 +47,7 @@ EOF
 echo "$YAML_CONTENT" > /home/jupyter/"$YAML_FILE"
 
 # Specify the GitHub repository URL and the file path
-REPO_URL="https://raw.githubusercontent.com/hyunuk/terraform-google-analytics-lakehouse/serverless-spark-neos/src/ipynb/spark_ml.ipynb"
+REPO_URL="https://raw.githubusercontent.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/main/src/ipynb/spark_ml.ipynb"
 
 # Use wget to download the file and check if the download was successful
 if wget "$REPO_URL" -O /home/jupyter/"$NOTEBOOK"; then
@@ -57,7 +57,7 @@ else
 fi
 
 # Import Dataproc session template
-gcloud beta dataproc session-templates import hyunuk-test-temp \
+gcloud beta dataproc session-templates import sparkml-template \
   --source=/home/jupyter/"$YAML_FILE" --project="$PROJECT" --location="$LOCATION" --quiet
 
 # Delete temporal YAML config file
