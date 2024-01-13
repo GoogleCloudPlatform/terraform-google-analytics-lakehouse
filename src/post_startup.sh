@@ -20,8 +20,6 @@ ZONE=$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/compute
 LOCATION="$(echo "$ZONE" | awk -F/ '{split($4, a, "-"); print a[1]"-"a[2]}')"
 echo "Current instance location: $LOCATION"
 
-TODAY=$(date +"%Y%m%d%H%M")
-
 # Specify the file name
 YAML_FILE="temp.yaml"
 NOTEBOOK="spark_ml.ipynb"
@@ -34,7 +32,7 @@ environmentConfig:
   peripheralsConfig: {}
 jupyterSession:
   kernel: PYTHON
-  displayName: SparkML Notebook - "$TODAY"
+  displayName: SparkML Notebook
 description: Serverless Template for the SparkML Notebook
 labels:
   client: dataproc-jupyter-plugin
