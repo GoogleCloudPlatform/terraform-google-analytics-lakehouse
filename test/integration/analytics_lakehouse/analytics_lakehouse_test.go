@@ -93,20 +93,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 	dwh.DefineTeardown(func(assert *assert.Assertions) {
 
-		projectID := dwh.GetTFSetupStringOutput("project_id")
-
-		verifyInitialSetupInstanceExists := func() (bool, error) {
-			currentComputeInstances := gcloud.Runf(t, "compute instances list --project %s", projectID).Array()
-			// Search for an instance with name starting with "initial-setup-"
-			for _, instance := range currentComputeInstances {
-				if strings.HasPrefix(instance.String(), "initial-setup-") {
-					return true, nil  // Instance exists
-				}
-			}
-			return false, nil
-		}
-		utils.Poll(t, verifyInitialSetupInstanceExists, 120, 30*time.Second)
-
 		dwh.DefaultTeardown(assert)
 
 	})
