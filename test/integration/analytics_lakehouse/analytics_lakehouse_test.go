@@ -92,7 +92,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 	})
 
 	dwh.DefineTeardown(func(assert *assert.Assertions) {
-
 		dwh.DefaultTeardown(assert)
 
 	})
