@@ -46,6 +46,7 @@ module "project-services" {
     "storage-api.googleapis.com",
     "storage.googleapis.com",
     "workflows.googleapis.com",
+    "notebooks.googleapis.com",
   ]
 }
 
@@ -160,7 +161,17 @@ resource "google_storage_bucket_object" "pyspark_file" {
   depends_on = [
     google_storage_bucket.provisioning_bucket
   ]
+}
 
+# Uploads the post-startup script for the workbench instance.
+resource "google_storage_bucket_object" "post_startup_script" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "post_startup.sh"
+  source = "${path.module}/src/post_startup.sh"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
 }
 
 resource "google_storage_bucket" "spark-log-directory" {
@@ -181,6 +192,14 @@ resource "google_storage_bucket" "phs-staging-bucket" {
 
 resource "google_storage_bucket" "phs-temp-bucket" {
   name                        = "gcp-${var.use_case_short}-phs-temp-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+resource "google_storage_bucket" "sparkml-model-bucket" {
+  name                        = "gcp-${var.use_case_short}-model-${random_id.id.hex}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
