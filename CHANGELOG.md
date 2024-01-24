@@ -8,6 +8,39 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This changelog is generated automatically based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [0.4.0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.3.0...v0.4.0) (2024-01-23)
+
+
+### Features
+
+* add bucket for PHS created in Spark Serverless Interactive Tutorial ([e087195](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/e08719526836af1e4197ef55005b3291920b7909))
+* adding sparkml notebook ([#99](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/99)) ([4b2169a](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/4b2169a11be058d495884a4ee455f49ef109b754))
+* adding unit tests, removing unused arg from README ([#93](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/93)) ([bb9257b](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/bb9257b975d7b9635cb249f1a3867c5c0a14369b))
+* create a bucket for dataplex ([#76](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/76)) ([ccadcc0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/ccadcc0667d1b3e81f7f093c2a0acc83e567120a))
+* **deps:** Update Terraform Google Provider to v5 (major) ([#79](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/79)) ([40ab09d](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/40ab09d2006f6052740afffc5df7cdaf06352c16))
+
+
+### Bug Fixes
+
+* add service account to phs cluster ([#82](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/82)) ([04a9fae](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/04a9fae8e4f1bb9cbe1a420bb9c89c79d1849ddb))
+* add unique hash to the service account name ([#71](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/71)) ([c16912d](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/c16912d7c3d182671dceac4067ba196aa814948a))
+* change data file paths to point to root directory ([#60](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/60)) ([4621da0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/4621da033d56f88bb0c03948b1c2e0c5108c297d))
+* **deps:** update module github.com/googlecloudplatform/cloud-foundation-toolkit/infra/blueprint-test to v0.8.0 ([#63](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/63)) ([54075a5](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/54075a59ef58fe8a156cac8f36f295ee149125a2))
+* **deps:** update terraform google-beta to v4.74.0 ([#57](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/57)) ([f3848c3](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/f3848c3a71518930b94c582406d3100a0e29bcde))
+* **deps:** update terraform google-beta to v4.75.0 ([#58](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/58)) ([10a452e](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/10a452e4f0e612f4ce63deb7559fc4c45bed3be0))
+* **deps:** Update Terraform google-beta to v4.81.0 ([#66](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/66)) ([825fd7d](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/825fd7d163e361711c7a23c14b68b65125def50a))
+* **deps:** Update Terraform google-beta to v4.82.0 ([#70](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/70)) ([cc8373f](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/cc8373fdda84690982c6c928480d67dfacb3d979))
+* **deps:** Update Terraform google-beta to v4.83.0 ([#73](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/73)) ([a2cabdb](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/a2cabdb10ec92242f8d17c72f8734a47937fa7e6))
+* **deps:** Update Terraform google-beta to v4.84.0 ([#74](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/74)) ([c70d9af](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/c70d9af5958fd6a6a792f1ebeee542b2f21ddb1b))
+* **deps:** Update Terraform terraform-google-modules/project-factory/google to v14.3.0 ([#65](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/65)) ([a59521a](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/a59521a0f7017cee43f166677ab50546245504e2))
+* **deps:** Update Terraform terraform-google-modules/project-factory/google to v14.4.0 ([#87](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/87)) ([8ca39d1](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/8ca39d18d09f6c0e5e08faa9ee5392b857d7fd96))
+* remove compute instance check from integration test teardown ([#110](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/110)) ([e07095d](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/e07095df965d032a8d64f83fa5511f442cc9c433))
+* rolling back PHS creation in deployment ([#105](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/105)) ([f5acf8e](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/f5acf8e9289422c549ea0243f0db5f8d3972399b))
+* set staging and temp bucket for phs cluster ([#88](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/88)) ([c7ff112](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/c7ff1121a5a38645531c3eb44201c08bb6407713))
+* Update Terraform versioning, improve dependency tree, remove unused table, add Managed Tables to Dataplex Assets ([#72](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/72)) ([9283feb](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/9283febc691cb313b97adc242dc38605dc3976d4))
+* wait for Dataplex IAM to create lake ([#86](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/86)) ([9f42b95](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/9f42b95015f6bb65ee67c9b5ada2e06a8b9a3274))
+* wait to create dataproc cluster until SA roles are assigned ([#91](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/91)) ([66bb99b](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/66bb99b2be3801abe86220f0a331c18b29bbe577))
+
 ## [0.3.0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.2.1...v0.3.0) (2023-07-18)
 
 
