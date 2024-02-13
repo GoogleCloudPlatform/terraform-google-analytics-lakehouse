@@ -23,16 +23,12 @@ spark = SparkSession \
     .enableHiveSupport() \
     .getOrCreate()
 
-catalog = os.getenv("lakehouse_catalog", "lakehouse_catalog")
-database = os.getenv("lakehouse_db", "lakehouse_db")
-# bucket = os.getenv("temp_bucket", "gcp-lakehouse-provisioner-8a68acad")
-bq_dataset = os.getenv("bq_dataset", "gcp_lakehouse_ds")
-bq_connection = os.getenv("bq_gcs_connection",
+conf = dict(spark.sparkContext.getConf().getAll())
+catalog = conf.get("spark.dataproc.driverEnv.lakehouse_catalog", "lakehouse_db")
+database = conf.get("spark.dataproc.driverEnv.lakehouse_database", "lakehouse_db")
+bq_dataset = conf.get("spark.dataproc.driverEnv.bq_dataset", "gcp_lakehouse_ds")
+bq_connection = conf.get("spark.dataproc.driverEnv.bq_gcs_connection",
                           "us-central1.gcp_gcs_connection")
-
-# Use the Cloud Storage bucket for temporary BigQuery export data
-# used by the connector.
-# spark.conf.set("temporaryGcsBucket", bucket)
 
 # Delete the BigLake Catalog if it currently exists to ensure proper setup.
 spark.sql(f"DROP NAMESPACE IF EXISTS {catalog} CASCADE;")
