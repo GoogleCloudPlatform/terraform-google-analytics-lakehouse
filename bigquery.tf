@@ -80,7 +80,7 @@ resource "google_bigquery_routine" "create_iceberg_tables" {
   routine_type    = "PROCEDURE"
   language        = "PYTHON"
   definition_body = ""
-  spark_optiions {
+  spark_options {
     connection      = google_bigquery_connection.gcp_lakehouse_connection_spark.name
     runtime_version = "2.1"
     main_file_uri   = google_storage_bucket_object.pyspark_file.self_link
