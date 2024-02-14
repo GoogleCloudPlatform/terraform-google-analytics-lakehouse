@@ -110,7 +110,7 @@ create_tables:
     - loopTables:
         for:
           value: key
-          in: $${keys(tables_map)}
+          in: $${keys(tables)}
           steps:
             - runQuery:
                 call: googleapis.bigquery.v2.jobs.query
