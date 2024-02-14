@@ -26,7 +26,6 @@
 main:
   params: []
   steps:
-    - init:
     # If this workflow has been run before, do not run again
     - sub_check_if_run:
         steps:
