@@ -58,7 +58,7 @@ module "project-services" {
         "roles/iam.serviceAccountUser",
         "roles/storage.objectAdmin",
       ]
-    }
+    },
     {
       api = "bigqueryconnection.googleapis.com"
       roles = [
