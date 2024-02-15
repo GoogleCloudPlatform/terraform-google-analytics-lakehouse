@@ -23,6 +23,15 @@ resource "google_project_service_identity" "workflows" {
   depends_on = [time_sleep.wait_after_apis_activate]
 }
 
+resource "google_project_service_identity" "dataproc" {
+  provider = google-beta
+  project  = module.project-services.project_id
+  service  = "dataproc.googleapis.com"
+
+  depends_on = [time_sleep.wait_after_apis_activate]
+}
+
+
 # Workflow to copy data from prod GCS bucket to private buckets
 # NOTE: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
 # You can use google_storage_bucket.<bucket>.url to include the prefix.
@@ -54,9 +63,9 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_project_service_identity.workflows.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    data_analyst_user         = google_service_account.data_analyst_user.email,
-    marketing_user            = google_service_account.marketing_user.email,
-    dataproc_service_account  = google_service_account.dataproc_service_account.email,
+    data_analyst_user         = "None"
+    marketing_user            = "None"
+    dataproc_service_account  = google_project_service_identity.dataproc.email,
     provisioner_bucket        = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket          = google_storage_bucket.warehouse_bucket.name,
     temp_bucket               = google_storage_bucket.warehouse_bucket.name,
@@ -102,10 +111,6 @@ data "http" "call_workflows_project_setup" {
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
     google_dataplex_asset.gcp_primary_tables,
     google_dataplex_asset.gcp_primary_textocr,
-    google_project_iam_member.connectionPermissionGrant,
-    google_project_iam_member.connectionPermissionGrant,
-    google_project_iam_member.dataproc_sa_roles,
-    google_service_account.dataproc_service_account,
     google_storage_bucket.provisioning_bucket,
     google_storage_bucket.warehouse_bucket,
     time_sleep.wait_after_copy_data

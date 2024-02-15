@@ -49,7 +49,7 @@ module "project-services" {
     "notebooks.googleapis.com",
   ]
 
-  activate_api_identites = [
+  activate_api_identities = [
     {
       api = "aiplatform.googleapis.com"
       roles = [
