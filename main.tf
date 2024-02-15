@@ -48,6 +48,59 @@ module "project-services" {
     "workflows.googleapis.com",
     "notebooks.googleapis.com",
   ]
+
+  activate_api_identites = [
+    {
+      api = "aiplatform.googleapis.com"
+      roles = [
+        "roles/compute.osAdminLogin",
+        "roles/dataproc.admin",
+        "roles/iam.serviceAccountUser",
+        "roles/storage.objectAdmin",
+      ]
+    }
+    {
+      api = "bigqueryconnection.googleapis.com"
+      roles = [
+        "roles/biglake.admin",
+        "roles/storage.objectViewer",
+      ]
+    },
+    {
+      api = "dataplex.googleapis.com"
+      roles = [
+        "roles/dataplex.serviceAgent"
+      ]
+    },
+    {
+      api = "dataproc.googleapis.com"
+      roles = [
+        "roles/biglake.admin",
+        "roles/bigquery.connectionAdmin",
+        "roles/bigquery.dataOwner",
+        "roles/bigquery.user",
+        "roles/dataproc.worker",
+        "roles/storage.objectAdmin",
+      ]
+    },
+    {
+      api = "workflows.googleapis.com"
+      roles = [
+        "roles/bigquery.admin",
+        "roles/bigquery.connectionAdmin",
+        "roles/bigquery.dataOwner",
+        "roles/bigquery.jobUser",
+        "roles/bigquery.resourceAdmin",
+        "roles/dataproc.admin",
+        "roles/dataplex.admin",
+        "roles/iam.serviceAccountTokenCreator",
+        "roles/iam.serviceAccountUser",
+        "roles/logging.logWriter",
+        "roles/workflows.admin",
+        "roles/storage.admin",
+      ]
+    }
+  ]
 }
 
 resource "time_sleep" "wait_after_apis_activate" {
@@ -55,153 +108,7 @@ resource "time_sleep" "wait_after_apis_activate" {
   create_duration = "30s"
 }
 
-# Set up service accounts fine grain sec.
-resource "google_service_account" "marketing_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-marketing-sa-${random_id.id.hex}"
-  display_name = "Service Account for marketing user"
-}
-
-# Set up service accounts fine grain sec.
-resource "google_service_account" "lake_admin_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-lake-admin-sa-${random_id.id.hex}"
-  display_name = "Service Account for lake admin user"
-}
-
-# Set up service accounts fine grain sec.
-resource "google_service_account" "data_analyst_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-analyst-sa-${random_id.id.hex}"
-  display_name = "Service Account for  user"
-}
-
-#get gcs svc account
-data "google_storage_project_service_account" "gcs_account" {
-  project = module.project-services.project_id
-}
-
 #random id
 resource "random_id" "id" {
   byte_length = 4
-}
-
-# Set up Storage Buckets
-
-# # Set up the raw storage bucket
-resource "google_storage_bucket" "raw_bucket" {
-  name                        = "gcp-${var.use_case_short}-raw-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the warehouse storage bucket
-resource "google_storage_bucket" "warehouse_bucket" {
-  name                        = "gcp-${var.use_case_short}-warehouse-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the provisioning bucketstorage bucket
-resource "google_storage_bucket" "provisioning_bucket" {
-  name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-}
-
-resource "google_storage_bucket" "ga4_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-ga4-images-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "textocr_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-textocr-images-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "tables_bucket" {
-  name                        = "gcp-${var.use_case_short}-tables-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-# Bucket used to store BI data in Dataplex
-resource "google_storage_bucket" "dataplex_bucket" {
-  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket_object" "pyspark_file" {
-  bucket = google_storage_bucket.provisioning_bucket.name
-  name   = "bigquery.py"
-  source = "${path.module}/src/bigquery.py"
-
-  depends_on = [
-    google_storage_bucket.provisioning_bucket
-  ]
-}
-
-# Uploads the post-startup script for the workbench instance.
-resource "google_storage_bucket_object" "post_startup_script" {
-  bucket = google_storage_bucket.provisioning_bucket.name
-  name   = "post_startup.sh"
-  source = "${path.module}/src/post_startup.sh"
-
-  depends_on = [
-    google_storage_bucket.provisioning_bucket
-  ]
-}
-
-resource "google_storage_bucket" "spark-log-directory" {
-  name                        = "gcp-${var.use_case_short}-spark-log-directory-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "phs-staging-bucket" {
-  name                        = "gcp-${var.use_case_short}-phs-staging-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "phs-temp-bucket" {
-  name                        = "gcp-${var.use_case_short}-phs-temp-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "sparkml-model-bucket" {
-  name                        = "gcp-${var.use_case_short}-model-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
 }
