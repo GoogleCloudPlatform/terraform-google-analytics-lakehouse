@@ -109,6 +109,7 @@ data "google_client_config" "current" {
 }
 
 # # execute the copy data workflow
+# tflint-ignore: terraform_unused_declarations
 data "http" "call_workflows_copy_data" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
   method = "POST"
@@ -155,15 +156,4 @@ resource "time_sleep" "wait_after_all_workflows" {
   depends_on = [
     data.http.call_workflows_project_setup,
   ]
-}
-
-# Stop the workbench instnace after creation to save on cost
-
-# tflint-ignore: terraform_unused_declarations
-data "http" "call_stop_workbench_instance" {
-  url    = "https://notebooks.googleapis.com/v2/projects/${module.project-services.project_id}/locations/${var.region}-a/instances/${google_workbench_instance.workbench_instance.name}:stop"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
 }
