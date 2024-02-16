@@ -74,23 +74,6 @@ module "project-services" {
         "roles/storage.objectAdmin",
       ]
     },
-    {
-      api = "workflows.googleapis.com"
-      roles = [
-        "roles/bigquery.admin",
-        "roles/bigquery.connectionAdmin",
-        "roles/bigquery.dataOwner",
-        "roles/bigquery.jobUser",
-        "roles/bigquery.resourceAdmin",
-        "roles/dataproc.admin",
-        "roles/dataplex.admin",
-        "roles/iam.serviceAccountTokenCreator",
-        "roles/iam.serviceAccountUser",
-        "roles/logging.logWriter",
-        "roles/workflows.admin",
-        "roles/storage.admin",
-      ]
-    }
   ]
 }
 
