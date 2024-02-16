@@ -45,6 +45,7 @@ module "project-services" {
     "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
     "storage.googleapis.com",
+    "storagetransfer.googleapis.com",
     "workflows.googleapis.com",
     "notebooks.googleapis.com",
   ]

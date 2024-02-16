@@ -135,6 +135,7 @@ resource "google_storage_bucket_object" "post_startup_script" {
   ]
 }
 
+
 locals {
   buckets = [
     {
@@ -184,4 +185,11 @@ resource "google_storage_transfer_job" "jobs" {
       day   = 1
     }
   }
+}
+
+resource "time_sleep" "wait_after_copy_data" {
+  create_duration = "60s"
+  depends_on = [
+    google_storage_transfer_job.jobs
+  ]
 }

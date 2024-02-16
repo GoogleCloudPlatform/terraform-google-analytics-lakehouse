@@ -133,13 +133,13 @@ data "google_client_config" "current" {
 #   ]
 # }
 
-resource "time_sleep" "wait_after_copy_data" {
-  create_duration = "30s"
-  depends_on = [
-    data.google_storage_project_service_account.gcs_account,
-    #data.http.call_workflows_copy_data
-  ]
-}
+# resource "time_sleep" "wait_after_copy_data" {
+#   create_duration = "30s"
+#   depends_on = [
+#     data.google_storage_project_service_account.gcs_account,
+#     #data.http.call_workflows_copy_data
+#   ]
+# }
 
 # execute the other project setup workflow
 data "http" "call_workflows_project_setup" {
