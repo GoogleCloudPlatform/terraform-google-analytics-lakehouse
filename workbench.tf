@@ -57,7 +57,7 @@ resource "google_workbench_instance" "workbench_instance" {
     disable_public_ip = false
 
     service_accounts {
-      email = google_project_service_identity.workbench.email
+      email = google_service_account.workbench_service_account.email
     }
 
     metadata = {
