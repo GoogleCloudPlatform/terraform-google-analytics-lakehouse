@@ -71,6 +71,10 @@ resource "google_workflows_workflow" "copy_data" {
     tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
     lake_name             = google_dataplex_lake.gcp_primary.name
   })
+
+  depends_on = [
+    google_project_iam_member.workflows_sa_roles
+  ]
 }
 
 # Workflow to set up project resources
@@ -93,6 +97,10 @@ resource "google_workflows_workflow" "project_setup" {
     dataplex_asset_textocr_id = google_dataplex_asset.gcp_primary_textocr.id,
     dataplex_asset_ga4_id     = google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce.id
   })
+
+  depends_on = [
+    google_project_iam_member.workflows_sa_roles
+  ]
 }
 
 # execute workflows after all resources are created
