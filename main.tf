@@ -52,7 +52,7 @@ module "project-services" {
 
 resource "time_sleep" "wait_after_apis_activate" {
   depends_on      = [module.project-services]
-  create_duration = "30s"
+  create_duration = "120s"
 }
 
 # Set up service accounts fine grain sec.
