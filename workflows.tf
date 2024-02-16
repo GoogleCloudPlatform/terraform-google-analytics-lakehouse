@@ -129,7 +129,8 @@ resource "time_sleep" "wait_after_all_workflows" {
   ]
 }
 
-# Stop the workbench instnace after creation since it costs too much.
+# Stop the workbench instnace after creation to save on cost
+
 # tflint-ignore: terraform_unused_declarations
 data "http" "call_stop_workbench_instance" {
   url    = "https://notebooks.googleapis.com/v2/projects/${module.project-services.project_id}/locations/${var.region}-a/instances/${google_workbench_instance.workbench_instance.name}:stop"

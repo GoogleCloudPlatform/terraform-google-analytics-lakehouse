@@ -51,15 +51,6 @@ module "project-services" {
 
   activate_api_identities = [
     {
-      api = "aiplatform.googleapis.com"
-      roles = [
-        "roles/compute.osAdminLogin",
-        "roles/dataproc.admin",
-        "roles/iam.serviceAccountUser",
-        "roles/storage.objectAdmin",
-      ]
-    },
-    {
       api = "bigqueryconnection.googleapis.com"
       roles = [
         "roles/biglake.admin",

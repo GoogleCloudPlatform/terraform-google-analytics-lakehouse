@@ -14,12 +14,24 @@
  * limitations under the License.
 */
 
-resource "google_project_service_identity" "workbench" {
-  provider = google-beta
-  project  = module.project-services.project_id
-  service  = "aiplatform.googleapis.com"
+resource "google_service_account" "workbench_service_account" {
+  project      = module.project-services.project_id
+  account_id   = "workbench-sa-${random_id.id.hex}"
+  display_name = "Service Account for Workbench Instance"
+}
 
-  depends_on = [time_sleep.wait_after_apis_activate]
+# Grants necessary roles to the Workbench service account.
+resource "google_project_iam_member" "workbench_sa_roles" {
+  for_each = toset([
+    "roles/compute.osAdminLogin",
+    "roles/dataproc.admin",
+    "roles/iam.serviceAccountUser",
+    "roles/storage.objectAdmin",
+  ])
+
+  project = module.project-services.project_id
+  role    = each.key
+  member  = "serviceAccount:${google_service_account.workbench_service_account.email}"
 }
 
 # Provisions a new Workbench instance.
