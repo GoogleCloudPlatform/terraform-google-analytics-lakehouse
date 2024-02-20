@@ -131,7 +131,7 @@ resource "time_sleep" "wait_after_apis_activate" {
     google_project_iam_member.workbench_sa_roles,
     google_project_iam_member.workflows_sa_roles
   ]
-  create_duration = "180s"
+  create_duration = "660s"
 }
 
 #random id
