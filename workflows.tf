@@ -78,6 +78,7 @@ data "http" "call_workflows_copy_data" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
+    time_sleep.wait_after_copy_data
     google_storage_bucket.textocr_images_bucket,
     google_storage_bucket.ga4_images_bucket,
     google_storage_bucket.tables_bucket
