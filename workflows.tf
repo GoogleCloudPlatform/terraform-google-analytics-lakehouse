@@ -96,7 +96,7 @@ data "http" "call_workflows_copy_data" {
 resource "time_sleep" "wait_after_copy_data" {
   create_duration = "30s"
   depends_on = [
-    http.call_workflows_copy_data
+    data.http.call_workflows_copy_data
   ]
 }
 
