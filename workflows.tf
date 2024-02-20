@@ -81,7 +81,7 @@ data "http" "call_workflows_copy_data" {
     google_storage_bucket.textocr_images_bucket,
     google_storage_bucket.ga4_images_bucket,
     google_storage_bucket.tables_bucket,
-    time_sleep.wait_after_copy_data
+    time_sleep.wait_after_apis_activate
   ]
 }
 
