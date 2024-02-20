@@ -80,6 +80,10 @@ resource "google_service_account" "data_analyst_user" {
 #get gcs svc account
 data "google_storage_transfer_project_service_account" "gcs_account" {
   project = module.project-services.project_id
+
+  depends_on = [
+    time_sleep.wait_after_apis_activate
+  ]
 }
 
 resource "google_project_iam_member" "gcs_sa_roles" {
