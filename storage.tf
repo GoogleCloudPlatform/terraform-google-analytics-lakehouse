@@ -185,6 +185,8 @@ resource "google_storage_transfer_job" "jobs" {
       day   = 1
     }
   }
+
+  depends_on = [google_project_iam_member.gcs_sa_roles]
 }
 
 resource "time_sleep" "wait_after_copy_data" {

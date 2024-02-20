@@ -78,8 +78,19 @@ resource "google_service_account" "data_analyst_user" {
 }
 
 #get gcs svc account
-data "google_storage_project_service_account" "gcs_account" {
+data "google_storage_transfer_project_service_account" "gcs_account" {
   project = module.project-services.project_id
+}
+
+resource "google_project_iam_member" "gcs_sa_roles" {
+  for_each = toset([
+    "roles/storage.objectViewer",
+    "roles/storage.legacyBucketViewer",
+  ])
+
+  project = module.project-services.project_id
+  role    = each.key
+  member  = "serviceAccount:${data.google_storage_transfer_project_service_account.gcs_account.email}"
 }
 
 #random id
