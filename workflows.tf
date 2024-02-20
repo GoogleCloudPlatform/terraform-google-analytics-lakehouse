@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-
 resource "google_project_service_identity" "dataproc" {
   provider = google-beta
   project  = module.project-services.project_id
   service  = "dataproc.googleapis.com"
-
-  depends_on = [time_sleep.wait_after_apis_activate]
-}
-
-resource "google_project_service_identity" "workflows" {
-  provider = google-beta
-  project  = module.project-services.project_id
-  service  = "workflows.googleapis.com"
 
   depends_on = [time_sleep.wait_after_apis_activate]
 }
@@ -39,7 +30,7 @@ resource "google_workflows_workflow" "copy_data" {
   project         = module.project-services.project_id
   region          = var.region
   description     = "Copies data and performs project setup"
-  service_account = google_project_service_identity.workflows.email
+  service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
     public_data_bucket    = var.public_data_bucket,
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
@@ -60,7 +51,7 @@ resource "google_workflows_workflow" "project_setup" {
   project         = module.project-services.project_id
   region          = var.region
   description     = "Copies data and performs project setup"
-  service_account = google_project_service_identity.workflows.email
+  service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
     data_analyst_user         = "None"
     marketing_user            = "None"

@@ -14,14 +14,6 @@
  * limitations under the License.
 */
 
-resource "google_project_service_identity" "workbench" {
-  provider = google-beta
-  project  = module.project-services.project_id
-  service  = "notebooks.googleapis.com"
-
-  depends_on = [time_sleep.wait_after_apis_activate]
-}
-
 # Provisions a new Workbench instance.
 resource "google_workbench_instance" "workbench_instance" {
   name     = "gcp-${var.use_case_short}-workbench-instance-${random_id.id.hex}"
@@ -45,7 +37,7 @@ resource "google_workbench_instance" "workbench_instance" {
     disable_public_ip = false
 
     service_accounts {
-      email = google_project_service_identity.workbench.email
+      email = google_service_account.workbench_service_account.email
     }
 
     metadata = {
