@@ -71,6 +71,7 @@ module "project-services" {
         "roles/bigquery.dataOwner",
         "roles/bigquery.user",
         "roles/dataproc.worker",
+        "roles/iam.serviceAccountUser",
         "roles/storage.objectAdmin",
       ]
     }
@@ -131,7 +132,7 @@ resource "time_sleep" "wait_after_apis_activate" {
     google_project_iam_member.workbench_sa_roles,
     google_project_iam_member.workflows_sa_roles
   ]
-  create_duration = "660s"
+  create_duration = "480s"
 }
 
 #random id
