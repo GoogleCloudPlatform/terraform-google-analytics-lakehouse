@@ -91,6 +91,8 @@ resource "google_project_iam_member" "gcs_sa_roles" {
   project = module.project-services.project_id
   role    = each.key
   member  = "serviceAccount:${data.google_storage_transfer_project_service_account.gcs_account.email}"
+
+  depends_on = [time_sleep.wait_after_apis_activate]
 }
 
 #random id
