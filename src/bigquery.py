@@ -17,7 +17,7 @@
 from pyspark.sql import SparkSession
 from bigquery.spark.procedure import SparkProcParamContext
 
-spark = SparkProcParamContext \
+spark = SparkSession \
     .builder \
     .appName("spark-bigquery-demo") \
     .enableHiveSupport() \
