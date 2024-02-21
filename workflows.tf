@@ -89,8 +89,9 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    data_analyst_user         = google_service_account.data_analyst_user.email,
-    marketing_user            = google_service_account.marketing_user.email,
+    bq_connection             = google_bigquery_connection.gcp_lakehouse_connection_cloud_resource.id
+    bq_dataset                = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
+    lakehouse_catalog         = local.lakehouse_catalog
     dataplex_asset_tables_id  = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-staging/assets/gcp-primary-tables"
     dataplex_asset_textocr_id = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-textocr"
     dataplex_asset_ga4_id     = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-ga4-obfuscated-sample-ecommerce"
@@ -129,7 +130,7 @@ data "http" "call_workflows_copy_data" {
 resource "time_sleep" "wait_after_copy_data" {
   create_duration = "30s"
   depends_on = [
-    data.google_storage_project_service_account.gcs_account,
+    # data.google_storage_project_service_account.gcs_account,
     data.http.call_workflows_copy_data
   ]
 }

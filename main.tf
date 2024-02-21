@@ -55,31 +55,10 @@ resource "time_sleep" "wait_after_apis_activate" {
   create_duration = "30s"
 }
 
-# Set up service accounts fine grain sec.
-resource "google_service_account" "marketing_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-marketing-sa-${random_id.id.hex}"
-  display_name = "Service Account for marketing user"
-}
-
-# Set up service accounts fine grain sec.
-resource "google_service_account" "lake_admin_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-lake-admin-sa-${random_id.id.hex}"
-  display_name = "Service Account for lake admin user"
-}
-
-# Set up service accounts fine grain sec.
-resource "google_service_account" "data_analyst_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-analyst-sa-${random_id.id.hex}"
-  display_name = "Service Account for  user"
-}
-
-#get gcs svc account
-data "google_storage_project_service_account" "gcs_account" {
-  project = module.project-services.project_id
-}
+# #get gcs svc account
+# data "google_storage_project_service_account" "gcs_account" {
+#   project = module.project-services.project_id
+# }
 
 #random id
 resource "random_id" "id" {

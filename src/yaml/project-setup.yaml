@@ -103,10 +103,14 @@ create_tables:
   steps:
     - assignTables:
         assign:
+          - lakehouse_catalog: ${lakehouse_catalog}
+          - lakehouse_database: lakehouse_db
+          - bq_connection: ${bq_connection}
+          - bq_dataset: ${bq_dataset}
           - results: {}
           - tables:
               create_view_ecommerce: $${"call gcp_lakehouse_ds.create_view_ecommerce()"}
-              create_iceberg_tabes: $${"call gcp_lakehouse_ds.create_iceberg_tables()"}
+              create_iceberg_tabes: $${"call gcp_lakehouse_ds.create_iceberg_tables("+lakehouse_catalog+", "+lakehouse_db+", "+bq_connection+", "+bq_dataset+")"}
     - loopTables:
         for:
           value: key

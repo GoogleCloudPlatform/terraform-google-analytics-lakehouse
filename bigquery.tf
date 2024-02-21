@@ -56,7 +56,8 @@ resource "google_project_iam_member" "connectionPermissionGrantSpark" {
   for_each = toset([
     "roles/bigquery.dataEditor",
     "roles/bigquery.connectionAdmin",
-    "roles/bigquery.jobUser"
+    "roles/bigquery.jobUser",
+    "roles/storage.objectViewer"
   ])
 
   project = module.project-services.project_id
@@ -73,6 +74,10 @@ resource "google_bigquery_routine" "create_view_ecommerce" {
   definition_body = file("${path.module}/src/sql/view_ecommerce.sql")
 }
 
+locals {
+  lakehouse_catalog = "lakehouse_catalog"
+}
+
 resource "google_bigquery_routine" "create_iceberg_tables" {
   project         = module.project-services.project_id
   dataset_id      = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
@@ -80,22 +85,34 @@ resource "google_bigquery_routine" "create_iceberg_tables" {
   routine_type    = "PROCEDURE"
   language        = "PYTHON"
   definition_body = ""
+  arguments {
+    name      = "lakehouse_catalog"
+    data_type = "{\"typeKind\" :  \"STRING\"}"
+  }
+  arguments {
+    name      = "lakehouse_database"
+    data_type = "{\"typeKind\" :  \"STRING\"}"
+  }
+  arguments {
+    name      = "bq_connection"
+    data_type = "{\"typeKind\" :  \"STRING\"}"
+  }
+  arguments {
+    name      = "bq_dataset"
+    data_type = "{\"typeKind\" :  \"STRING\"}"
+  }
   spark_options {
     connection      = google_bigquery_connection.gcp_lakehouse_connection_spark.name
     runtime_version = "2.1"
     main_file_uri   = "gs://${google_storage_bucket_object.pyspark_file.bucket}/${google_storage_bucket_object.pyspark_file.name}"
     properties = {
       "spark.sql.catalog.lakehouse_catalog" : "org.apache.iceberg.spark.SparkCatalog",
-      "spark.sql.catalog.lakehouse_catalog.blms_catalog" : "lakehouse_catalog",
+      "spark.sql.catalog.lakehouse_catalog.blms_catalog" : local.lakehouse_catalog
       "spark.sql.catalog.lakehouse_catalog.catalog-impl" : "org.apache.iceberg.gcp.biglake.BigLakeCatalog",
       "spark.sql.catalog.lakehouse_catalog.gcp_location" : var.region,
       "spark.sql.catalog.lakehouse_catalog.gcp_project" : var.project_id,
       "spark.sql.catalog.lakehouse_catalog.warehouse" : "${google_storage_bucket.warehouse_bucket.url}/warehouse",
       "spark.jars.packages" : "org.apache.iceberg:iceberg-spark-runtime-3.3_2.13:1.2.1"
-      "spark.dataproc.driverEnv.lakehouse_catalog" : "lakehouse_catalog"
-      "spark.dataproc.driverEnv.lakehouse_database" : "lakehouse_database"
-      "spark.dataproc.driverEnv.bq_dataset" : google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-      "spark.dataproc.driverEnv.bq_gcs_connection" : google_bigquery_connection.gcp_lakehouse_connection_spark.name
     }
   }
 }
