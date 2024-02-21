@@ -53,15 +53,13 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    data_analyst_user         = "None"
-    marketing_user            = "None"
     dataproc_service_account  = google_project_service_identity.dataproc.email,
     provisioner_bucket        = google_storage_bucket.provisioning_bucket.name,
     warehouse_bucket          = google_storage_bucket.warehouse_bucket.name,
     temp_bucket               = google_storage_bucket.warehouse_bucket.name,
-    dataplex_asset_tables_id  = google_dataplex_asset.gcp_primary_tables.id,
-    dataplex_asset_textocr_id = google_dataplex_asset.gcp_primary_textocr.id,
-    dataplex_asset_ga4_id     = google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce.id
+    dataplex_asset_tables_id  = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-staging/assets/gcp-primary-tables"
+    dataplex_asset_textocr_id = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-textocr"
+    dataplex_asset_ga4_id     = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-ga4-obfuscated-sample-ecommerce"
   })
 }
 
