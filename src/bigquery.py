@@ -24,8 +24,10 @@ spark = SparkSession \
     .enableHiveSupport() \
     .getOrCreate()
 
+
 def load_arg(arg):
-  return str(json.loads(os.environ[f"BIGQUERY_PROC_PARAM.{arg}"]))
+    return str(json.loads(os.environ[f"BIGQUERY_PROC_PARAM.{arg}"]))
+
 
 catalog = load_arg("lakehouse_catalog")
 database = load_arg("lakehouse_database")
@@ -39,7 +41,6 @@ spark.sql(f"DROP NAMESPACE IF EXISTS {catalog} CASCADE;")
 spark.sql(f"CREATE NAMESPACE IF NOT EXISTS {catalog};")
 spark.sql(f"CREATE DATABASE IF NOT EXISTS {catalog}.{database};")
 spark.sql(f"DROP TABLE IF EXISTS {catalog}.{database}.agg_events_iceberg;")
-
 
 # Load data from BigQuery.
 events = spark.read.format("bigquery") \
