@@ -46,18 +46,23 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection_spark" {
 
 # This grants permissions to the service account of the Cloud Resource connection.
 resource "google_project_iam_member" "connectionPermissionGrantCloudResource" {
+  for_each = toset([
+    "roles/biglake.admin",
+    "roles/storage.objectAdmin"
+  ])
   project = module.project-services.project_id
-  role    = "roles/storage.objectViewer"
+  role    = each.key
   member  = format("serviceAccount:%s", google_bigquery_connection.gcp_lakehouse_connection_cloud_resource.cloud_resource[0].service_account_id)
 }
 
 # This grands permissions to the service account of the Spark connection.
 resource "google_project_iam_member" "connectionPermissionGrantSpark" {
   for_each = toset([
+    "roles/biglake.admin",
     "roles/bigquery.dataEditor",
     "roles/bigquery.connectionAdmin",
     "roles/bigquery.jobUser",
-    "roles/storage.objectViewer"
+    "roles/storage.objectAdmin"
   ])
 
   project = module.project-services.project_id
@@ -105,6 +110,7 @@ resource "google_bigquery_routine" "create_iceberg_tables" {
     connection      = google_bigquery_connection.gcp_lakehouse_connection_spark.name
     runtime_version = "2.1"
     main_file_uri   = "gs://${google_storage_bucket_object.pyspark_file.bucket}/${google_storage_bucket_object.pyspark_file.name}"
+    jar_uris        = ["gs://spark-lib/biglake/biglake-catalog-iceberg1.2.0-0.1.0-with-dependencies.jar"]
     properties = {
       "spark.sql.catalog.lakehouse_catalog" : "org.apache.iceberg.spark.SparkCatalog",
       "spark.sql.catalog.lakehouse_catalog.blms_catalog" : local.lakehouse_catalog

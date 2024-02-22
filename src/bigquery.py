@@ -15,7 +15,8 @@
 
 """BigQuery I/O with BigLake Iceberg PySpark example."""
 from pyspark.sql import SparkSession
-from bigquery.spark.procedure import SparkProcParamContext
+import json
+import os
 
 spark = SparkSession \
     .builder \
@@ -23,12 +24,13 @@ spark = SparkSession \
     .enableHiveSupport() \
     .getOrCreate()
 
-spark_proc_param_context = SparkProcParamContext.getOrCreate
+def load_arg(arg):
+  return str(json.loads(os.environ[f"BIGQUERY_PROC_PARAM.{arg}"]))
 
-catalog = spark_proc_param_context.catalog
-database = spark_proc_param_context.database
-bq_dataset = spark_proc_param_context.bq_dataset
-bq_connection = spark_proc_param_context.bq_connection
+catalog = load_arg("lakehouse_catalog")
+database = load_arg("lakehouse_database")
+bq_dataset = load_arg("bq_dataset")
+bq_connection = load_arg("bq_connection")
 
 # Delete the BigLake Catalog if it currently exists to ensure proper setup.
 spark.sql(f"DROP NAMESPACE IF EXISTS {catalog} CASCADE;")
