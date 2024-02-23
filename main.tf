@@ -45,6 +45,7 @@ module "project-services" {
     "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
     "storage.googleapis.com",
+    "storagetransfer.googleapis.com",
     "workflows.googleapis.com",
     "notebooks.googleapis.com",
   ]
@@ -77,131 +78,27 @@ resource "google_service_account" "data_analyst_user" {
 }
 
 #get gcs svc account
-data "google_storage_project_service_account" "gcs_account" {
+data "google_storage_transfer_project_service_account" "gcs_account" {
   project = module.project-services.project_id
+
+  depends_on = [
+    time_sleep.wait_after_apis_activate
+  ]
+}
+
+resource "google_project_iam_member" "gcs_sa_roles" {
+  for_each = toset([
+    "roles/storage.objectViewer"
+  ])
+
+  project = module.project-services.project_id
+  role    = each.key
+  member  = "serviceAccount:${data.google_storage_transfer_project_service_account.gcs_account.email}"
+
+  depends_on = [time_sleep.wait_after_apis_activate]
 }
 
 #random id
 resource "random_id" "id" {
   byte_length = 4
-}
-
-# Set up Storage Buckets
-
-# # Set up the raw storage bucket
-resource "google_storage_bucket" "raw_bucket" {
-  name                        = "gcp-${var.use_case_short}-raw-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the warehouse storage bucket
-resource "google_storage_bucket" "warehouse_bucket" {
-  name                        = "gcp-${var.use_case_short}-warehouse-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
-# # Set up the provisioning bucketstorage bucket
-resource "google_storage_bucket" "provisioning_bucket" {
-  name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-}
-
-resource "google_storage_bucket" "ga4_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-ga4-images-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "textocr_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-textocr-images-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "tables_bucket" {
-  name                        = "gcp-${var.use_case_short}-tables-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-# Bucket used to store BI data in Dataplex
-resource "google_storage_bucket" "dataplex_bucket" {
-  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket_object" "pyspark_file" {
-  bucket = google_storage_bucket.provisioning_bucket.name
-  name   = "bigquery.py"
-  source = "${path.module}/src/bigquery.py"
-
-  depends_on = [
-    google_storage_bucket.provisioning_bucket
-  ]
-}
-
-# Uploads the post-startup script for the workbench instance.
-resource "google_storage_bucket_object" "post_startup_script" {
-  bucket = google_storage_bucket.provisioning_bucket.name
-  name   = "post_startup.sh"
-  source = "${path.module}/src/post_startup.sh"
-
-  depends_on = [
-    google_storage_bucket.provisioning_bucket
-  ]
-}
-
-resource "google_storage_bucket" "spark-log-directory" {
-  name                        = "gcp-${var.use_case_short}-spark-log-directory-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "phs-staging-bucket" {
-  name                        = "gcp-${var.use_case_short}-phs-staging-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "phs-temp-bucket" {
-  name                        = "gcp-${var.use_case_short}-phs-temp-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-}
-
-resource "google_storage_bucket" "sparkml-model-bucket" {
-  name                        = "gcp-${var.use_case_short}-model-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
 }

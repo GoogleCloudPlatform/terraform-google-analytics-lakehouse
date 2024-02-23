@@ -56,32 +56,32 @@ resource "google_project_iam_member" "workflows_sa_roles" {
   ]
 }
 
-# Workflow to copy data from prod GCS bucket to private buckets
-# NOTE: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
-# You can use google_storage_bucket.<bucket>.url to include the prefix.
-resource "google_workflows_workflow" "copy_data" {
-  name            = "copy-data"
-  project         = module.project-services.project_id
-  region          = var.region
-  description     = "Copies data and performs project setup"
-  service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
-    public_data_bucket    = var.public_data_bucket,
-    textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
-    ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
-    tables_bucket         = google_storage_bucket.tables_bucket.name,
-    dataplex_bucket       = google_storage_bucket.dataplex_bucket.name,
-    images_zone_name      = google_dataplex_zone.gcp_primary_raw.name,
-    tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
-    lake_name             = google_dataplex_lake.gcp_primary.name
-  })
+# # Workflow to copy data from prod GCS bucket to private buckets
+# # NOTE: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
+# # You can use google_storage_bucket.<bucket>.url to include the prefix.
+# resource "google_workflows_workflow" "copy_data" {
+#   name            = "copy-data"
+#   project         = module.project-services.project_id
+#   region          = var.region
+#   description     = "Copies data and performs project setup"
+#   service_account = google_service_account.workflows_sa.email
+#   source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
+#     public_data_bucket    = var.public_data_bucket,
+#     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
+#     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
+#     tables_bucket         = google_storage_bucket.tables_bucket.name,
+#     dataplex_bucket       = google_storage_bucket.dataplex_bucket.name,
+#     images_zone_name      = google_dataplex_zone.gcp_primary_raw.name,
+#     tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
+#     lake_name             = google_dataplex_lake.gcp_primary.name
+#   })
 
-  depends_on = [
-    google_project_iam_member.workflows_sa_roles,
-    google_project_iam_member.dataproc_sa_roles
-  ]
+#   depends_on = [
+#     google_project_iam_member.workflows_sa_roles,
+#     google_project_iam_member.dataproc_sa_roles
+#   ]
 
-}
+# }
 
 # Workflow to set up project resources
 # Note: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
@@ -93,20 +93,22 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    data_analyst_user         = google_service_account.data_analyst_user.email,
-    marketing_user            = google_service_account.marketing_user.email,
-    dataproc_service_account  = google_service_account.dataproc_service_account.email,
-    provisioner_bucket        = google_storage_bucket.provisioning_bucket.name,
-    warehouse_bucket          = google_storage_bucket.warehouse_bucket.name,
-    temp_bucket               = google_storage_bucket.warehouse_bucket.name,
-    dataplex_asset_tables_id  = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-staging/assets/gcp-primary-tables"
-    dataplex_asset_textocr_id = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-textocr"
-    dataplex_asset_ga4_id     = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-ga4-obfuscated-sample-ecommerce"
+    data_analyst_user        = google_service_account.data_analyst_user.email,
+    marketing_user           = google_service_account.marketing_user.email,
+    dataproc_service_account = google_service_account.dataproc_service_account.email,
+    provisioner_bucket       = google_storage_bucket.provisioning_bucket.name,
+    warehouse_bucket         = google_storage_bucket.warehouse_bucket.name,
+    temp_bucket              = google_storage_bucket.warehouse_bucket.name,
+    #   dataplex_asset_tables_id  = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-staging/assets/gcp-primary-tables"
+    #   dataplex_asset_textocr_id = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-textocr"
+    #   dataplex_asset_ga4_id     = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-ga4-obfuscated-sample-ecommerce"
+    # })
+    # Note: using the asset_id values below in project_setup config threw an IAM error when executing. Unsure why.
+    dataplex_asset_tables_id  = google_dataplex_asset.gcp_primary_tables.id,
+    dataplex_asset_textocr_id = google_dataplex_asset.gcp_primary_textocr.id,
+    dataplex_asset_ga4_id     = google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce.id
   })
-  # Note: using the asset_id values below in project_setup config threw an IAM error when executing. Unsure why.
-  # dataplex_asset_tables_id  = google_dataplex_asset.gcp_primary_tables.id,
-  # dataplex_asset_textocr_id = google_dataplex_asset.gcp_primary_textocr.id,
-  # dataplex_asset_ga4_id     = google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce.id
+
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
     google_project_iam_member.dataproc_sa_roles
@@ -119,27 +121,27 @@ resource "google_workflows_workflow" "project_setup" {
 data "google_client_config" "current" {
 }
 
-# # execute the copy data workflow
-data "http" "call_workflows_copy_data" {
-  url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-  depends_on = [
-    google_storage_bucket.textocr_images_bucket,
-    google_storage_bucket.ga4_images_bucket,
-    google_storage_bucket.tables_bucket
-  ]
-}
+# # # execute the copy data workflow
+# data "http" "call_workflows_copy_data" {
+#   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
+#   method = "POST"
+#   request_headers = {
+#     Accept = "application/json"
+#   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
+#   depends_on = [
+#     google_storage_bucket.textocr_images_bucket,
+#     google_storage_bucket.ga4_images_bucket,
+#     google_storage_bucket.tables_bucket
+#   ]
+# }
 
-resource "time_sleep" "wait_after_copy_data" {
-  create_duration = "30s"
-  depends_on = [
-    data.google_storage_project_service_account.gcs_account,
-    data.http.call_workflows_copy_data
-  ]
-}
+# resource "time_sleep" "wait_after_copy_data" {
+#   create_duration = "30s"
+#   depends_on = [
+#     data.google_storage_project_service_account.gcs_account,
+#     #data.http.call_workflows_copy_data
+#   ]
+# }
 
 # execute the other project setup workflow
 data "http" "call_workflows_project_setup" {
