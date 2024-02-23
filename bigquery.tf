@@ -62,7 +62,7 @@ resource "google_project_iam_member" "connectionPermissionGrantSpark" {
     "roles/bigquery.dataEditor",
     "roles/bigquery.connectionAdmin",
     "roles/bigquery.jobUser",
-    "roles/bigquery.readSessionUser"
+    "roles/bigquery.readSessionUser",
     "roles/storage.objectAdmin"
   ])
 
