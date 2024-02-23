@@ -88,8 +88,7 @@ data "google_storage_transfer_project_service_account" "gcs_account" {
 
 resource "google_project_iam_member" "gcs_sa_roles" {
   for_each = toset([
-    "roles/storage.objectViewer",
-    "roles/storage.legacyBucketViewer",
+    "roles/storage.objectViewer"
   ])
 
   project = module.project-services.project_id
