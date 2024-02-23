@@ -48,6 +48,7 @@ events = spark.read.format("bigquery") \
     .load()
 events.createOrReplaceTempView("events")
 
+print("CREATING TABLE")
 # Create Iceberg Table if not exists
 spark.sql(
     f"""CREATE TABLE IF NOT EXISTS {catalog}.{database}.agg_events_iceberg
@@ -59,6 +60,7 @@ spark.sql(
     """
 )
 
+print("INSERTING INTO TABLE")
 # Create Iceberg Table if not exists
 spark.sql(
     f"""INSERT INTO {catalog}.{database}.agg_events_iceberg
@@ -68,3 +70,4 @@ spark.sql(
     group by user_id;
     """
 )
+print("INSERTED INTO TABLE")
