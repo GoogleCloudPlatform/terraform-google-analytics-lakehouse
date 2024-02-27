@@ -14,19 +14,6 @@
  * limitations under the License.
  */
 
-resource "google_project_service_identity" "dataplex_sa" {
-  provider = google-beta
-  project  = module.project-services.project_id
-  service  = "dataplex.googleapis.com"
-}
-
-#give dataplex access to biglake bucket
-resource "google_project_iam_member" "dataplex_bucket_access" {
-  project = module.project-services.project_id
-  role    = "roles/dataplex.serviceAgent"
-  member  = "serviceAccount:${google_project_service_identity.dataplex_sa.email}"
-}
-
 resource "google_dataplex_lake" "gcp_primary" {
   location     = var.region
   name         = "gcp-primary-lake"
@@ -38,11 +25,6 @@ resource "google_dataplex_lake" "gcp_primary" {
   }
 
   project = module.project-services.project_id
-
-  depends_on = [
-    google_project_iam_member.dataplex_bucket_access
-  ]
-
 }
 
 #zone - raw
@@ -132,7 +114,6 @@ resource "google_dataplex_asset" "gcp_primary_textocr" {
 
   project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_copy_data]
-
 }
 
 #asset
@@ -155,7 +136,6 @@ resource "google_dataplex_asset" "gcp_primary_ga4_obfuscated_sample_ecommerce" {
 
   project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_copy_data]
-
 }
 
 #asset

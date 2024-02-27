@@ -120,8 +120,6 @@ create_tables:
     - assignStepPolicies:
         assign:
           - results: {}
-          # - marketing_user: ${marketing_user}
-          # - data_analyst_user: ${data_analyst_user}
           - policy_map:
               # create something that duplicates the table and adds the policy
               # row_policy_usa_filter: $${"CREATE OR REPLACE ROW ACCESS POLICY usa_filter ON `" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + ".gcp_lakehouse_ds.gcp_tbl_users` GRANT TO ('serviceAccount:" + data_analyst_user + "')  FILTER USING (Country = 'United States')"}

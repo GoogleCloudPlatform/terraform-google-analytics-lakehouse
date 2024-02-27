@@ -14,27 +14,6 @@
  * limitations under the License.
 */
 
-# Creates a service account specifically for the Workbench instance.
-resource "google_service_account" "workbench_service_account" {
-  project      = module.project-services.project_id
-  account_id   = "workbench-sa-${random_id.id.hex}"
-  display_name = "Service Account for Workbench Instance"
-}
-
-# Grants necessary roles to the Workbench service account.
-resource "google_project_iam_member" "workbench_sa_roles" {
-  for_each = toset([
-    "roles/iam.serviceAccountUser",
-    "roles/storage.objectAdmin",
-    "roles/compute.osAdminLogin",
-    "roles/dataproc.admin",
-  ])
-
-  project = module.project-services.project_id
-  role    = each.key
-  member  = "serviceAccount:${google_service_account.workbench_service_account.email}"
-}
-
 # Provisions a new Workbench instance.
 resource "google_workbench_instance" "workbench_instance" {
   name     = "gcp-${var.use_case_short}-workbench-instance-${random_id.id.hex}"
@@ -74,7 +53,17 @@ resource "google_workbench_instance" "workbench_instance" {
   }
 
   depends_on = [
-    google_project_iam_member.workbench_sa_roles,
     google_compute_subnetwork.subnet
   ]
+}
+
+# Stop the workbench instnace after creation to save on cost
+
+# tflint-ignore: terraform_unused_declarations
+data "http" "call_stop_workbench_instance" {
+  url    = "https://notebooks.googleapis.com/v2/projects/${module.project-services.project_id}/locations/${var.region}-a/instances/${google_workbench_instance.workbench_instance.name}:stop"
+  method = "POST"
+  request_headers = {
+    Accept = "application/json"
+  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
 }

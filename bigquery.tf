@@ -35,15 +35,6 @@ resource "google_bigquery_connection" "gcp_lakehouse_connection" {
   cloud_resource {}
 }
 
-
-
-## This grants permissions to the service account of the connection created in the last step.
-resource "google_project_iam_member" "connectionPermissionGrant" {
-  project = module.project-services.project_id
-  role    = "roles/storage.objectViewer"
-  member  = format("serviceAccount:%s", google_bigquery_connection.gcp_lakehouse_connection.cloud_resource[0].service_account_id)
-}
-
 resource "google_bigquery_routine" "create_view_ecommerce" {
   project         = module.project-services.project_id
   dataset_id      = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
