@@ -130,8 +130,13 @@ create_tables:
             - captureResults:
                 assign:
                   - results[key]: $${queryResult}
+    - wait_to_finish:
+        call: sys.sleep
+        args:
+          seconds: 120
     - returnStep:
         return: $${results}
+
 
 # Subworkflow to Dataplex taxonomy
 create_taxonomy:
