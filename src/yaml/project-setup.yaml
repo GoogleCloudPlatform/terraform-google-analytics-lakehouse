@@ -134,7 +134,7 @@ create_tables:
     - wait_for_bq_to_finish:
         call: sys.sleep
         args:
-          seconds: 120
+          seconds: 60
     - returnStep:
         return: $${results}
 
