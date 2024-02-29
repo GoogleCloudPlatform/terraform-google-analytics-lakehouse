@@ -130,7 +130,8 @@ create_tables:
             - captureResults:
                 assign:
                   - results[key]: $${queryResult}
-    - wait_to_finish:
+    # Extra wait before proceeding to allow BQ jobs to finish
+    - wait_for_bq_to_finish:
         call: sys.sleep
         args:
           seconds: 120
