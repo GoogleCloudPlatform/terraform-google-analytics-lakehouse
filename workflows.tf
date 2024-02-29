@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#dag order #1
 resource "google_project_service_identity" "workflows" {
   provider = google-beta
   project  = module.project-services.project_id
@@ -89,14 +88,15 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    bq_connection             = google_bigquery_connection.gcp_lakehouse_connection_cloud_resource.id
+    bq_connection             = google_bigquery_connection.cloud_resource.id
     bq_dataset                = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
     lakehouse_catalog         = local.lakehouse_catalog
     dataplex_asset_tables_id  = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-staging/assets/gcp-primary-tables"
     dataplex_asset_textocr_id = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-textocr"
     dataplex_asset_ga4_id     = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-ga4-obfuscated-sample-ecommerce"
   })
-  # Note: using the asset_id values below in project_setup config threw an IAM error when executing. Unsure why.
+  # Note: using the asset_id values below in project_setup config threw an IAM error when executing.
+  # This is likely caused by added delays in IAM propagating and causes the workflow to fail.
   #   dataplex_asset_tables_id  = google_dataplex_asset.gcp_primary_tables.id,
   #   dataplex_asset_textocr_id = google_dataplex_asset.gcp_primary_textocr.id,
   #   dataplex_asset_ga4_id     = google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce.id
@@ -130,7 +130,6 @@ data "http" "call_workflows_copy_data" {
 resource "time_sleep" "wait_after_copy_data" {
   create_duration = "30s"
   depends_on = [
-    # data.google_storage_project_service_account.gcs_account,
     data.http.call_workflows_copy_data
   ]
 }
@@ -149,8 +148,8 @@ data "http" "call_workflows_project_setup" {
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
     google_dataplex_asset.gcp_primary_tables,
     google_dataplex_asset.gcp_primary_textocr,
-    google_project_iam_member.connectionPermissionGrantCloudResource,
-    google_project_iam_member.connectionPermissionGrantSpark,
+    google_project_iam_member.connection_permission_grant_cloud_resource,
+    google_project_iam_member.connection_permission_grant_spark,
     google_project_iam_member.dataproc_sa_roles,
     google_service_account.dataproc_service_account,
     google_storage_bucket.provisioning_bucket,

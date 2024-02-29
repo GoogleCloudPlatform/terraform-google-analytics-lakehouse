@@ -55,11 +55,6 @@ resource "time_sleep" "wait_after_apis_activate" {
   create_duration = "30s"
 }
 
-# #get gcs svc account
-# data "google_storage_project_service_account" "gcs_account" {
-#   project = module.project-services.project_id
-# }
-
 #random id
 resource "random_id" "id" {
   byte_length = 4

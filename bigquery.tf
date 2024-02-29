@@ -15,7 +15,8 @@
  */
 
 # Set up BigQuery resources
-# Create the BigQuery dataset
+
+# # Create the BigQuery dataset
 resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   project                    = module.project-services.project_id
   dataset_id                 = "gcp_lakehouse_ds"
@@ -26,37 +27,37 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   delete_contents_on_destroy = var.force_destroy
 }
 
-# Create a BigQuery connection for cloud resources
-resource "google_bigquery_connection" "gcp_lakehouse_connection_cloud_resource" {
+# # Create a BigQuery connection for cloud resources
+resource "google_bigquery_connection" "cloud_resource" {
   project       = module.project-services.project_id
-  connection_id = "gcp_lakehouse_connection_cloud_resource"
+  connection_id = "cloud_resource"
   location      = var.region
   friendly_name = "gcp lakehouse storage bucket connection"
   cloud_resource {}
 }
 
-# Create a BigQuery connection for Spark
-resource "google_bigquery_connection" "gcp_lakehouse_connection_spark" {
+# # Create a BigQuery connection for Spark
+resource "google_bigquery_connection" "spark" {
   project       = module.project-services.project_id
-  connection_id = "gcp_lakehouse_connection_spark"
+  connection_id = "spark"
   location      = var.region
   friendly_name = "gcp lakehouse spark connection"
   spark {}
 }
 
-# This grants permissions to the service account of the Cloud Resource connection.
-resource "google_project_iam_member" "connectionPermissionGrantCloudResource" {
+# # This grants permissions to the service account of the Cloud Resource connection.
+resource "google_project_iam_member" "connection_permission_grant_cloud_resource" {
   for_each = toset([
     "roles/biglake.admin",
     "roles/storage.objectAdmin"
   ])
   project = module.project-services.project_id
   role    = each.key
-  member  = format("serviceAccount:%s", google_bigquery_connection.gcp_lakehouse_connection_cloud_resource.cloud_resource[0].service_account_id)
+  member  = format("serviceAccount:%s", google_bigquery_connection.cloud_resource.cloud_resource[0].service_account_id)
 }
 
-# This grands permissions to the service account of the Spark connection.
-resource "google_project_iam_member" "connectionPermissionGrantSpark" {
+# # This grands permissions to the service account of the Spark connection.
+resource "google_project_iam_member" "connection_permission_grant_spark" {
   for_each = toset([
     "roles/biglake.admin",
     "roles/bigquery.dataEditor",
@@ -68,9 +69,10 @@ resource "google_project_iam_member" "connectionPermissionGrantSpark" {
 
   project = module.project-services.project_id
   role    = each.key
-  member  = format("serviceAccount:%s", google_bigquery_connection.gcp_lakehouse_connection_spark.spark[0].service_account_id)
+  member  = format("serviceAccount:%s", google_bigquery_connection.spark.spark[0].service_account_id)
 }
 
+# # Creates a stored procedure for a new view
 resource "google_bigquery_routine" "create_view_ecommerce" {
   project         = module.project-services.project_id
   dataset_id      = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
@@ -84,6 +86,7 @@ locals {
   lakehouse_catalog = "lakehouse_catalog"
 }
 
+# # Creates a stored procedure for a spark job to create iceberg tables
 resource "google_bigquery_routine" "create_iceberg_tables" {
   project         = module.project-services.project_id
   dataset_id      = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
