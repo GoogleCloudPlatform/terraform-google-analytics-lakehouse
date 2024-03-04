@@ -88,7 +88,6 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    bq_connection             = google_bigquery_connection.cloud_resource.id
     bq_dataset                = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
     lakehouse_catalog         = local.lakehouse_catalog
     dataplex_asset_tables_id  = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-staging/assets/gcp-primary-tables"
@@ -148,8 +147,7 @@ data "http" "call_workflows_project_setup" {
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
     google_dataplex_asset.gcp_primary_tables,
     google_dataplex_asset.gcp_primary_textocr,
-    google_project_iam_member.connection_permission_grant_cloud_resource,
-    google_project_iam_member.connection_permission_grant_spark,
+    google_project_iam_member.connection_permission_grant,
     google_project_iam_member.dataproc_sa_roles,
     google_service_account.dataproc_service_account,
     google_storage_bucket.provisioning_bucket,

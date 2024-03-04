@@ -27,15 +27,6 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   delete_contents_on_destroy = var.force_destroy
 }
 
-# # Create a BigQuery connection for cloud resources
-resource "google_bigquery_connection" "cloud_resource" {
-  project       = module.project-services.project_id
-  connection_id = "cloud_resource"
-  location      = var.region
-  friendly_name = "gcp lakehouse storage bucket connection"
-  cloud_resource {}
-}
-
 # # Create a BigQuery connection for Spark
 resource "google_bigquery_connection" "spark" {
   project       = module.project-services.project_id
@@ -45,19 +36,8 @@ resource "google_bigquery_connection" "spark" {
   spark {}
 }
 
-# # This grants permissions to the service account of the Cloud Resource connection.
-resource "google_project_iam_member" "connection_permission_grant_cloud_resource" {
-  for_each = toset([
-    "roles/biglake.admin",
-    "roles/storage.objectAdmin"
-  ])
-  project = module.project-services.project_id
-  role    = each.key
-  member  = format("serviceAccount:%s", google_bigquery_connection.cloud_resource.cloud_resource[0].service_account_id)
-}
-
 # # This grands permissions to the service account of the Spark connection.
-resource "google_project_iam_member" "connection_permission_grant_spark" {
+resource "google_project_iam_member" "connection_permission_grant" {
   for_each = toset([
     "roles/biglake.admin",
     "roles/bigquery.dataEditor",
@@ -100,10 +80,6 @@ resource "google_bigquery_routine" "create_iceberg_tables" {
   }
   arguments {
     name      = "lakehouse_database"
-    data_type = "{\"typeKind\" :  \"STRING\"}"
-  }
-  arguments {
-    name      = "bq_connection"
     data_type = "{\"typeKind\" :  \"STRING\"}"
   }
   arguments {

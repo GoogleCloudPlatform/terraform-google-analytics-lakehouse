@@ -32,7 +32,6 @@ def load_arg(arg):
 catalog = load_arg("lakehouse_catalog")
 database = load_arg("lakehouse_database")
 bq_dataset = load_arg("bq_dataset")
-bq_connection = load_arg("bq_connection")
 
 # Delete the BigLake Catalog if it currently exists to ensure proper setup.
 spark.sql(f"DROP NAMESPACE IF EXISTS {catalog} CASCADE;")
@@ -54,8 +53,7 @@ spark.sql(
     (user_id string, event_count bigint)
     USING iceberg
             TBLPROPERTIES(
-                bq_table='{bq_dataset}.agg_events_iceberg',
-                bq_connection='{bq_connection}');
+                bq_table='{bq_dataset}.agg_events_iceberg');
     """
 )
 
