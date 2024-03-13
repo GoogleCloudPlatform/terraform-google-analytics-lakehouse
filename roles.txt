@@ -1,0 +1,13 @@
+roles/bigquery.admin
+roles/compute.admin
+roles/config.agent
+roles/dataplex.admin
+roles/dataproc.admin
+roles/iam.serviceAccountAdmin
+roles/iam.serviceAccountUser
+roles/logging.configWriter
+roles/notebooks.admin
+roles/resourcemanager.projectIamAdmin
+roles/serviceusage.serviceUsageAdmin
+roles/storage.admin
+roles/workflows.admin
