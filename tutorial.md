@@ -69,7 +69,7 @@ To download your solution, in the `File` menu, select `Download Workspace`. The 
 **Save the solution to your Git repository**
 
 Set the remote URL to your Git repository
-```bash 
+```bash
 git remote set-url origin [git-repo-url]
 ```
 

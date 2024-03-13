@@ -47,14 +47,14 @@ fi
 echo "Region is ${REGION}"
 echo "Deployment name is ${DEPLOYMENT_NAME}"
 
-SERVICE_ACCOUNT=$(gcloud infra-manager deployments describe ${DEPLOYMENT_NAME} --location ${REGION} --format='value(serviceAccount)')
+SERVICE_ACCOUNT=$(gcloud infra-manager deployments describe "${DEPLOYMENT_NAME}" --location "${REGION}" --format='value(serviceAccount)')
 
 echo "Assigning required roles to the service account ${SERVICE_ACCOUNT}"
 # Iterate over the roles and check if the service account already has that role
 # assigned. If it has then skip adding that policy binding as using
 # --condition=None can overwrite any existing conditions in the binding.
-CURRENT_POLICY=$(gcloud projects get-iam-policy ${PROJECT_ID} --format=json)
-MEMBER_EMAIL=$(echo ${SERVICE_ACCOUNT} | awk -F '/' '{print $NF}')
+CURRENT_POLICY=$(gcloud projects get-iam-policy "${PROJECT_ID}" --format=json)
+MEMBER_EMAIL=$(echo "${SERVICE_ACCOUNT}" | awk -F '/' '{print $NF}')
 MEMBER="serviceAccount:${MEMBER_EMAIL}"
 
 while IFS= read -r role || [[ -n "$role" ]]
@@ -62,17 +62,17 @@ do \
 if echo "$CURRENT_POLICY" | jq -e --arg role "$role" --arg member "$MEMBER" '.bindings[] | select(.role == $role) | .members[] | select(. == $member)' > /dev/null; then \
     echo "IAM policy binding already exists for member ${MEMBER} and role ${role}"
 else \
-    gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --member="$MEMBER" \
     --role="$role" \
     --condition=None
 fi
 done < "roles.txt"
 
-DEPLOYMENT_DESCRIPTION=$(gcloud infra-manager deployments describe ${DEPLOYMENT_NAME} --location ${REGION} --format json)
+DEPLOYMENT_DESCRIPTION=$(gcloud infra-manager deployments describe "${DEPLOYMENT_NAME}" --location "${REGION}" --format json)
 cat <<EOF > input.tfvars
 # Do not edit the region as changing the region can lead to failed deployment.
-region="$(echo $DEPLOYMENT_DESCRIPTION | jq -r '.terraformBlueprint.inputValues.region.inputValue')"
+region="$(echo "$DEPLOYMENT_DESCRIPTION" | jq -r '.terraformBlueprint.inputValues.region.inputValue')"
 project_id = "${PROJECT_ID}"
 labels = {
   "goog-solutions-console-deployment-name" = "${DEPLOYMENT_NAME}",
@@ -81,7 +81,7 @@ labels = {
 EOF
 
 echo "An input.tfvars has been created in the current directory with a set of default input terraform variables for the solution. You can modify their values or go ahead with the defaults."
-read -p "Once done, press Enter to continue: "
+read -r -p "Once done, press Enter to continue: "
 
 echo "Creating the cloud storage bucket if it does not exist already"
 BUCKET_NAME="${PROJECT_ID}_infra_manager_staging"
@@ -93,4 +93,4 @@ else
 fi
 
 echo "Deploying the solution"
-gcloud infra-manager deployments apply projects/${PROJECT_ID}/locations/${REGION}/deployments/${DEPLOYMENT_NAME} --service-account ${SERVICE_ACCOUNT} --local-source="."     --inputs-file=./input.tfvars --labels="modification-reason=make-it-mine,goog-solutions-console-deployment-name=${DEPLOYMENT_NAME},goog-solutions-console-solution-id=${SOLUTION_ID},goog-config-partner=sc"
+gcloud infra-manager deployments apply projects/"${PROJECT_ID}"/locations/"${REGION}"/deployments/"${DEPLOYMENT_NAME}" --service-account "${SERVICE_ACCOUNT}" --local-source="."     --inputs-file=./input.tfvars --labels="modification-reason=make-it-mine,goog-solutions-console-deployment-name=${DEPLOYMENT_NAME},goog-solutions-console-solution-id=${SOLUTION_ID},goog-config-partner=sc"
