@@ -8,9 +8,9 @@ project_id = sys.argv[1]
 instance_id = sys.argv[2]
 
 # Create a Spark session and configure the spark-bigtable connector.
-spark = (SparkSession.builder
-        .config('spark.jars', "gs://spark-bigtable-preview/jars/spark-bigtable-0.0.1-preview4-SNAPSHOT.jar")
-        .getOrCreate())
+spark = SparkSession.builder \
+          .config('spark.jars', "gs://spark-bigtable-preview/jars/spark-bigtable-0.0.1-preview4-SNAPSHOT.jar") \
+          .getOrCreate()
 
 # Create the catalog schema to convert Bigtable columns to Spark.
 # "table" defnes the Bigtable namespace and table to read data from.
@@ -31,19 +31,19 @@ catalog = ''.join(("""{
 
 # Load Bigtable data.
 df = spark.read \
-  .format('bigtable') \
-  .option('spark.bigtable.project.id', project_id) \
-  .option('spark.bigtable.instance.id', instance_id) \
-  .options(catalog=catalog) \
-  .load()
+       .format('bigtable') \
+       .option('spark.bigtable.project.id', project_id) \
+       .option('spark.bigtable.instance.id', instance_id) \
+       .options(catalog=catalog) \
+       .load()
 
 # Create new dfs with counts of each recommended item per rec position.
 # Rename columns to join later.
 def groupby_count_rename(df, col):
   return df.groupBy(col) \
-          .count() \
-          .withColumnRenamed(col, "item") \
-          .withColumnRenamed("count", col)
+           .count() \
+           .withColumnRenamed(col, "item") \
+           .withColumnRenamed("count", col)
 
 r0 = groupby_count_rename(df, "rec0")
 r1 = groupby_count_rename(df, "rec1")
@@ -58,7 +58,7 @@ joined_df = r0.join(r1, r0.item == r1.item, 'outer') \
               .select(r0.item, "rec0", "rec1", "rec2", "rec3")
 
 # Write the table to BigQuery.
-df.write \
+joined_df.write \
   .format("bigquery") \
   .option("writeMethod", "direct") \
   .save("gcp_lakehouse_ds.user_recommendations")
