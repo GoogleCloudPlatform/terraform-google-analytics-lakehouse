@@ -30,8 +30,9 @@ instance_id = sys.argv[2]
 
 # Create a Spark session and configure the spark-bigtable connector.
 spark = SparkSession.builder \
-          .config('spark.jars', 
-                  "gs://spark-bigtable-preview/jars/spark-bigtable-0.0.1-preview5-SNAPSHOT.jar") \
+          .config("spark.jars",
+                  "gs://spark-bigtable-preview/jars/" +
+                  "spark-bigtable-0.0.1-preview5-SNAPSHOT.jar") \
           .getOrCreate()
 
 # Create the catalog schema to convert Bigtable columns to Spark.
@@ -79,13 +80,15 @@ df = spark.read \
         .options(catalog=catalog) \
         .load()
 
+
 # Create new dfs counting each recommended item per rec position.
 # Rename columns to join later.
 def groupby_count_rename(df, col):
-  return df.groupBy(col) \
-           .count() \
-           .withColumnRenamed(col, "item") \
-           .withColumnRenamed("count", col)
+    return df.groupBy(col) \
+             .count() \
+             .withColumnRenamed(col, "item") \
+             .withColumnRenamed("count", col)
+
 
 r0 = groupby_count_rename(df, "rec0")
 r1 = groupby_count_rename(df, "rec1")
