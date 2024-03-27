@@ -89,7 +89,7 @@ resource "google_bigquery_routine" "create_iceberg_tables" {
   spark_options {
     connection      = google_bigquery_connection.spark.name
     runtime_version = "2.1"
-    main_file_uri   = "gs://${google_storage_bucket_object.pyspark_file.bucket}/${google_storage_bucket_object.pyspark_file.name}"
+    main_file_uri   = "gs://${google_storage_bucket_object.bigquery_file.bucket}/${google_storage_bucket_object.bigquery_file.name}"
     jar_uris        = ["gs://spark-lib/biglake/biglake-catalog-iceberg1.2.0-0.1.0-with-dependencies.jar"]
     properties = {
       "spark.sql.catalog.lakehouse_catalog" : "org.apache.iceberg.spark.SparkCatalog",

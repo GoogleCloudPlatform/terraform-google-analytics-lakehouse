@@ -127,10 +127,20 @@ resource "google_storage_bucket" "dataplex_bucket" {
   force_destroy               = var.force_destroy
 }
 
-resource "google_storage_bucket_object" "pyspark_file" {
+resource "google_storage_bucket_object" "bigquery_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "bigquery.py"
-  source = "${path.module}/src/bigquery.py"
+  source = "${path.module}/src/python/bigquery.py"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+resource "google_storage_bucket_object" "bigtable_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "bigtable.py"
+  source = "${path.module}/src/python/bigtable.py"
 
   depends_on = [
     google_storage_bucket.provisioning_bucket
@@ -141,7 +151,7 @@ resource "google_storage_bucket_object" "pyspark_file" {
 resource "google_storage_bucket_object" "post_startup_script" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "post_startup.sh"
-  source = "${path.module}/src/post_startup.sh"
+  source = "${path.module}/src/shell/post_startup.sh"
 
   depends_on = [
     google_storage_bucket.provisioning_bucket

@@ -37,7 +37,7 @@ description: Serverless Template for the SparkML Notebook
 labels:
   client: dataproc-jupyter-plugin
 runtimeConfig:
-  version: '2.1'
+  version: '2.2'
 EOF
 )
 
