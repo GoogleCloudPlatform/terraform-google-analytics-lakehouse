@@ -8,6 +8,23 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This changelog is generated automatically based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [0.5.0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.4.0...v0.5.0) (2024-03-28)
+
+
+### Features
+
+* Add support for make it mine and deploy via cloudbuild trigger ([#140](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/140)) ([a465da6](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/a465da64409b07f5ec6f8e5f7e3a2e05a37d02fa))
+* moving iceberg table creation to a stored procedure ([#124](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/124)) ([bf7ea70](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/bf7ea705f018ec3796d9d6886f803b88eda4963c))
+* staging bigtable.py and updating severless spark session runtime version ([#146](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/146)) ([8a41d12](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/8a41d12098da9af86023a66d0f6c0a58f79f66cf))
+
+
+### Bug Fixes
+
+* delete dataproc session with its template ([#116](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/116)) ([54bda2b](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/54bda2b8ff5612419886fcf7167b3e9874421154))
+* **deps:** Update cft/developer-tools Docker tag to v1.19 ([#119](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/119)) ([732bd76](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/732bd7606612448eabf7919683de59b5838406a8))
+* **deps:** Update Terraform GoogleCloudPlatform/analytics-lakehouse/google to ~&gt; 0.4 ([#121](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/121)) ([8d8520a](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/8d8520ab3b77284d25e0ca93c79dc90435d6c3f4))
+* **deps:** Update Terraform terraform-google-modules/project-factory/google to v14.5.0 ([#135](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/issues/135)) ([b8cb837](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/commit/b8cb837937011319c4cd82b823e3e89d03ccde57))
+
 ## [0.4.0](https://github.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/compare/v0.3.0...v0.4.0) (2024-01-23)
 
 
