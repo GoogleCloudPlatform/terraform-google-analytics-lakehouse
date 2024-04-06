@@ -149,7 +149,7 @@ create_data_quality_rules:
     - create_data_quality_check:
         call: http.post
         args:
-          url: $${"https://dataplex.googleapis.com/v1/projects/"+project_id+"/locations/US/dataScans?dataScanId=orders"}
+          url: $${"https://dataplex.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/dataScans?dataScanId=orders"}
           auth:
             type: OAuth2
           body:
