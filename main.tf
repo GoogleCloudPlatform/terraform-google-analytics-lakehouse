@@ -167,7 +167,8 @@ resource "google_storage_bucket_object" "post_startup_script" {
 
 resource "google_project_iam_member" "gcs_sa_roles" {
   for_each = toset([
-    "roles/storage.objectViewer"
+    "roles/storage.admin",
+    "roles/storagetransfer.serviceAgent"
   ])
 
   project = module.project-services.project_id
