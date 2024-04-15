@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#ICEBERG setup
 # Set up networking
 resource "google_compute_network" "default_network" {
   project                 = module.project-services.project_id
@@ -79,27 +78,4 @@ resource "google_project_iam_member" "dataproc_sa_roles" {
   project = module.project-services.project_id
   role    = each.key
   member  = "serviceAccount:${google_service_account.dataproc_service_account.email}"
-}
-
-# # Create a BigQuery connection
-resource "google_bigquery_connection" "ds_connection" {
-  project       = module.project-services.project_id
-  connection_id = "gcp_gcs_connection"
-  location      = var.region
-  friendly_name = "Storage Bucket Connection"
-  cloud_resource {}
-}
-
-# # Grant IAM access to the BigQuery Connection account for Cloud Storage
-resource "google_project_iam_member" "bq_connection_iam_object_viewer" {
-  project = module.project-services.project_id
-  role    = "roles/storage.objectViewer"
-  member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
-}
-
-# # Grant IAM access to the BigQuery Connection account for BigLake Metastore
-resource "google_project_iam_member" "bq_connection_iam_biglake" {
-  project = module.project-services.project_id
-  role    = "roles/biglake.admin"
-  member  = "serviceAccount:${google_bigquery_connection.ds_connection.cloud_resource[0].service_account_id}"
 }

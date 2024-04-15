@@ -16,7 +16,7 @@
 
 module "project-services" {
   source                      = "terraform-google-modules/project-factory/google//modules/project_services"
-  version                     = "14.4.0"
+  version                     = "14.5.0"
   disable_services_on_destroy = false
 
   project_id  = var.project_id
@@ -56,30 +56,109 @@ resource "time_sleep" "wait_after_apis_activate" {
   create_duration = "30s"
 }
 
-# Set up service accounts fine grain sec.
-resource "google_service_account" "marketing_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-marketing-sa-${random_id.id.hex}"
-  display_name = "Service Account for marketing user"
-}
-
-# Set up service accounts fine grain sec.
-resource "google_service_account" "lake_admin_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-lake-admin-sa-${random_id.id.hex}"
-  display_name = "Service Account for lake admin user"
-}
-
-# Set up service accounts fine grain sec.
-resource "google_service_account" "data_analyst_user" {
-  project      = module.project-services.project_id
-  account_id   = "user-analyst-sa-${random_id.id.hex}"
-  display_name = "Service Account for  user"
-}
 
 #get gcs svc account
 data "google_storage_transfer_project_service_account" "gcs_account" {
   project = module.project-services.project_id
+}
+  
+#random id
+resource "random_id" "id" {
+  byte_length = 4
+}
+
+# Set up Storage Buckets
+
+# # Set up the raw storage bucket
+resource "google_storage_bucket" "raw_bucket" {
+  name                        = "gcp-${var.use_case_short}-raw-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
+  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
+}
+
+# # Set up the warehouse storage bucket
+resource "google_storage_bucket" "warehouse_bucket" {
+  name                        = "gcp-${var.use_case_short}-warehouse-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
+  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
+}
+
+# # Set up the provisioning bucketstorage bucket
+resource "google_storage_bucket" "provisioning_bucket" {
+  name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+
+}
+
+resource "google_storage_bucket" "ga4_images_bucket" {
+  name                        = "gcp-${var.use_case_short}-ga4-images-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+resource "google_storage_bucket" "textocr_images_bucket" {
+  name                        = "gcp-${var.use_case_short}-textocr-images-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+resource "google_storage_bucket" "tables_bucket" {
+  name                        = "gcp-${var.use_case_short}-tables-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+# Bucket used to store BI data in Dataplex
+resource "google_storage_bucket" "dataplex_bucket" {
+  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
+}
+
+resource "google_storage_bucket_object" "bigquery_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "bigquery.py"
+  source = "${path.module}/src/python/bigquery.py"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+resource "google_storage_bucket_object" "bigtable_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "bigtable.py"
+  source = "${path.module}/src/python/bigtable.py"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+# Uploads the post-startup script for the workbench instance.
+resource "google_storage_bucket_object" "post_startup_script" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "post_startup.sh"
+  source = "${path.module}/src/shell/post_startup.sh"
 
   depends_on = [
     time_sleep.wait_after_apis_activate
