@@ -124,6 +124,26 @@ resource "google_storage_bucket_object" "pyspark_file" {
   ]
 }
 
+resource "google_storage_bucket_object" "bigquery_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "bigquery.py"
+  source = "${path.module}/src/python/bigquery.py"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+resource "google_storage_bucket_object" "bigtable_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "bigtable.py"
+  source = "${path.module}/src/python/bigtable.py"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
 # # Uploads the post-startup script for the workbench instance.
 resource "google_storage_bucket_object" "post_startup_script" {
   bucket = google_storage_bucket.provisioning_bucket.name
@@ -135,6 +155,23 @@ resource "google_storage_bucket_object" "post_startup_script" {
   ]
 }
 
+#get gcs svc account
+data "google_storage_transfer_project_service_account" "gcs_account" {
+  project = module.project-services.project_id
+}
+
+resource "google_project_iam_member" "gcs_sa_roles" {
+  for_each = toset([
+    "roles/storage.admin",
+    "roles/storagetransfer.serviceAgent"
+  ])
+
+  project = module.project-services.project_id
+  role    = each.key
+  member  = "serviceAccount:${data.google_storage_transfer_project_service_account.gcs_account.email}"
+
+  depends_on = [time_sleep.wait_after_apis_activate]
+}
 
 locals {
   buckets = [
