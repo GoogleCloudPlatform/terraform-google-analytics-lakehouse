@@ -40,7 +40,8 @@ resource "google_dataplex_lake" "gcp_primary" {
   project = module.project-services.project_id
 
   depends_on = [
-    google_project_iam_member.dataplex_bucket_access
+    google_project_iam_member.dataplex_bucket_access,
+    google_storage_transfer_job.jobs
   ]
 
 }
