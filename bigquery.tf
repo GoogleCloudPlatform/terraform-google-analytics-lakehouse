@@ -52,16 +52,6 @@ resource "google_project_iam_member" "connection_permission_grant" {
   member  = format("serviceAccount:%s", google_bigquery_connection.spark.spark[0].service_account_id)
 }
 
-# # Creates a stored procedure for a new view
-resource "google_bigquery_routine" "create_view_ecommerce" {
-  project         = module.project-services.project_id
-  dataset_id      = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  routine_id      = "create_view_ecommerce"
-  routine_type    = "PROCEDURE"
-  language        = "SQL"
-  definition_body = file("${path.module}/src/sql/view_ecommerce.sql")
-}
-
 locals {
   lakehouse_catalog = "lakehouse_catalog"
 }
@@ -102,3 +92,25 @@ resource "google_bigquery_routine" "create_iceberg_tables" {
     }
   }
 }
+
+# # Execute after Dataplex discovery wait
+
+resource "google_bigquery_job" "create_view_ecommerce" {
+  job_id = "create_view_ecommerce_${random_id.id.hex}"
+
+  query {
+    query = file("${path.module}/src/sql/view_ecommerce.sql")
+  }
+
+  depends_on = [time_sleep.wait_for_dataplex_discovery]
+}
+
+resource "google_bigquery_job" "create_iceberg_tables" {
+  job_id = "create_iceberg_tables_${random_id.id.hex}"
+
+  query {
+    query = "call gcp_lakehouse_ds.create_iceberg_tables('${lakehouse_catalog}', '"+lakehouse_database+"', '"+bq_dataset+"')"}
+  }
+}
+
+resource 

@@ -179,3 +179,16 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
   project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_copy_data]
 }
+
+# Add a wait for Dataplex Discovery. 
+# Discovery on this data generally takes 6-8 minutes.
+resource "time_sleep" "wait_for_dataplex_discovery" {
+  depends_on = [
+    google_dataplex_asset.gcp_primary_curated_bi,
+    google_dataplex_asset.gcp_primary_tables,
+    google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
+    google_dataplex_asset.gcp_primary_textocr
+  ]
+
+  create_duration = "600s"
+}
