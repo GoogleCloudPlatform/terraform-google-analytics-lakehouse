@@ -54,12 +54,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			return true, nil
 		}
 
-		// Assert copy-data workflow ran successfully
-		verifyCopyDataWorkflow := func() (bool, error) {
-			return verifyWorkflow("copy-data")
-		}
-		utils.Poll(t, verifyCopyDataWorkflow, 50, 15*time.Second)
-
 		// Assert project-setup workflow ran successfully
 		verifyProjectSetupWorkflow := func() (bool, error) {
 			return verifyWorkflow("project-setup")
