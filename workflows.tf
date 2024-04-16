@@ -51,33 +51,6 @@ resource "google_project_iam_member" "workflows_sa_roles" {
   ]
 }
 
-# # Workflow to copy data from prod GCS bucket to private buckets
-# # NOTE: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
-# # You can use google_storage_bucket.<bucket>.url to include the prefix.
-# resource "google_workflows_workflow" "copy_data" {
-#   name            = "copy-data"
-#   project         = module.project-services.project_id
-#   region          = var.region
-#   description     = "Copies data and performs project setup"
-#   service_account = google_service_account.workflows_sa.email
-#   source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
-#     public_data_bucket    = var.public_data_bucket,
-#     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
-#     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
-#     tables_bucket         = google_storage_bucket.tables_bucket.name,
-#     dataplex_bucket       = google_storage_bucket.dataplex_bucket.name,
-#     images_zone_name      = google_dataplex_zone.gcp_primary_raw.name,
-#     tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
-#     lake_name             = google_dataplex_lake.gcp_primary.name
-#   })
-
-#   depends_on = [
-#     google_project_iam_member.workflows_sa_roles,
-#     google_project_iam_member.dataproc_sa_roles
-#   ]
-
-# }
-
 # Workflow to set up project resources
 # Note: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
 # You can use google_storage_bucket.<bucket>.url to include the prefix.
@@ -112,29 +85,6 @@ resource "google_workflows_workflow" "project_setup" {
 data "google_client_config" "current" {
 }
 
-# # # execute the copy data workflow
-# data "http" "call_workflows_copy_data" {
-#   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.copy_data.name}/executions"
-#   method = "POST"
-#   request_headers = {
-#     Accept = "application/json"
-#   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-#   depends_on = [
-#     google_storage_bucket.textocr_images_bucket,
-#     google_storage_bucket.ga4_images_bucket,
-#     google_storage_bucket.tables_bucket
-#   ]
-# }
-
-# resource "time_sleep" "wait_after_copy_data" {
-#   create_duration = "30s"
-#   depends_on = [
-#     data.google_storage_project_service_account.gcs_account,
-#     #data.http.call_workflows_copy_data
-#   ]
-# }
-
-
 # execute the other project setup workflow
 data "http" "call_workflows_project_setup" {
   url    = "https://workflowexecutions.googleapis.com/v1/projects/${module.project-services.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.project_setup.name}/executions"
@@ -154,7 +104,6 @@ data "http" "call_workflows_project_setup" {
     google_service_account.dataproc_service_account,
     google_storage_bucket.provisioning_bucket,
     google_storage_bucket.warehouse_bucket,
-    time_sleep.wait_after_copy_data
   ]
 }
 
@@ -168,14 +117,4 @@ resource "time_sleep" "wait_after_all_workflows" {
   depends_on = [
     data.http.call_workflows_project_setup,
   ]
-}
-
-# Stop the workbench instnace after creation since it costs too much.
-# tflint-ignore: terraform_unused_declarations
-data "http" "call_stop_workbench_instance" {
-  url    = "https://notebooks.googleapis.com/v2/projects/${module.project-services.project_id}/locations/${var.region}-a/instances/${google_workbench_instance.workbench_instance.name}:stop"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
 }
