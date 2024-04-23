@@ -45,34 +45,34 @@ main:
               switch:
                 - condition: $${len(Operation.body.executions) > 1}
                   next: end
-    - sub_wait_for_dataplex_discovery:
-        steps:
-          - assign_asset_ids:
-              assign:
-                - asset_ids:
-                    - ${dataplex_asset_tables_id}
-                    - ${dataplex_asset_textocr_id}
-                    - ${dataplex_asset_ga4_id}
-                    # ADD NEW ASSETS HERE
-          - run_checks:
-              parallel:
-                for:
-                  value: asset_id
-                  in: $${asset_ids}
-                  steps:
-                    - run_check:
-                        call: check_discovery_status
-                        args:
-                          asset_id: $${asset_id}
-                        result: result
+    # - sub_wait_for_dataplex_discovery:
+    #     steps:
+    #       - assign_asset_ids:
+    #           assign:
+    #             - asset_ids:
+    #                 - ${dataplex_asset_tables_id}
+    #                 - ${dataplex_asset_textocr_id}
+    #                 - ${dataplex_asset_ga4_id}
+    #                 # ADD NEW ASSETS HERE
+    #       - run_checks:
+    #           parallel:
+    #             for:
+    #               value: asset_id
+    #               in: $${asset_ids}
+    #               steps:
+    #                 - run_check:
+    #                     call: check_discovery_status
+    #                     args:
+    #                       asset_id: $${asset_id}
+    #                     result: result
     # Extra wait after discovery for table publishing
-    - sub_extra_dataplex_wait:
-        call: sys.sleep
-        args:
-          seconds: 120
-    - sub_create_tables:
-        call: create_tables
-        result: create_tables_output
+    # - sub_extra_dataplex_wait:
+    #     call: sys.sleep
+    #     args:
+    #       seconds: 120
+    # - sub_create_tables:
+    #     call: create_tables
+    #     result: create_tables_output
     - sub_create_data_quality_rules:
         call: create_data_quality_rules
         result: create_data_quality_rules_output
@@ -80,65 +80,65 @@ main:
         call: create_taxonomy
         result: create_taxonomy_output
 
-# Subworkflow to check if Dataplex Discovery is complete
-check_discovery_status:
-  params: [asset_id]
-  steps:
-    - check_status:
-        call: http.get
-        args:
-          url: $${"https://dataplex.googleapis.com/v1/"+asset_id}
-          auth:
-            type: OAuth2
-        result: Asset
-    - check_if_done:
-        switch:
-          - condition: $${Asset.body.state == "ACTIVE" and Asset.body.discoveryStatus.state == "SCHEDULED"}
-            return: Asset
-    - wait:
-        call: sys.sleep
-        args:
-          seconds: 15
-        next: check_status
+# # Subworkflow to check if Dataplex Discovery is complete
+# check_discovery_status:
+#   params: [asset_id]
+#   steps:
+#     - check_status:
+#         call: http.get
+#         args:
+#           url: $${"https://dataplex.googleapis.com/v1/"+asset_id}
+#           auth:
+#             type: OAuth2
+#         result: Asset
+#     - check_if_done:
+#         switch:
+#           - condition: $${Asset.body.state == "ACTIVE" and Asset.body.discoveryStatus.state == "SCHEDULED"}
+#             return: Asset
+#     - wait:
+#         call: sys.sleep
+#         args:
+#           seconds: 15
+#         next: check_status
 
 # Subworkflow to create BigQuery views using stored procedures
-create_tables:
-  steps:
-    - assignTables:
-        assign:
-          - lakehouse_catalog: ${lakehouse_catalog}
-          - lakehouse_database: lakehouse_db
-          - bq_dataset: ${bq_dataset}
-          - results: {}
-          - tables:
-              create_view_ecommerce: $${"call gcp_lakehouse_ds.create_view_ecommerce()"}
-              create_iceberg_tabes: $${"call gcp_lakehouse_ds.create_iceberg_tables('"+lakehouse_catalog+"', '"+lakehouse_database+"', '"+bq_dataset+"')"}
-    - loopTables:
-        for:
-          value: key
-          in: $${keys(tables)}
-          steps:
-            - runQuery:
-                call: googleapis.bigquery.v2.jobs.query
-                args:
-                  projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                  body:
-                    useLegacySql: false
-                    useQueryCache: false
-                    location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
-                    timeoutMs: 600000
-                    query: $${tables[key]}
-                result: queryResult
-            - captureResults:
-                assign:
-                  - results[key]: $${queryResult}
-    # Extra wait before proceeding to allow BQ jobs to finish
-    - wait_for_bq_to_finish:
-        call: sys.sleep
-        args:
-          seconds: 60
-    - returnStep:
-        return: $${results}
+# create_tables:
+#   steps:
+#     - assignTables:
+#         assign:
+#           - lakehouse_catalog: ${lakehouse_catalog}
+#           - lakehouse_database: lakehouse_db
+#           - bq_dataset: ${bq_dataset}
+#           - results: {}
+#           - tables:
+#               create_view_ecommerce: $${"call gcp_lakehouse_ds.create_view_ecommerce()"}
+#               create_iceberg_tabes: $${"call gcp_lakehouse_ds.create_iceberg_tables('"+lakehouse_catalog+"', '"+lakehouse_database+"', '"+bq_dataset+"')"}
+#     - loopTables:
+#         for:
+#           value: key
+#           in: $${keys(tables)}
+#           steps:
+#             - runQuery:
+#                 call: googleapis.bigquery.v2.jobs.query
+#                 args:
+#                   projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+#                   body:
+#                     useLegacySql: false
+#                     useQueryCache: false
+#                     location: $${sys.get_env("GOOGLE_CLOUD_LOCATION")}
+#                     timeoutMs: 600000
+#                     query: $${tables[key]}
+#                 result: queryResult
+#             - captureResults:
+#                 assign:
+#                   - results[key]: $${queryResult}
+#     # Extra wait before proceeding to allow BQ jobs to finish
+#     - wait_for_bq_to_finish:
+#         call: sys.sleep
+#         args:
+#           seconds: 60
+#     - returnStep:
+#         return: $${results}
 
 create_data_quality_rules:
   steps:
