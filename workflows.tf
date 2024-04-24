@@ -142,7 +142,7 @@ data "http" "call_workflows_project_setup" {
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
     google_bigquery_dataset.gcp_lakehouse_ds,
-    time_sleep.wait_for_dataplex_discovery
+    time_sleep.wait_for_dataplex_discovery,
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
     google_dataplex_asset.gcp_primary_tables,
     google_dataplex_asset.gcp_primary_textocr,
