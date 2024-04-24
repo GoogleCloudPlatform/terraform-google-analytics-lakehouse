@@ -180,7 +180,7 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
   depends_on = [time_sleep.wait_after_copy_data]
 }
 
-# Add a wait for Dataplex Discovery. 
+# Add a wait for Dataplex Discovery.
 # Discovery on this data generally takes 6-8 minutes.
 resource "time_sleep" "wait_for_dataplex_discovery" {
   depends_on = [
