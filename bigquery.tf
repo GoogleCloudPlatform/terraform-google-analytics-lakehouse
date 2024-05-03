@@ -96,32 +96,52 @@ resource "google_bigquery_routine" "create_iceberg_tables" {
 # # Execute after Dataplex discovery wait
 
 resource "google_bigquery_job" "create_view_ecommerce" {
-  project = module.project-services.project_id
+  project  = module.project-services.project_id
   location = var.region
-  job_id  = "create_view_ecommerce_${random_id.id.hex}"
+  job_id   = "create_view_ecommerce_${random_id.id.hex}"
 
   query {
     query = file("${path.module}/src/sql/view_ecommerce.sql")
-    
+
     # Since the query contains DML, these must be set to empty.
     create_disposition = ""
-    write_disposition = ""
+    write_disposition  = ""
   }
 
   depends_on = [time_sleep.wait_for_dataplex_discovery]
+}
+
+resource "time_sleep" "check_create_view_ecommerce" {
+  create_duration = "30s"
+
+  postcondition {
+    condition     = google_bigquery_job.create_view_ecommerce.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
+    error_message = "State: ${google_bigquery_job.create_view_ecommerce.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+  }
 }
 
 resource "google_bigquery_job" "create_iceberg_tables" {
-  project = module.project-services.project_id
+  project  = module.project-services.project_id
   location = var.region
-  job_id  = "create_iceberg_tables_${random_id.id.hex}"
+  job_id   = "create_iceberg_tables_${random_id.id.hex}"
 
   query {
     query = "call gcp_lakehouse_ds.create_iceberg_tables('${local.lakehouse_catalog}', 'lakehouse_db', '${google_bigquery_dataset.gcp_lakehouse_ds.dataset_id}')"
-    # Since the query contains DML, these must be set to empty.
+
+    # Since the query calls a stored procedure, these must be set to empty.
     create_disposition = ""
-    write_disposition = ""
+    write_disposition  = ""
   }
 
   depends_on = [time_sleep.wait_for_dataplex_discovery]
 }
+
+resource "time_sleep" "check_create_iceberg_tables" {
+  create_duration = "300s"
+
+  postcondition {
+    condition     = google_bigquery_job.create_iceberg_tables.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
+    error_message = "State: ${google_bigquery_job.create_iceberg_tables.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+  }
+}
+
