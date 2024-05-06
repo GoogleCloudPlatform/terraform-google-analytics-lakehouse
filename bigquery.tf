@@ -114,9 +114,11 @@ resource "google_bigquery_job" "create_view_ecommerce" {
 resource "time_sleep" "check_create_view_ecommerce" {
   create_duration = "30s"
 
-  postcondition {
-    condition     = google_bigquery_job.create_view_ecommerce.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
-    error_message = "State: ${google_bigquery_job.create_view_ecommerce.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+  lifecycle {
+    postcondition {
+      condition     = google_bigquery_job.create_view_ecommerce.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
+      error_message = "State: ${google_bigquery_job.create_view_ecommerce.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+    }
   }
 }
 
@@ -138,10 +140,12 @@ resource "google_bigquery_job" "create_iceberg_tables" {
 
 resource "time_sleep" "check_create_iceberg_tables" {
   create_duration = "300s"
-
-  postcondition {
-    condition     = google_bigquery_job.create_iceberg_tables.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
-    error_message = "State: ${google_bigquery_job.create_iceberg_tables.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+  
+  lifecycle {
+    postcondition {
+      condition     = google_bigquery_job.create_iceberg_tables.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
+      error_message = "State: ${google_bigquery_job.create_iceberg_tables.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+    }
   }
 }
 

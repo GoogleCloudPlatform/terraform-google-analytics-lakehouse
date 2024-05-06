@@ -197,7 +197,7 @@ locals {
 }
 
 resource "google_dataplex_datascan" "dq_scan" {
-  location = var.region
+  location     = var.region
   data_scan_id = "thelook-ecommerce-orders"
 
   data {
@@ -212,44 +212,44 @@ resource "google_dataplex_datascan" "dq_scan" {
 
   data_quality_spec {
     rules {
-      column = "order_id"
-      dimension = "COMPLETENESS"
-      name = "non-null"
+      column      = "order_id"
+      dimension   = "COMPLETENESS"
+      name        = "non-null"
       description = "Sample rule for non-null column"
-      threshold = 1.0
+      threshold   = 1.0
       non_null_expectation {}
     }
 
     rules {
-      column = "user_id"
-      dimension = "COMPLETENESS"
-      name = "non-null"
+      column      = "user_id"
+      dimension   = "COMPLETENESS"
+      name        = "non-null"
       description = "Sample rule for non-null column"
-      threshold = 1.0
+      threshold   = 1.0
       non_null_expectation {}
     }
 
     rules {
-      column = "created_at"
-      dimension = "COMPLETENESS"
-      name = "non-null"
+      column      = "created_at"
+      dimension   = "COMPLETENESS"
+      name        = "non-null"
       description = "Sample rule for non-null column"
-      threshold = 1.0
+      threshold   = 1.0
       non_null_expectation {}
     }
 
     rules {
-      column = "order_id"
-      dimension = "UNIQUENESS"
-      name = "unique"
+      column      = "order_id"
+      dimension   = "UNIQUENESS"
+      name        = "unique"
       description = "Sample rule for values in a set"
       uniqueness_expectation {}
     }
 
     rules {
-      column = "status"
-      dimension = "VALIDITY"
-      name = "one-of-set"
+      column      = "status"
+      dimension   = "VALIDITY"
+      name        = "one-of-set"
       description = "Sample rule for values in a set"
       ignore_null = false
       set_expectation {
@@ -258,22 +258,22 @@ resource "google_dataplex_datascan" "dq_scan" {
     }
 
     rules {
-      column = "num_of_item"
-      dimension = "VALIDITY"
-      name = "range-values"
+      column      = "num_of_item"
+      dimension   = "VALIDITY"
+      name        = "range-values"
       description = "Sample rule for values in a range"
       ignore_null = false
-      threshold = 0.99
+      threshold   = 0.99
       range_expectation {
-        max_value = 1
+        max_value          = 1
         strict_max_enabled = false
         strict_min_enabled = false
       }
     }
 
     rules {
-      dimension = "VALIDITY"
-      name = "non-empty-table"
+      dimension   = "VALIDITY"
+      name        = "non-empty-table"
       description = "Sample rule for a non-empty table"
       table_condition_expectation {
         sql_expression = "COUNT(*) > 0"
