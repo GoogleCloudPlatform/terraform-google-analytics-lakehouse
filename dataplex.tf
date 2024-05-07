@@ -197,7 +197,7 @@ locals {
 }
 
 resource "google_dataplex_datascan" "dq_scan" {
-  project    = module.project-services.project_id
+  project      = module.project-services.project_id
   location     = var.region
   data_scan_id = "thelook-ecommerce-orders"
 
@@ -281,4 +281,6 @@ resource "google_dataplex_datascan" "dq_scan" {
       }
     }
   }
+
+  depends_on = [time_sleep.wait_for_dataplex_discovery]
 }
