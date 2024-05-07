@@ -23,6 +23,8 @@ resource "google_compute_network" "default_network" {
   mtu                     = 1460
 }
 
+# add destroy sleep here
+
 resource "google_compute_subnetwork" "subnet" {
   project                  = module.project-services.project_id
   name                     = "dataproc-subnet"
