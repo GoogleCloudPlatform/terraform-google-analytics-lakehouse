@@ -111,18 +111,18 @@ resource "google_bigquery_job" "create_view_ecommerce" {
   depends_on = [time_sleep.wait_for_dataplex_discovery]
 }
 
-resource "time_sleep" "check_create_view_ecommerce" {
-  create_duration = "30s"
+# resource "time_sleep" "check_create_view_ecommerce" {
+#   create_duration = "30s"
 
-  depends_on = [google_bigquery_job.create_view_ecommerce]
+#   depends_on = [google_bigquery_job.create_view_ecommerce]
 
-  lifecycle {
-    postcondition {
-      condition     = google_bigquery_job.create_view_ecommerce.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
-      error_message = "State: ${google_bigquery_job.create_view_ecommerce.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
-    }
-  }
-}
+#   lifecycle {
+#     postcondition {
+#       condition     = google_bigquery_job.create_view_ecommerce.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
+#       error_message = "State: ${google_bigquery_job.create_view_ecommerce.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+#     }
+#   }
+# }
 
 resource "google_bigquery_job" "create_iceberg_tables" {
   project  = module.project-services.project_id
@@ -140,16 +140,16 @@ resource "google_bigquery_job" "create_iceberg_tables" {
   depends_on = [time_sleep.wait_for_dataplex_discovery]
 }
 
-resource "time_sleep" "check_create_iceberg_tables" {
-  create_duration = "300s"
+# resource "time_sleep" "check_create_iceberg_tables" {
+#   create_duration = "300s"
 
-  depends_on = [google_bigquery_job.create_iceberg_tables]
+#   depends_on = [google_bigquery_job.create_iceberg_tables]
 
-  lifecycle {
-    postcondition {
-      condition     = google_bigquery_job.create_iceberg_tables.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
-      error_message = "State: ${google_bigquery_job.create_iceberg_tables.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
-    }
-  }
-}
+#   lifecycle {
+#     postcondition {
+#       condition     = google_bigquery_job.create_iceberg_tables.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
+#       error_message = "State: ${google_bigquery_job.create_iceberg_tables.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
+#     }
+#   }
+# }
 

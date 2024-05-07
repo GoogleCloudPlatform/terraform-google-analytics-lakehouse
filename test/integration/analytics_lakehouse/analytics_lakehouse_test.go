@@ -38,6 +38,8 @@ func TestAnalyticsLakehouse(t *testing.T) {
 	dwh.DefineVerify(func(assert *assert.Assertions) {
 		dwh.DefaultVerify(assert)
 
+		time.Sleep(300 * time.Second)
+
 		projectID := dwh.GetTFSetupStringOutput("project_id")
 
 		verifyWorkflow := func(workflow string) (bool, error) {
