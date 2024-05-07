@@ -197,6 +197,7 @@ locals {
 }
 
 resource "google_dataplex_datascan" "dq_scan" {
+  project    = module.project-services.project_id
   location     = var.region
   data_scan_id = "thelook-ecommerce-orders"
 
