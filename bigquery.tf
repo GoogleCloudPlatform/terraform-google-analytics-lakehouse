@@ -114,6 +114,8 @@ resource "google_bigquery_job" "create_view_ecommerce" {
 resource "time_sleep" "check_create_view_ecommerce" {
   create_duration = "30s"
 
+  depends_on = [google_bigquery_job.create_view_ecommerce]
+
   lifecycle {
     postcondition {
       condition     = google_bigquery_job.create_view_ecommerce.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
@@ -140,7 +142,9 @@ resource "google_bigquery_job" "create_iceberg_tables" {
 
 resource "time_sleep" "check_create_iceberg_tables" {
   create_duration = "300s"
-  
+
+  depends_on = [google_bigquery_job.create_iceberg_tables]
+
   lifecycle {
     postcondition {
       condition     = google_bigquery_job.create_iceberg_tables.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
