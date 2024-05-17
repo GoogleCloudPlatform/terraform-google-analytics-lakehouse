@@ -179,3 +179,108 @@ resource "google_dataplex_asset" "gcp_primary_tables" {
   project    = module.project-services.project_id
   depends_on = [time_sleep.wait_after_copy_data]
 }
+
+# Add a wait for Dataplex Discovery.
+# Discovery on this data generally takes 6-8 minutes.
+resource "time_sleep" "wait_for_dataplex_discovery" {
+  depends_on = [
+    google_dataplex_asset.gcp_primary_tables,
+    google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
+    google_dataplex_asset.gcp_primary_textocr
+  ]
+
+  create_duration = "600s"
+}
+
+locals {
+  datascan_dataset = replace(google_dataplex_zone.gcp_primary_staging.name, "-", "_")
+}
+
+resource "google_dataplex_datascan" "dq_scan" {
+  project      = module.project-services.project_id
+  location     = var.region
+  data_scan_id = "thelook-ecommerce-orders"
+
+  data {
+    resource = "//bigquery.googleapis.com/projects/${module.project-services.project_id}/datasets/${local.datascan_dataset}/tables/thelook_ecommerce_orders"
+  }
+
+  execution_spec {
+    trigger {
+      on_demand {}
+    }
+  }
+
+  data_quality_spec {
+    rules {
+      column      = "order_id"
+      dimension   = "COMPLETENESS"
+      name        = "non-null"
+      description = "Sample rule for non-null column"
+      threshold   = 1.0
+      non_null_expectation {}
+    }
+
+    rules {
+      column      = "user_id"
+      dimension   = "COMPLETENESS"
+      name        = "non-null"
+      description = "Sample rule for non-null column"
+      threshold   = 1.0
+      non_null_expectation {}
+    }
+
+    rules {
+      column      = "created_at"
+      dimension   = "COMPLETENESS"
+      name        = "non-null"
+      description = "Sample rule for non-null column"
+      threshold   = 1.0
+      non_null_expectation {}
+    }
+
+    rules {
+      column      = "order_id"
+      dimension   = "UNIQUENESS"
+      name        = "unique"
+      description = "Sample rule for values in a set"
+      uniqueness_expectation {}
+    }
+
+    rules {
+      column      = "status"
+      dimension   = "VALIDITY"
+      name        = "one-of-set"
+      description = "Sample rule for values in a set"
+      ignore_null = false
+      set_expectation {
+        values = ["Shipped", "Complete", "Processing", "Cancelled", "Returned"]
+      }
+    }
+
+    rules {
+      column      = "num_of_item"
+      dimension   = "VALIDITY"
+      name        = "range-values"
+      description = "Sample rule for values in a range"
+      ignore_null = false
+      threshold   = 0.99
+      range_expectation {
+        max_value          = 1
+        strict_max_enabled = false
+        strict_min_enabled = false
+      }
+    }
+
+    rules {
+      dimension   = "VALIDITY"
+      name        = "non-empty-table"
+      description = "Sample rule for a non-empty table"
+      table_condition_expectation {
+        sql_expression = "COUNT(*) > 0"
+      }
+    }
+  }
+
+  depends_on = [time_sleep.wait_for_dataplex_discovery]
+}
