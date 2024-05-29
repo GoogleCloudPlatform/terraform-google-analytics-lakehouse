@@ -37,9 +37,10 @@ resource "google_project_iam_member" "workbench_sa_roles" {
 
 # Provisions a new Workbench instance.
 resource "google_workbench_instance" "workbench_instance" {
-  name     = "gcp-${var.use_case_short}-workbench-instance-${random_id.id.hex}"
-  project  = module.project-services.project_id
-  location = "${var.region}-a"
+  name          = "gcp-${var.use_case_short}-workbench-instance-${random_id.id.hex}"
+  project       = module.project-services.project_id
+  location      = "${var.region}-a"
+  desired_state = "STOPPED"
 
   gce_setup {
     machine_type = "e2-standard-4"
@@ -77,14 +78,4 @@ resource "google_workbench_instance" "workbench_instance" {
     google_project_iam_member.workbench_sa_roles,
     google_compute_firewall.subnet_firewall_rule
   ]
-}
-
-# Stop the workbench instnace after creation since it costs too much.
-# tflint-ignore: terraform_unused_declarations
-data "http" "call_stop_workbench_instance" {
-  url    = "https://notebooks.googleapis.com/v2/projects/${module.project-services.project_id}/locations/${var.region}-a/instances/${google_workbench_instance.workbench_instance.name}:stop"
-  method = "POST"
-  request_headers = {
-    Accept = "application/json"
-  Authorization = "Bearer ${data.google_client_config.current.access_token}" }
 }
