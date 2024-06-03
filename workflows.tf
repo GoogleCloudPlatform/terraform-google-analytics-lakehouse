@@ -52,30 +52,16 @@ resource "google_project_iam_member" "workflows_sa_roles" {
 }
 
 # Workflow to set up project resources
-# Note: google_storage_bucket.<bucket>.name omits the `gs://` prefix.
-# You can use google_storage_bucket.<bucket>.url to include the prefix.
 resource "google_workflows_workflow" "project_setup" {
   name            = "project-setup"
   project         = module.project-services.project_id
   region          = var.region
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
-    bq_dataset                = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-    lakehouse_catalog         = local.lakehouse_catalog
-    dataplex_asset_tables_id  = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-staging/assets/gcp-primary-tables"
-    dataplex_asset_textocr_id = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-textocr"
-    dataplex_asset_ga4_id     = "projects/${module.project-services.project_id}/locations/${var.region}/lakes/gcp-primary-lake/zones/gcp-primary-raw/assets/gcp-primary-ga4-obfuscated-sample-ecommerce"
-  })
-  # Note: using the asset_id values below in project_setup config threw an IAM error when executing.
-  # This is likely caused by added delays in IAM propagating and causes the workflow to fail.
-  #   dataplex_asset_tables_id  = google_dataplex_asset.gcp_primary_tables.id,
-  #   dataplex_asset_textocr_id = google_dataplex_asset.gcp_primary_textocr.id,
-  #   dataplex_asset_ga4_id     = google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce.id
-  # })
+  source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {})
+
   depends_on = [
-    google_project_iam_member.workflows_sa_roles,
-    google_project_iam_member.dataproc_sa_roles
+    google_project_iam_member.workflows_sa_roles
   ]
 
 }
@@ -94,8 +80,7 @@ data "http" "call_workflows_project_setup" {
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
     google_bigquery_dataset.gcp_lakehouse_ds,
-    google_bigquery_routine.create_iceberg_tables,
-    google_bigquery_routine.create_view_ecommerce,
+    time_sleep.wait_for_dataplex_discovery,
     google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
     google_dataplex_asset.gcp_primary_tables,
     google_dataplex_asset.gcp_primary_textocr,
@@ -104,17 +89,5 @@ data "http" "call_workflows_project_setup" {
     google_service_account.dataproc_service_account,
     google_storage_bucket.provisioning_bucket,
     google_storage_bucket.warehouse_bucket,
-  ]
-}
-
-# Wait for the project setup workflow to finish. This step should take about
-# 12 minutes total. Completing this is not a blocker to begin exploring the
-# deployment, but we pause for five minutes to give some resources time to
-# spin up.
-resource "time_sleep" "wait_after_all_workflows" {
-  create_duration = "300s"
-
-  depends_on = [
-    data.http.call_workflows_project_setup,
   ]
 }
