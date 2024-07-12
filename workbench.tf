@@ -50,6 +50,14 @@ resource "google_workbench_instance" "workbench_instance" {
       name    = "workbench-instances-v20231108-py310"
     }
 
+    boot_disk {
+      disk_type = "PD_STANDARD"
+    }
+
+    data_disks {
+      disk_type = "PD_STANDARD"
+    }
+
     network_interfaces {
       network  = google_compute_network.default_network.id
       subnet   = google_compute_subnetwork.subnet.id
