@@ -22,7 +22,7 @@ echo "Current instance location: $LOCATION"
 
 # Specify the file name
 YAML_FILE="temp.yaml"
-NOTEBOOK="spark_ml.ipynb"
+declare -a NOTEBOOKS=("spark_langchain.ipynb" "spark_ml.ipynb")
 
 # Define the content for the YAML file
 YAML_CONTENT=$(cat <<EOF
@@ -44,15 +44,17 @@ EOF
 # Write the content to the YAML file
 echo "$YAML_CONTENT" > /home/jupyter/"$YAML_FILE"
 
-# Specify the GitHub repository URL and the file path
-REPO_URL="https://raw.githubusercontent.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/main/src/ipynb/spark_ml.ipynb"
-
 # Use wget to download the file and check if the download was successful
-if wget "$REPO_URL" -O /home/jupyter/"$NOTEBOOK"; then
-    echo "File downloaded successfully."
-else
-    echo "Error downloading the file."
-fi
+for NOTEBOOK in "${NOTEBOOKS[@]}"
+do
+  # Specify the GitHub repository URL and the file path
+  REPO_URL="https://raw.githubusercontent.com/GoogleCloudPlatform/terraform-google-analytics-lakehouse/main/src/ipynb/$NOTEBOOK"
+  if wget "$REPO_URL" -O /home/jupyter/"$NOTEBOOK"; then
+      echo "File downloaded successfully."
+  else
+      echo "Error downloading the file."
+  fi
+done
 
 # Import Dataproc session template
 gcloud beta dataproc session-templates import sparkml-template \
