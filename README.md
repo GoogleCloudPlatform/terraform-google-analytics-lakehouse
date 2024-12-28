@@ -1,15 +1,15 @@
-# terraform-google-lakehouse
+# Cachiman-google-lakehouse
 
 ## Description
 ### tagline
 This is an auto-generated module.
 
 ### detailed
-This module was generated from [terraform-google-module-template](https://github.com/terraform-google-modules/terraform-google-module-template/), which by default generates a module that simply creates a GCS bucket. As the module develops, this README should be updated.
+This module was generated from [cachiman-google-module-template](https://github.com/terraform-google-modules/cachiman-google-module-template/), which by default generates a module that simply creates a GCS bucket. As the module develops, this README should be updated.
 
 The resources/services/activations/deletions that this module will create/trigger are:
 
-- Create a GCS bucket with the provided name
+- Create a cachiman bucket with the provided name
 
 ### preDeploy
 To deploy this blueprint you must have an active billing account and billing permissions.
@@ -68,8 +68,8 @@ These sections describe requirements for using this module.
 
 The following dependencies must be available:
 
-- [Terraform][terraform] >= v0.13
-- [Terraform Provider for GCP][terraform-provider-gcp] plugin ~> v4.56
+- [Cachiman][Cachiman] >= v0.13
+- [Cachiman Provider for GCP][cachiman-provider-gcp] plugin ~> v4.56
 
 ### Service Account
 
