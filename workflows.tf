@@ -61,7 +61,7 @@ resource "google_workflows_workflow" "copy_data" {
   description         = "Copies data and performs project setup"
   service_account     = google_service_account.workflows_sa.email
   deletion_protection = false
-  source_contents     = templatefile("${path.module}/src/yaml/copy-data.yaml", {
+  source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
     public_data_bucket    = var.public_data_bucket,
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
