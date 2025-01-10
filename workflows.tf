@@ -70,6 +70,7 @@ resource "google_workflows_workflow" "copy_data" {
     tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
     lake_name             = google_dataplex_lake.gcp_primary.name
   })
+  deletion_protection = false
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
@@ -86,6 +87,7 @@ resource "google_workflows_workflow" "project_setup" {
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
   source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {})
+  deletion_protection = false
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles
