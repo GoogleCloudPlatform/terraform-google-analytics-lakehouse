@@ -60,6 +60,7 @@ resource "google_workflows_workflow" "copy_data" {
   region          = var.region
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
+  deletion_protection = false
   source_contents = templatefile("${path.module}/src/yaml/copy-data.yaml", {
     public_data_bucket    = var.public_data_bucket,
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
@@ -70,7 +71,6 @@ resource "google_workflows_workflow" "copy_data" {
     tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
     lake_name             = google_dataplex_lake.gcp_primary.name
   })
-  deletion_protection = false
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
@@ -86,8 +86,8 @@ resource "google_workflows_workflow" "project_setup" {
   region          = var.region
   description     = "Copies data and performs project setup"
   service_account = google_service_account.workflows_sa.email
-  source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {})
   deletion_protection = false
+  source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {})
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles
