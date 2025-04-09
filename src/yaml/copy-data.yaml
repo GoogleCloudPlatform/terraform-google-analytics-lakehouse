@@ -93,12 +93,12 @@ main:
 
 # Occasionally IAM permissions take time to propagate, so we retry if this happens.
 retry_on_403_predicate:
-    params: [error] 
+    params: [error]
     steps:
         - check_error_code_is_403:
             switch:
               - condition: $${error.code == 403}
-                return: true 
+                return: true
         - not_retryable:
             return: false
 
