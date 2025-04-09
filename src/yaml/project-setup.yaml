@@ -68,8 +68,8 @@ main:
                       args:
                         source_bucket_name: ${thelook_bucket}
                         id: thelook
-            - sub_create_datascan_textocr_images:
                       result: create_datascan_output
+            - sub_create_datascan_textocr_images:
                 steps:
                   - call_create_datascan_textocr_images:
                       call: create_datascan
