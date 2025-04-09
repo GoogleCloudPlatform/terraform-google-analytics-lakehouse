@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- resource "google_project_service_identity" "dataplex_sa" {
+resource "google_project_service_identity" "dataplex_sa" {
   provider = google-beta
   project  = module.project-services.project_id
   service  = "dataplex.googleapis.com"

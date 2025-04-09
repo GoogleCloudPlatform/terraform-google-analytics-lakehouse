@@ -50,15 +50,11 @@ resource "google_project_iam_member" "connection_permission_grant_storage" {
   member  = format("serviceAccount:%s", google_bigquery_connection.storage.cloud_resource[0].service_account_id)
 }
 
-locals {
-  lakehouse_catalog = "lakehouse_catalog"
-}
-
 # # Create a taxonomy for policy tags
 resource "google_data_catalog_taxonomy" "taxonomy" {
-  project         = module.project-services.project_id
-  region          = var.region
-  display_name    = "taxonomy-${module.project-services.project_id}"
+  project                = module.project-services.project_id
+  region                 = var.region
+  display_name           = "taxonomy-${module.project-services.project_id}"
   activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
 }
 
@@ -84,14 +80,14 @@ resource "google_bigquery_datapolicy_data_policy" "data_policy" {
 
 # # Create a BigQuery Table for Apache Iceberg
 resource "google_bigquery_table" "taxi" {
-  project       = module.project-services.project_id
-  table_id      = "taxi"
-  dataset_id    = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  friendly_name = "BigQuery Table for Apache Iceberg"
-  description   = "BigQuery Table for Apache Iceberg"
-  deletion_protection=false
+  project             = module.project-services.project_id
+  table_id            = "taxi"
+  dataset_id          = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
+  friendly_name       = "BigQuery Table for Apache Iceberg"
+  description         = "BigQuery Table for Apache Iceberg"
+  deletion_protection = false
 
-  biglake_configuration  {
+  biglake_configuration {
     connection_id = google_bigquery_connection.storage.name
     storage_uri   = google_storage_bucket.iceberg_bucket.url
     file_format   = "PARQUET"
@@ -234,10 +230,10 @@ EOF
 
 # Load into Iceberg table
 resource "google_bigquery_job" "load_into_iceberg_table" {
-  job_id     = "load_into_iceberg_table"
-  project    = module.project-services.project_id
-  location   = var.region
-  
+  job_id   = "load_into_iceberg_table"
+  project  = module.project-services.project_id
+  location = var.region
+
   load {
     source_uris = [
       "${google_storage_bucket.taxi_bucket.url}/new-york-taxi-trips/tlc-yellow-trips-2022/*.parquet"

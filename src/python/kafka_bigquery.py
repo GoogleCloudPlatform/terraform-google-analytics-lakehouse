@@ -33,7 +33,7 @@ spark = SparkSession \
     .appName("spark-kafka") \
     .getOrCreate()
 
-# events_df = spark.read.format("bigquery").load(f"{project_id}.thelook_{project_id}.events")
+
 events_df = spark.read.format("bigquery").load(f"{project_id}.thelook_{project_id.replace('-', '_')}.events")
 
 kafka_df = events_df.select(col("id").cast("string").alias("key"), to_json(struct(*events_df.columns)).alias("value"))

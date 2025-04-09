@@ -84,7 +84,7 @@ resource "google_workflows_workflow" "project_setup" {
   description         = "Copies data and performs project setup"
   service_account     = google_service_account.workflows_sa.email
   deletion_protection = false
-  source_contents     = templatefile("${path.module}/src/yaml/project-setup.yaml", {
+  source_contents = templatefile("${path.module}/src/yaml/project-setup.yaml", {
     storage_conn          = google_bigquery_connection.storage.name,
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
