@@ -27,69 +27,246 @@ resource "google_bigquery_dataset" "gcp_lakehouse_ds" {
   delete_contents_on_destroy = var.force_destroy
 }
 
-# # Create a BigQuery connection for Spark
-resource "google_bigquery_connection" "spark" {
+# # Create a BigQuery connection for Storage
+resource "google_bigquery_connection" "storage" {
   project       = module.project-services.project_id
-  connection_id = "spark"
+  connection_id = "storage"
   location      = var.region
-  friendly_name = "gcp lakehouse spark connection"
-  spark {}
+  friendly_name = "gcp lakehouse storage connection"
+  cloud_resource {}
 }
 
-# # This grands permissions to the service account of the Spark connection.
-resource "google_project_iam_member" "connection_permission_grant" {
+resource "google_project_iam_member" "connection_permission_grant_storage" {
   for_each = toset([
+    "roles/aiplatform.admin",
     "roles/biglake.admin",
-    "roles/bigquery.dataEditor",
-    "roles/bigquery.connectionAdmin",
-    "roles/bigquery.jobUser",
-    "roles/bigquery.readSessionUser",
+    "roles/bigquery.admin",
+    "roles/dataproc.worker",
     "roles/storage.objectAdmin"
   ])
 
   project = module.project-services.project_id
   role    = each.key
-  member  = format("serviceAccount:%s", google_bigquery_connection.spark.spark[0].service_account_id)
+  member  = format("serviceAccount:%s", google_bigquery_connection.storage.cloud_resource[0].service_account_id)
 }
 
 locals {
   lakehouse_catalog = "lakehouse_catalog"
 }
 
-# # Creates a stored procedure for a spark job to create iceberg tables
-resource "google_bigquery_routine" "create_iceberg_tables" {
+# # Create a taxonomy for policy tags
+resource "google_data_catalog_taxonomy" "taxonomy" {
   project         = module.project-services.project_id
-  dataset_id      = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
-  routine_id      = "create_iceberg_tables"
-  routine_type    = "PROCEDURE"
-  language        = "PYTHON"
-  definition_body = ""
-  arguments {
-    name      = "lakehouse_catalog"
-    data_type = "{\"typeKind\" :  \"STRING\"}"
+  region          = var.region
+  display_name    = "taxonomy-${module.project-services.project_id}"
+  activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
+}
+
+# # Create a policy tag
+resource "google_data_catalog_policy_tag" "policy_tag" {
+  taxonomy     = google_data_catalog_taxonomy.taxonomy.name
+  display_name = "tag"
+  description  = "Data that is considered sensitive"
+}
+
+# # Create a data policy for that tag
+resource "google_bigquery_datapolicy_data_policy" "data_policy" {
+  project          = module.project-services.project_id
+  location         = var.region
+  data_policy_id   = "masking_policy"
+  policy_tag       = google_data_catalog_policy_tag.policy_tag.name
+  data_policy_type = "DATA_MASKING_POLICY"
+
+  data_masking_policy {
+    predefined_expression = "ALWAYS_NULL"
   }
-  arguments {
-    name      = "lakehouse_database"
-    data_type = "{\"typeKind\" :  \"STRING\"}"
+}
+
+# # Create a BigQuery Table for Apache Iceberg
+resource "google_bigquery_table" "taxi" {
+  project       = module.project-services.project_id
+  table_id      = "taxi"
+  dataset_id    = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
+  friendly_name = "BigQuery Table for Apache Iceberg"
+  description   = "BigQuery Table for Apache Iceberg"
+  deletion_protection=false
+
+  biglake_configuration  {
+    connection_id = google_bigquery_connection.storage.name
+    storage_uri   = google_storage_bucket.iceberg_bucket.url
+    file_format   = "PARQUET"
+    table_format  = "ICEBERG"
   }
-  arguments {
-    name      = "bq_dataset"
-    data_type = "{\"typeKind\" :  \"STRING\"}"
-  }
-  spark_options {
-    connection      = google_bigquery_connection.spark.name
-    runtime_version = "2.1"
-    main_file_uri   = "gs://${google_storage_bucket_object.bigquery_file.bucket}/${google_storage_bucket_object.bigquery_file.name}"
-    jar_uris        = ["gs://spark-lib/biglake/biglake-catalog-iceberg1.2.0-0.1.0-with-dependencies.jar"]
-    properties = {
-      "spark.sql.catalog.lakehouse_catalog" : "org.apache.iceberg.spark.SparkCatalog",
-      "spark.sql.catalog.lakehouse_catalog.blms_catalog" : local.lakehouse_catalog
-      "spark.sql.catalog.lakehouse_catalog.catalog-impl" : "org.apache.iceberg.gcp.biglake.BigLakeCatalog",
-      "spark.sql.catalog.lakehouse_catalog.gcp_location" : var.region,
-      "spark.sql.catalog.lakehouse_catalog.gcp_project" : var.project_id,
-      "spark.sql.catalog.lakehouse_catalog.warehouse" : "${google_storage_bucket.warehouse_bucket.url}/warehouse",
-      "spark.jars.packages" : "org.apache.iceberg:iceberg-spark-runtime-3.3_2.13:1.2.1"
+
+  schema = <<EOF
+[
+  {
+    "name": "vendor_id",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "pickup_datetime",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "dropoff_datetime",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "passenger_count",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "trip_distance",
+    "type": "NUMERIC",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "rate_code",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "store_and_fwd_flag",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "payment_type",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "fare_amount",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
     }
+  },
+  {
+    "name": "extra",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
+    }
+  },
+  {
+    "name": "mta_tax",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
+    }
+  },
+  {
+    "name": "tip_amount",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
+    }
+  },
+  {
+    "name": "tolls_amount",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
+    }
+  },
+  {
+    "name": "imp_surcharge",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
+    }
+  },
+  {
+    "name": "airport_fee",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
+    }
+  },
+  {
+    "name": "total_amount",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "policyTags": {
+      "names": ["${google_data_catalog_policy_tag.policy_tag.id}"]
+    }
+  },
+  {
+    "name": "pickup_location_id",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "dropoff_location_id",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "data_file_year",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "data_file_month",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  }
+]
+EOF
+
+  depends_on = [
+    google_project_iam_member.connection_permission_grant_storage
+  ]
+}
+
+# Load into Iceberg table
+resource "google_bigquery_job" "load_into_iceberg_table" {
+  job_id     = "load_into_iceberg_table"
+  project    = module.project-services.project_id
+  location   = var.region
+  
+  load {
+    source_uris = [
+      "${google_storage_bucket.taxi_bucket.url}/new-york-taxi-trips/tlc-yellow-trips-2022/*.parquet"
+    ]
+
+    destination_table {
+      project_id = module.project-services.project_id
+      dataset_id = google_bigquery_dataset.gcp_lakehouse_ds.dataset_id
+      table_id   = google_bigquery_table.taxi.table_id
+    }
+  }
+}
+
+resource "time_sleep" "wait_after_bq_job" {
+  create_duration = "60s"
+  depends_on = [
+    google_bigquery_job.load_into_iceberg_table
+  ]
+}
+
+# # Create Dataform repository
+resource "google_dataform_repository" "notebooks" {
+  provider = google-beta
+  project  = module.project-services.project_id
+  region   = var.region
+  name     = "notebooks"
+
+  labels = {
+    single-file-asset-type = "notebooks"
   }
 }
 
@@ -108,48 +285,5 @@ resource "google_bigquery_job" "create_view_ecommerce" {
     write_disposition  = ""
   }
 
-  depends_on = [time_sleep.wait_for_dataplex_discovery]
+  depends_on = [time_sleep.wait_after_project_setup]
 }
-
-# resource "time_sleep" "check_create_view_ecommerce" {
-#   create_duration = "30s"
-
-#   depends_on = [google_bigquery_job.create_view_ecommerce]
-
-#   lifecycle {
-#     postcondition {
-#       condition     = google_bigquery_job.create_view_ecommerce.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
-#       error_message = "State: ${google_bigquery_job.create_view_ecommerce.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
-#     }
-#   }
-# }
-
-resource "google_bigquery_job" "create_iceberg_tables" {
-  project  = module.project-services.project_id
-  location = var.region
-  job_id   = "create_iceberg_tables_${random_id.id.hex}"
-
-  query {
-    query = "call gcp_lakehouse_ds.create_iceberg_tables('${local.lakehouse_catalog}', 'lakehouse_db', '${google_bigquery_dataset.gcp_lakehouse_ds.dataset_id}')"
-
-    # Since the query calls a stored procedure, these must be set to empty.
-    create_disposition = ""
-    write_disposition  = ""
-  }
-
-  depends_on = [time_sleep.wait_for_dataplex_discovery]
-}
-
-# resource "time_sleep" "check_create_iceberg_tables" {
-#   create_duration = "300s"
-
-#   depends_on = [google_bigquery_job.create_iceberg_tables]
-
-#   lifecycle {
-#     postcondition {
-#       condition     = google_bigquery_job.create_iceberg_tables.status.state == "DONE" && google_bigquery_job.create_view_ecommerce.status.error_result == null
-#       error_message = "State: ${google_bigquery_job.create_iceberg_tables.status}, Error: ${google_bigquery_job.create_view_ecommerce.status.error_result.message}"
-#     }
-#   }
-# }
-

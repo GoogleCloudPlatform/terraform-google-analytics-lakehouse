@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-output "workflow_return_project_setup" {
-  description = "Output of the project setup workflow"
-  value       = data.http.call_workflows_project_setup.response_body
-}
-
 output "lookerstudio_report_url" {
   value       = "https://lookerstudio.google.com/reporting/create?c.reportId=79675b4f-9ed8-4ee4-bb35-709b8fd5306a&ds.ds0.datasourceName=vw_ecommerce&ds.ds0.projectId=${var.project_id}&ds.ds0.type=TABLE&ds.ds0.datasetId=gcp_lakehouse_ds&ds.ds0.tableId=view_ecommerce"
   description = "The URL to create a new Looker Studio report displays a sample dashboard for data analysis"
@@ -35,6 +30,6 @@ output "neos_tutorial_url" {
 }
 
 output "lakehouse_colab_url" {
-  value       = "https://colab.research.google.com/github/GoogleCloudPlatform/terraform-google-analytics-lakehouse/blob/main/src/ipynb/exploratory-analysis.ipynb"
+  value       = "https://colab.research.google.com/github/GoogleCloudPlatform/terraform-google-analytics-lakehouse/blob/main/src/ipynb/create_embeddings_with_bigquery.ipynb"
   description = "The URL to launch the in-console tutorial for the Analytics Lakehouse solution"
 }

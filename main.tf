@@ -23,6 +23,7 @@ module "project-services" {
   enable_apis = var.enable_apis
 
   activate_apis = [
+    "aiplatform.googleapis.com",
     "artifactregistry.googleapis.com",
     "biglake.googleapis.com",
     "bigquery.googleapis.com",
@@ -32,21 +33,26 @@ module "project-services" {
     "bigquerymigration.googleapis.com",
     "bigqueryreservation.googleapis.com",
     "bigquerystorage.googleapis.com",
+    "cloudaicompanion.googleapis.com",
     "cloudapis.googleapis.com",
     "cloudbuild.googleapis.com",
     "cloudfunctions.googleapis.com",
     "compute.googleapis.com",
     "config.googleapis.com",
     "datacatalog.googleapis.com",
+    "dataflow.googleapis.com",
+    "dataform.googleapis.com",
     "datalineage.googleapis.com",
     "dataplex.googleapis.com",
     "dataproc.googleapis.com",
+    "dataprocrm.googleapis.com",
     "iam.googleapis.com",
-    "serviceusage.googleapis.com",
-    "storage-api.googleapis.com",
-    "storage.googleapis.com",
-    "workflows.googleapis.com",
+    "managedkafka.googleapis.com",
     "notebooks.googleapis.com",
+    "serviceusage.googleapis.com",
+    "storage.googleapis.com",
+    "storage-api.googleapis.com",
+    "workflows.googleapis.com",
   ]
 }
 
@@ -62,40 +68,35 @@ resource "random_id" "id" {
 
 # Set up Storage Buckets
 
-# # Set up the raw storage bucket
-resource "google_storage_bucket" "raw_bucket" {
-  name                        = "gcp-${var.use_case_short}-raw-${random_id.id.hex}"
-  project                     = module.project-services.project_id
-  location                    = var.region
-  uniform_bucket_level_access = true
-  force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
-}
-
 # # Set up the warehouse storage bucket
 resource "google_storage_bucket" "warehouse_bucket" {
-  name                        = "gcp-${var.use_case_short}-warehouse-${random_id.id.hex}"
+  name                        = "${var.use_case_short}-warehouse-${module.project-services.project_id}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
-
-  # public_access_prevention = "enforced" # need to validate if this is a hard requirement
 }
 
-# # Set up the provisioning bucketstorage bucket
+# Set up the provisioning bucketstorage bucket
 resource "google_storage_bucket" "provisioning_bucket" {
-  name                        = "gcp-${var.use_case_short}-provisioner-${random_id.id.hex}"
+  name                        = "${var.use_case_short}-provisioner-${module.project-services.project_id}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
+}
 
+# Set up the provisioning bucketstorage bucket
+resource "google_storage_bucket" "iceberg_bucket" {
+  name                        = "${var.use_case_short}-iceberg-${module.project-services.project_id}"
+  project                     = module.project-services.project_id
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = var.force_destroy
 }
 
 resource "google_storage_bucket" "ga4_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-ga4-images-${random_id.id.hex}"
+  name                        = "ga4-images-${module.project-services.project_id}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
@@ -103,29 +104,29 @@ resource "google_storage_bucket" "ga4_images_bucket" {
 }
 
 resource "google_storage_bucket" "textocr_images_bucket" {
-  name                        = "gcp-${var.use_case_short}-textocr-images-${random_id.id.hex}"
+  name                        = "textocr-images-${module.project-services.project_id}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
 }
 
-resource "google_storage_bucket" "tables_bucket" {
-  name                        = "gcp-${var.use_case_short}-tables-${random_id.id.hex}"
+resource "google_storage_bucket" "taxi_bucket" {
+  name                        = "taxi-${module.project-services.project_id}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
 }
 
-# Bucket used to store BI data in Dataplex
-resource "google_storage_bucket" "dataplex_bucket" {
-  name                        = "gcp-${var.use_case_short}-dataplex-${random_id.id.hex}"
+resource "google_storage_bucket" "thelook_bucket" {
+  name                        = "thelook-${module.project-services.project_id}"
   project                     = module.project-services.project_id
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
 }
+
 
 resource "google_storage_bucket_object" "bigquery_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
@@ -137,10 +138,44 @@ resource "google_storage_bucket_object" "bigquery_file" {
   ]
 }
 
+# Bigtable task file
 resource "google_storage_bucket_object" "bigtable_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "bigtable.py"
   source = "${path.module}/src/python/bigtable.py"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+# Kafka + BigQuery task file
+resource "google_storage_bucket_object" "kafka_bigquery_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "kafka-bigquery.py"
+  source = "${path.module}/src/python/kafka_bigquery.py"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+# Upload Spark + BigQuery notebook
+resource "google_storage_bucket_object" "spark_biguery_notebook_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "spark_in_bigquery.ipynb"
+  source = "${path.module}/src/ipynb/spark_in_bigquery.ipynb"
+
+  depends_on = [
+    google_storage_bucket.provisioning_bucket
+  ]
+}
+
+# Upload BQML notebook
+resource "google_storage_bucket_object" "bqml_notebook_file" {
+  bucket = google_storage_bucket.provisioning_bucket.name
+  name   = "create_embeddings_with_bqml.ipynb"
+  source = "${path.module}/src/ipynb/create_embeddings_with_bqml.ipynb"
 
   depends_on = [
     google_storage_bucket.provisioning_bucket

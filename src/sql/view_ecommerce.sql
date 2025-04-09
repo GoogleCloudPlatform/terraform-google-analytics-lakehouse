@@ -11,6 +11,8 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+
+EXECUTE IMMEDIATE REPLACE("""
 CREATE OR REPLACE VIEW
   gcp_lakehouse_ds.view_ecommerce AS
 SELECT
@@ -51,21 +53,21 @@ SELECT
   u.longitude user_long,
   u.traffic_source user_traffic_source
 FROM
-  gcp_primary_staging.thelook_ecommerce_orders o
+  thelook_PROJECT_ID.orders o
 INNER JOIN
-  gcp_primary_staging.thelook_ecommerce_order_items i
+  thelook_PROJECT_ID.order_items i
 ON
   o.order_id = i.order_id
 INNER JOIN
-  `gcp_primary_staging.thelook_ecommerce_products` p
+  `thelook_PROJECT_ID.products` p
 ON
   i.product_id = p.id
 INNER JOIN
-  `gcp_primary_staging.thelook_ecommerce_distribution_centers` d
+  `thelook_PROJECT_ID.distribution_centers` d
 ON
   p.distribution_center_id = d.id
 INNER JOIN
-  `gcp_primary_staging.thelook_ecommerce_users` u
+  `thelook_PROJECT_ID.users` u
 ON
   o.user_id = u.id
-;
+;""", "PROJECT_ID", @@project_id)

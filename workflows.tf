@@ -39,7 +39,8 @@ resource "google_project_iam_member" "workflows_sa_roles" {
     "roles/logging.logWriter",
     "roles/dataproc.admin",
     "roles/bigquery.admin",
-    "roles/dataplex.admin"
+    "roles/dataplex.admin",
+    "roles/compute.admin",
   ])
 
   project = module.project-services.project_id
@@ -65,16 +66,12 @@ resource "google_workflows_workflow" "copy_data" {
     public_data_bucket    = var.public_data_bucket,
     textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
     ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
-    tables_bucket         = google_storage_bucket.tables_bucket.name,
-    dataplex_bucket       = google_storage_bucket.dataplex_bucket.name,
-    images_zone_name      = google_dataplex_zone.gcp_primary_raw.name,
-    tables_zone_name      = google_dataplex_zone.gcp_primary_staging.name,
-    lake_name             = google_dataplex_lake.gcp_primary.name
+    thelook_bucket        = google_storage_bucket.thelook_bucket.name,
+    taxi_bucket           = google_storage_bucket.taxi_bucket.name,
   })
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles,
-    google_project_iam_member.dataproc_sa_roles
   ]
 
 }
@@ -87,7 +84,15 @@ resource "google_workflows_workflow" "project_setup" {
   description         = "Copies data and performs project setup"
   service_account     = google_service_account.workflows_sa.email
   deletion_protection = false
-  source_contents     = templatefile("${path.module}/src/yaml/project-setup.yaml", {})
+  source_contents     = templatefile("${path.module}/src/yaml/project-setup.yaml", {
+    storage_conn          = google_bigquery_connection.storage.name,
+    textocr_images_bucket = google_storage_bucket.textocr_images_bucket.name,
+    ga4_images_bucket     = google_storage_bucket.ga4_images_bucket.name,
+    thelook_bucket        = google_storage_bucket.thelook_bucket.name,
+    taxi_bucket           = google_storage_bucket.taxi_bucket.name,
+    repo_id               = google_dataform_repository.notebooks.id,
+    notebooks_bucket      = google_storage_bucket.provisioning_bucket.name,
+  })
 
   depends_on = [
     google_project_iam_member.workflows_sa_roles
@@ -110,7 +115,8 @@ data "http" "call_workflows_copy_data" {
   depends_on = [
     google_storage_bucket.textocr_images_bucket,
     google_storage_bucket.ga4_images_bucket,
-    google_storage_bucket.tables_bucket
+    google_storage_bucket.thelook_bucket,
+    google_storage_bucket.taxi_bucket,
   ]
 }
 
@@ -129,16 +135,22 @@ data "http" "call_workflows_project_setup" {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
   depends_on = [
+    google_bigquery_connection.storage,
     google_bigquery_dataset.gcp_lakehouse_ds,
-    time_sleep.wait_for_dataplex_discovery,
-    google_dataplex_asset.gcp_primary_ga4_obfuscated_sample_ecommerce,
-    google_dataplex_asset.gcp_primary_tables,
-    google_dataplex_asset.gcp_primary_textocr,
-    google_project_iam_member.connection_permission_grant,
-    google_project_iam_member.dataproc_sa_roles,
-    google_service_account.dataproc_service_account,
+    google_project_iam_member.connection_permission_grant_storage,
     google_storage_bucket.provisioning_bucket,
-    google_storage_bucket.warehouse_bucket,
-    time_sleep.wait_after_copy_data
+    google_storage_bucket.textocr_images_bucket,
+    google_storage_bucket.ga4_images_bucket,
+    google_storage_bucket.thelook_bucket,
+    google_storage_bucket.taxi_bucket,
+    google_dataform_repository.notebooks,
+    time_sleep.wait_after_copy_data,
+  ]
+}
+
+resource "time_sleep" "wait_after_project_setup" {
+  create_duration = "480s"
+  depends_on = [
+    data.http.call_workflows_project_setup
   ]
 }
