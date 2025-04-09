@@ -63,13 +63,13 @@ main:
                       result: enable_private_google_access_output
             - sub_create_datascan_thelook:
                 steps:
-                  - call_create_datascan_thelook:                            
+                  - call_create_datascan_thelook:
                       call: create_datascan
                       args:
                         source_bucket_name: ${thelook_bucket}
-                        id: thelook 
-                      result: create_datascan_output
+                        id: thelook
             - sub_create_datascan_textocr_images:
+                      result: create_datascan_output
                 steps:
                   - call_create_datascan_textocr_images:
                       call: create_datascan
@@ -87,14 +87,14 @@ main:
                       result: create_datascan_output
             - sub_upload_spark_notebook:
                 steps:
-                  - call_upload_spark_notebook:                      
+                  - call_upload_spark_notebook:
                       call: upload_notebook
                       args:
                         notebook_path: "spark_in_bigquery.ipynb"
                       result: upload_spark_notebook_output
             - sub_upload_bqml_notebook:
                 steps:
-                  - call_upload_bqml_notebook:                      
+                  - call_upload_bqml_notebook:
                       call: upload_notebook
                       args:
                         notebook_path: create_embeddings_with_bqml.ipynb
@@ -102,26 +102,26 @@ main:
 
 # Occasionally IAM permissions take time to propagate, so we retry if this happens.
 retry_on_403_predicate:
-    params: [error] 
+    params: [error]
     steps:
         - check_error_code_is_403:
             switch:
               - condition: $${error.code == 403}
-                return: true 
+                return: true
         - not_retryable:
             return: false
 
 retry_on_404_predicate:
-    params: [error] 
+    params: [error]
     steps:
         - check_error_code_is_404:
             switch:
               - condition: $${error.code == 404}
-                return: true 
+                return: true
         - not_retryable:
             return: false
 
-enable_private_google_access: 
+enable_private_google_access:
   steps:
     - assign_values:
         assign:
@@ -156,7 +156,7 @@ create_datascan:
               resource: $${"//storage.googleapis.com/projects/"+project_id+"/buckets/"+source_bucket_name}
             executionSpec:
               trigger:
-                onDemand: 
+                onDemand:
             dataDiscoverySpec:
               bigqueryPublishingConfig:
                 tableType: BIGLAKE
@@ -169,14 +169,14 @@ create_datascan:
                 url: $${"https://dataplex.googleapis.com/v1/projects/"+project_id+"/locations/"+location+"/dataScans/"+id+":run"}
                 auth:
                     type: OAuth2
-            result: run_datascan_output 
+            result: run_datascan_output
         retry:
             predicate: $${retry_on_404_predicate}
             max_retries: 5
             backoff:
                 initial_delay: 30
                 max_delay: 120
-                multiplier: 2.0   
+                multiplier: 2.0
 
 upload_notebook:
   params: [notebook_path]
@@ -204,10 +204,9 @@ upload_notebook:
               author:
                 name: user
                 emailAddress: user@thelook.com
-              commit_message: Uploading notebook 
+              commit_message: Uploading notebook
             fileOperations:
               $${notebook_path}:
                 writeFile:
                   contents: $${base64.encode(text.encode(notebook_content))}
         result: upload_notebook_output
- 
