@@ -34,9 +34,9 @@ spark = SparkSession \
     .getOrCreate()
 
 
-events_df = spark.read.format("bigquery").load(f"{project_id}.thelook_{project_id.replace('-', '_')}.events")
+order_items_df = spark.read.format("bigquery").load(f"{project_id}.thelook_{project_id.replace('-', '_')}.order_items")
 
-kafka_df = events_df.select(col("id").cast("string").alias("key"), to_json(struct(*events_df.columns)).alias("value"))
+kafka_df = order_items_df.select(col("id").cast("string").alias("key"), to_json(struct(*order_items_df.columns)).alias("value"))
 
 kafka_df \
   .write \
