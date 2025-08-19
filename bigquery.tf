@@ -170,7 +170,7 @@ resource "google_bigquery_table" "users" {
     "name": "created_at",
     "type": "TIMESTAMP",
     "mode": "NULLABLE"
-  },
+  }
 ]
 EOF
 
@@ -487,7 +487,9 @@ resource "google_bigquery_job" "load_into_iceberg_table_taxi" {
 resource "time_sleep" "wait_after_bq_job" {
   create_duration = "60s"
   depends_on = [
-    google_bigquery_job.load_into_iceberg_table
+    google_bigquery_job.load_into_iceberg_table_taxi,
+    google_bigquery_job.load_into_iceberg_table_order_items,
+    google_bigquery_job.load_into_iceberg_table_users
   ]
 }
 
