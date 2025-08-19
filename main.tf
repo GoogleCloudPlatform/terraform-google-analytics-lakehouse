@@ -183,7 +183,7 @@ resource "google_storage_bucket_object" "bqml_notebook_file" {
 }
 
 # Upload SparkML notebook
-resource "google_storage_bucket_object"  sparkml_notebook_file" {
+resource "google_storage_bucket_object" "sparkml_notebook_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
   name   = "purchase_predictions_sparkml.ipynb"
   source = "${path.module}/src/ipynb/purchase_predictions_sparkml.ipynb"
