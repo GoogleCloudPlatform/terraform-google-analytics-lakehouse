@@ -182,11 +182,11 @@ resource "google_storage_bucket_object" "bqml_notebook_file" {
   ]
 }
 
-# Uploads the post-startup script for the workbench instance.
-resource "google_storage_bucket_object" "post_startup_script" {
+# Upload SparkML notebook
+resource "google_storage_bucket_object" "bqml_notebook_file" {
   bucket = google_storage_bucket.provisioning_bucket.name
-  name   = "post_startup.sh"
-  source = "${path.module}/src/shell/post_startup.sh"
+  name   = "purchase_predictions_sparkml.ipynb"
+  source = "${path.module}/src/ipynb/purchase_predictions_sparkml.ipynb"
 
   depends_on = [
     google_storage_bucket.provisioning_bucket

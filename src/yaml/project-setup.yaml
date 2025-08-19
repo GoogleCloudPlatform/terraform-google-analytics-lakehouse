@@ -68,8 +68,8 @@ main:
                       args:
                         source_bucket_name: ${thelook_bucket}
                         id: thelook
-            - sub_create_datascan_textocr_images:
                       result: create_datascan_output
+            - sub_create_datascan_textocr_images:
                 steps:
                   - call_create_datascan_textocr_images:
                       call: create_datascan
@@ -98,6 +98,13 @@ main:
                       call: upload_notebook
                       args:
                         notebook_path: create_embeddings_with_bqml.ipynb
+                      result: upload_bqml_notebook_output
+            - sub_upload_sparkml_notebook:
+                steps:
+                  - call_upload_bqml_notebook:
+                      call: upload_notebook
+                      args:
+                        notebook_path: purchase_predictions_sparkml.ipynb
                       result: upload_bqml_notebook_output
 
 # Occasionally IAM permissions take time to propagate, so we retry if this happens.
