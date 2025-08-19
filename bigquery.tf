@@ -78,7 +78,7 @@ resource "google_bigquery_datapolicy_data_policy" "data_policy" {
   }
 }
 
-# # Create BigLake Tables for Apache Iceberg 
+# # Create BigLake Tables for Apache Iceberg
 resource "google_bigquery_table" "users" {
   project             = module.project-services.project_id
   table_id            = "users"
@@ -416,7 +416,7 @@ resource "google_bigquery_job" "load_into_iceberg_table_users" {
 
   query {
     query = <<-EOT
-      SELECT 
+      SELECT
         id,
         first_name,
         last_name,
@@ -432,7 +432,7 @@ resource "google_bigquery_job" "load_into_iceberg_table_users" {
         longitude,
         traffic_source,
         created_at
-      FROM 
+      FROM
         `bigquery-public-data.thelook_ecommerce.users"
     EOT
 
