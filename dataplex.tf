@@ -93,7 +93,7 @@ resource "google_dataplex_datascan" "thelook" {
   data_discovery_spec {
     bigquery_publishing_config {
       table_type = "BIGLAKE"
-      connections = google_bigquery_connection.storage.name
+      connection = google_bigquery_connection.storage.name
     }
   }
 }
@@ -117,7 +117,7 @@ resource "google_dataplex_datascan" "ga4" {
   data_discovery_spec {
     bigquery_publishing_config {
       table_type = "BIGLAKE"
-      connections = google_bigquery_connection.storage.name
+      connection = google_bigquery_connection.storage.name
     }
   }
 }
@@ -140,7 +140,7 @@ resource "google_dataplex_datascan" "textocr" {
   data_discovery_spec {
     bigquery_publishing_config {
       table_type = "BIGLAKE"
-      connections = google_bigquery_connection.storage.name
+      connection = google_bigquery_connection.storage.name
     }
   }
 }
