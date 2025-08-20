@@ -74,3 +74,73 @@ resource "google_dataplex_datascan" "dq_scan" {
     time_sleep.wait_after_bq_job
   ]
 }
+
+resource "google_dataplex_datascan" "thelook" {
+  project      = module.project-services.project_id
+  location     = var.region
+  data_scan_id = "thelook"
+
+  data {
+    resource = "//storage.googleapis.com/projects/${module.project-services.project_id}/buckets/${google_storage_bucket.thelook_bucket.name}"
+  }
+
+  execution_spec {
+    trigger {
+      on_demand {}
+    }
+  }
+
+  data_discovery_spec {
+    bigqueryPublishingConfig {
+      table_type = "BIGLAKE"
+      connections = google_bigquery_connection.storage.name
+    }
+  }
+}
+
+
+resource "googe_dataplex_datascan" "ga4" {
+  project      = module.project-services.project_id
+  location     = var.region
+  data_scan_id = "ga4"
+
+  data {
+    resource = "//storage.googleapis.com/projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_bucket.name}"
+  }
+
+  execution_spec {
+    trigger {
+      on_demand {}
+    }
+  }
+
+  data_discovery_spec {
+    bigqueryPublishingConfig {
+      table_type = "BIGLAKE"
+      connections = google_bigquery_connection.storage.name
+    }
+  }
+}
+
+resource "google_dataplex_datascan" "textocr" {
+  project      = module.project-services.project_id
+  location     = var.region
+  data_scan_id = "textocr"
+
+  data {
+    resource = "//storage.googleapis.com/projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_bucket.name}"
+  }
+
+  execution_spec {
+    trigger {
+      on_demand {}
+    }
+  }
+
+  data_discovery_spec {
+    bigqueryPublishingConfig {
+      table_type = "BIGLAKE"
+      connections = google_bigquery_connection.storage.name
+    }
+  }
+}

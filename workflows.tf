@@ -144,6 +144,9 @@ data "http" "call_workflows_project_setup" {
     google_storage_bucket.thelook_bucket,
     google_storage_bucket.taxi_bucket,
     google_dataform_repository.notebooks,
+    google_dataplex_datascan.thelook,
+    google_dataplex_datascan.ga4,
+    google_dataplex_datascan.textocr,
     time_sleep.wait_after_copy_data,
   ]
 }
