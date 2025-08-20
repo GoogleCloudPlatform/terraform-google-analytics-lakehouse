@@ -36,8 +36,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 	dwh := tft.NewTFBlueprintTest(t, tft.WithRetryableTerraformErrors(retryErrors, 60, time.Minute))
 
 	dwh.DefineVerify(func(assert *assert.Assertions) {
-		// Commented out until Workbench provider proxy-byoid-url bug is fixed
-		// dwh.DefaultVerify(assert)
+		dwh.DefaultVerify(assert)
 
 		time.Sleep(300 * time.Second)
 
