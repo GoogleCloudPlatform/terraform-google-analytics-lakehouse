@@ -99,7 +99,7 @@ resource "google_dataplex_datascan" "thelook" {
 }
 
 
-resource "googe_dataplex_datascan" "ga4" {
+resource "google_dataplex_datascan" "ga4" {
   project      = module.project-services.project_id
   location     = var.region
   data_scan_id = "ga4"
