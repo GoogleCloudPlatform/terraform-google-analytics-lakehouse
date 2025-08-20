@@ -91,7 +91,7 @@ resource "google_dataplex_datascan" "thelook" {
   }
 
   data_discovery_spec {
-    bigqueryPublishingConfig {
+    bigquery_publishing_config {
       table_type = "BIGLAKE"
       connections = google_bigquery_connection.storage.name
     }
@@ -105,7 +105,7 @@ resource "google_dataplex_datascan" "ga4" {
   data_scan_id = "ga4"
 
   data {
-    resource = "//storage.googleapis.com/projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_bucket.name}"
+    resource = "//storage.googleapis.com/projects/${module.project-services.project_id}/buckets/${google_storage_bucket.ga4_images_bucket.name}"
   }
 
   execution_spec {
@@ -115,7 +115,7 @@ resource "google_dataplex_datascan" "ga4" {
   }
 
   data_discovery_spec {
-    bigqueryPublishingConfig {
+    bigquery_publishing_config {
       table_type = "BIGLAKE"
       connections = google_bigquery_connection.storage.name
     }
@@ -128,7 +128,7 @@ resource "google_dataplex_datascan" "textocr" {
   data_scan_id = "textocr"
 
   data {
-    resource = "//storage.googleapis.com/projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_bucket.name}"
+    resource = "//storage.googleapis.com/projects/${module.project-services.project_id}/buckets/${google_storage_bucket.textocr_images_bucket.name}"
   }
 
   execution_spec {
@@ -138,7 +138,7 @@ resource "google_dataplex_datascan" "textocr" {
   }
 
   data_discovery_spec {
-    bigqueryPublishingConfig {
+    bigquery_publishing_config {
       table_type = "BIGLAKE"
       connections = google_bigquery_connection.storage.name
     }
