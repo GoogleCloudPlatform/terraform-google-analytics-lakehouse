@@ -63,31 +63,31 @@ main:
                       result: enable_private_google_access_output
             - sub_run_datascan_thelook:
                 steps:
-                  - call_create_datascan_thelook:
-                      call: create_datascan
+                  - call_run_datascan_thelook:
+                      call: run_datascan
                       args:
                         id: thelook
-                      result: create_datascan_output
+                      result: run_datascan_output
             - sub_run_datascan_textocr_images:
                 steps:
-                  - call_create_datascan_textocr_images:
-                      call: create_datascan
+                  - call_run_datascan_textocr_images:
+                      call: run_datascan
                       args:
                         id: textocr
-                      result: create_datascan_output
+                      result: run_datascan_output
             - sub_run_datascan_ga4_images:
                 steps:
-                  - call_create_datascan_ga4_images:
-                      call: create_datascan
+                  - call_run_datascan_ga4_images:
+                      call: run_datascan
                       args:
                         id: ga4
-                      result: create_datascan_output
+                      result: run_datascan_output
             - sub_upload_spark_notebook:
                 steps:
                   - call_upload_spark_notebook:
                       call: upload_notebook
                       args:
-                        notebook_path: "spark_in_bigquery.ipynb"
+                        notebook_path: spark_in_bigquery.ipynb
                       result: upload_spark_notebook_output
             - sub_upload_bqml_notebook:
                 steps:
