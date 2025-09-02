@@ -78,7 +78,7 @@ main:
             - sub_run_datascan_ga4_images:
                 steps:
                   - call_run_datascan_ga4_images:
-                      call: run_datascan
+                      call: run_datascan_job
                       args:
                         id: ga4
                       result: run_datascan_output
