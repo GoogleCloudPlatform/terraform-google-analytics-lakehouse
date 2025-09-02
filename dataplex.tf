@@ -96,6 +96,10 @@ resource "google_dataplex_datascan" "thelook" {
       connection = google_bigquery_connection.storage.name
     }
   }
+
+  timeouts {
+    create = "20m" # Increase the timeout to 20 minutes
+  }
 }
 
 
@@ -120,6 +124,10 @@ resource "google_dataplex_datascan" "ga4" {
       connection = google_bigquery_connection.storage.name
     }
   }
+
+  timeouts {
+    create = "20m" # Increase the timeout to 20 minutes
+  }
 }
 
 resource "google_dataplex_datascan" "textocr" {
@@ -142,5 +150,9 @@ resource "google_dataplex_datascan" "textocr" {
       table_type = "BIGLAKE"
       connection = google_bigquery_connection.storage.name
     }
+  }
+
+  timeouts {
+    create = "20m" # Increase the timeout to 20 minutes
   }
 }
