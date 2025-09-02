@@ -64,14 +64,14 @@ main:
             - sub_run_datascan_thelook:
                 steps:
                   - call_run_datascan_thelook:
-                      call: run_datascan
+                      call: run_datascan_job
                       args:
                         id: thelook
                       result: run_datascan_output
             - sub_run_datascan_textocr_images:
                 steps:
                   - call_run_datascan_textocr_images:
-                      call: run_datascan
+                      call: run_datascan_job
                       args:
                         id: textocr
                       result: run_datascan_output
