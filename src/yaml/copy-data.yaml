@@ -97,7 +97,7 @@ retry_on_403_predicate:
     steps:
         - check_error_code_is_403:
             switch:
-              - condition: $${"code" in error and error.code == 403}
+              - condition: $${"AuthError" in error.payload.tags}
                 return: true
         - not_retryable:
             return: false
