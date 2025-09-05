@@ -228,5 +228,6 @@ resource "google_storage_bucket" "sparkml-model-bucket" {
 resource "google_compute_network" "default" {
   provider                = google-beta
   name                    = "default"
+  project                 = module.project-services.project_id
   auto_create_subnetworks = true
 }
