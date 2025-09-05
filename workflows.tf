@@ -147,6 +147,7 @@ data "http" "call_workflows_project_setup" {
     google_dataplex_datascan.thelook,
     google_dataplex_datascan.ga4,
     google_dataplex_datascan.textocr,
+    google_compute_network.default
     time_sleep.wait_after_copy_data,
   ]
 }

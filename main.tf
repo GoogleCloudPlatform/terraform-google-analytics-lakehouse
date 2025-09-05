@@ -224,3 +224,9 @@ resource "google_storage_bucket" "sparkml-model-bucket" {
   uniform_bucket_level_access = true
   force_destroy               = var.force_destroy
 }
+
+resource "google_compute_network" "default" {
+  provider                = google-beta
+  name                    = "default"
+  auto_create_subnetworks = true
+}
