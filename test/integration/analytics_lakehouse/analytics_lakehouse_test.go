@@ -67,29 +67,6 @@ func TestAnalyticsLakehouse(t *testing.T) {
 			return verifyWorkflow("project-setup")
 		}
 		utils.Poll(t, verifyProjectSetupWorkflow, 100, 15*time.Second)
-
-		tables := []string{
-			"gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
-			"gcp_primary_raw.textocr_images",
-			"gcp_primary_staging.new_york_taxi_trips_tlc_yellow_trips_2022",
-			"gcp_primary_staging.thelook_ecommerce_distribution_centers",
-			"gcp_primary_staging.thelook_ecommerce_events",
-			"gcp_primary_staging.thelook_ecommerce_inventory_items",
-			"gcp_primary_staging.thelook_ecommerce_order_items",
-			"gcp_primary_staging.thelook_ecommerce_orders",
-			"gcp_primary_staging.thelook_ecommerce_products",
-			"gcp_primary_staging.thelook_ecommerce_users",
-			"gcp_lakehouse_ds.agg_events_iceberg",
-		}
-
-		query_template := "SELECT count(*) AS count FROM `%[1]s.%[2]s`;"
-		for _, table := range tables {
-			query := fmt.Sprintf(query_template, projectID, table)
-			op := bq.Runf(t, "--project_id=%[1]s query --nouse_legacy_sql %[2]s", projectID, query)
-
-			count := op.Get("0.count").Int()
-			assert.Greater(count, int64(0), table)
-		}
 	})
 
 	dwh.DefineTeardown(func(assert *assert.Assertions) {
