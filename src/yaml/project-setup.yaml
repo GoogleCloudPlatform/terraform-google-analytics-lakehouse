@@ -147,8 +147,8 @@ enable_private_google_access:
         predicate: $${retry_on_404_predicate}
         max_retries: 5
         backoff:
-            initial_delay: 1
-            max_delay: 30
+            initial_delay: 30
+            max_delay: 60
             multiplier: 1.5
 
 
