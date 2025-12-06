@@ -58,12 +58,6 @@ resource "google_workbench_instance" "workbench_instance" {
       disk_type = "PD_STANDARD"
     }
 
-    network_interfaces {
-      network  = google_compute_network.default_network.id
-      subnet   = google_compute_subnetwork.subnet.id
-      nic_type = "GVNIC"
-    }
-
     disable_public_ip = false
 
     service_accounts {
@@ -84,6 +78,5 @@ resource "google_workbench_instance" "workbench_instance" {
 
   depends_on = [
     google_project_iam_member.workbench_sa_roles,
-    google_compute_firewall.subnet_firewall_rule
   ]
 }
