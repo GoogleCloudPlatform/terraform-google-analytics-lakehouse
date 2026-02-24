@@ -44,6 +44,6 @@ terraform {
   }
 
   provider_meta "google" {
-    module_name = "blueprints/terraform/terraform-google-analytics-lakehouse/v0.4.0"
+    module_name = "blueprints/terraform/terraform-google-analytics-lakehouse/v0.5.0"
   }
 }
