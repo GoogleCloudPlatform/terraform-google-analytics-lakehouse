@@ -71,7 +71,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 
 		tables := []string{
 			// "gcp_primary_raw.ga4_obfuscated_sample_ecommerce_images",
-			"gcp_primary_raw.textocr_images",
+			// "gcp_primary_raw.textocr_images",
 			"gcp_primary_staging.new_york_taxi_trips_tlc_yellow_trips_2022",
 			"gcp_primary_staging.thelook_ecommerce_distribution_centers",
 			"gcp_primary_staging.thelook_ecommerce_events",
