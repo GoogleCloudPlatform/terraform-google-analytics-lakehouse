@@ -86,7 +86,7 @@ func TestAnalyticsLakehouse(t *testing.T) {
 		query_template := "SELECT count(*) AS count FROM `%[1]s.%[2]s`;"
 		for _, table := range tables {
 			query := fmt.Sprintf(query_template, projectID, table)
-			op := bq.Runf(t, "--project_id=%[1]s query %[2]s", projectID, query)
+			op := bq.Runf(t, "--project_id=%[1]s --location=us-central1 query %[2]s", projectID, query)
 
 			count := op.Get("0.count").Int()
 			assert.Greater(count, int64(0), table)
